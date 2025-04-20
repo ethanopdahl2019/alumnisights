@@ -1,8 +1,10 @@
+
 export interface School {
   id: string;
   name: string;
   location: string | null;
   type: 'ivy_league' | 'public' | 'liberal_arts' | 'technical' | 'international' | null;
+  image?: string | null;
 }
 
 export interface Major {
@@ -44,6 +46,7 @@ export interface UserCredentials {
 export interface UserRegistration extends UserCredentials {
   firstName: string;
   lastName: string;
+  metadata?: Record<string, any>;
 }
 
 export interface Company {
@@ -125,8 +128,8 @@ export interface LandingPage {
   meta_description: string | null;
   created_at: string;
   updated_at: string;
-  template?: LandingPageTemplate;
-  school?: School;
-  major?: Major;
+  template?: LandingPageTemplate | null;
+  school?: School | null;
+  major?: Major | null;
   content_blocks?: ContentBlock[];
 }

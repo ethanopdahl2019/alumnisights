@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
-export async function signUp({ email, password, firstName, lastName }: UserRegistration) {
+export async function signUp({ email, password, firstName, lastName, metadata = {} }: UserRegistration) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -10,6 +10,7 @@ export async function signUp({ email, password, firstName, lastName }: UserRegis
       data: {
         first_name: firstName,
         last_name: lastName,
+        ...metadata
       }
     }
   });

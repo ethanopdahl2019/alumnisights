@@ -33,14 +33,80 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
 
   return {
     ...data,
-    template: {
+    template: data.template ? {
       id: data.template.id,
       name: data.template.name,
       slug: data.template.slug,
       created_at: data.template.created_at
-    },
+    } : null,
     content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
-  };
+  } as LandingPage;
+}
+
+export async function getLandingPageBySchool(schoolId: string): Promise<LandingPage | null> {
+  const { data, error } = await supabase
+    .from('landing_pages')
+    .select(`
+      *,
+      template:template_id(*),
+      school:school_id(*),
+      major:major_id(*),
+      content_blocks:landing_page_blocks(
+        block:content_block_id(*)
+      )
+    `)
+    .eq('school_id', schoolId)
+    .is('major_id', null)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return {
+    ...data,
+    template: data.template ? {
+      id: data.template.id,
+      name: data.template.name,
+      slug: data.template.slug,
+      created_at: data.template.created_at
+    } : null,
+    content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
+  } as LandingPage;
+}
+
+export async function getLandingPageBySchoolAndMajor(schoolId: string, majorId: string): Promise<LandingPage | null> {
+  const { data, error } = await supabase
+    .from('landing_pages')
+    .select(`
+      *,
+      template:template_id(*),
+      school:school_id(*),
+      major:major_id(*),
+      content_blocks:landing_page_blocks(
+        block:content_block_id(*)
+      )
+    `)
+    .eq('school_id', schoolId)
+    .eq('major_id', majorId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return {
+    ...data,
+    template: data.template ? {
+      id: data.template.id,
+      name: data.template.name,
+      slug: data.template.slug,
+      created_at: data.template.created_at
+    } : null,
+    content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
+  } as LandingPage;
 }
 
 export async function getContentBlocks(schoolId?: string, majorId?: string): Promise<ContentBlock[]> {
