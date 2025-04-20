@@ -68,3 +68,45 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     activities: profile.activities.map((pa: any) => pa.activities)
   };
 }
+
+export async function getSchools() {
+  const { data, error } = await supabase
+    .from('schools')
+    .select('*')
+    .order('name');
+    
+  if (error) {
+    console.error('Error fetching schools:', error);
+    return [];
+  }
+  
+  return data;
+}
+
+export async function getMajors() {
+  const { data, error } = await supabase
+    .from('majors')
+    .select('*')
+    .order('name');
+    
+  if (error) {
+    console.error('Error fetching majors:', error);
+    return [];
+  }
+  
+  return data;
+}
+
+export async function getActivities() {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .order('name');
+    
+  if (error) {
+    console.error('Error fetching activities:', error);
+    return [];
+  }
+  
+  return data;
+}
