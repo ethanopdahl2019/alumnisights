@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -17,7 +16,6 @@ function classNames(...classes: string[]) {
 const SchoolDetail = () => {
   const { id } = useParams<{ id: string }>();
   
-  // Fetch school details
   const { data: school, isLoading: loadingSchool } = useQuery({
     queryKey: ['school', id],
     queryFn: async () => {
@@ -33,14 +31,12 @@ const SchoolDetail = () => {
     enabled: !!id
   });
   
-  // Fetch school landing page
   const { data: landingPage } = useQuery({
     queryKey: ['school-landing', id],
     queryFn: () => getLandingPageBySchool(id!),
     enabled: !!id
   });
   
-  // Fetch majors for this school
   const { data: majors } = useQuery({
     queryKey: ['school-majors', id],
     queryFn: async () => {
@@ -55,7 +51,6 @@ const SchoolDetail = () => {
         
       if (error) throw error;
       
-      // Extract unique majors
       const uniqueMajors = new Map();
       data.forEach(item => {
         if (item.majors) {
@@ -68,7 +63,6 @@ const SchoolDetail = () => {
     enabled: !!id
   });
   
-  // Fetch activities for this school
   const { data: activities } = useQuery({
     queryKey: ['school-activities', id],
     queryFn: async () => {
@@ -82,7 +76,6 @@ const SchoolDetail = () => {
         
       if (error) throw error;
       
-      // Extract unique activities
       const uniqueActivities = new Map();
       data.forEach(item => {
         if (item.activities) {
@@ -95,7 +88,6 @@ const SchoolDetail = () => {
     enabled: !!id
   });
   
-  // Fetch profiles from this school
   const { data: profiles } = useQuery({
     queryKey: ['school-profiles', id],
     queryFn: async () => {
@@ -217,7 +209,6 @@ const SchoolDetail = () => {
                 ))}
               </Tab.List>
               <Tab.Panels className="mt-2 mb-12">
-                {/* Overview Panel */}
                 <Tab.Panel>
                   <div className="prose max-w-none">
                     {landingPage ? (
@@ -236,7 +227,6 @@ const SchoolDetail = () => {
                   </div>
                 </Tab.Panel>
                 
-                {/* Majors Panel */}
                 <Tab.Panel>
                   <h2 className="text-2xl font-bold mb-6">Majors at {school.name}</h2>
                   {majors && majors.length > 0 ? (
@@ -259,7 +249,6 @@ const SchoolDetail = () => {
                   )}
                 </Tab.Panel>
                 
-                {/* Activities Panel */}
                 <Tab.Panel>
                   <h2 className="text-2xl font-bold mb-6">Activities at {school.name}</h2>
                   {activities && activities.length > 0 ? (
@@ -282,7 +271,6 @@ const SchoolDetail = () => {
                   )}
                 </Tab.Panel>
                 
-                {/* Profiles Panel */}
                 <Tab.Panel>
                   <div className="mb-8 flex justify-between items-center">
                     <h2 className="text-2xl font-bold">Students & Alumni</h2>

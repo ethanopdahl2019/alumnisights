@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -41,8 +41,20 @@ const registerBaseSchema = z.object({
 
 const prospectSchema = registerBaseSchema;
 
-const alumniStudentSchema = registerBaseSchema.extend({
+// Create a new schema for alumni/student instead of extending
+const alumniStudentSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  firstName: z.string().min(1, { message: "First name is required" }),
+  lastName: z.string().min(1, { message: "Last name is required" }),
+  userType: z.enum(["prospect", "alumni_student"], { 
+    required_error: "Please select user type" 
+  }),
   schoolId: z.string().min(1, { message: "Please select a school" }),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;

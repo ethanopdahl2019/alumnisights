@@ -1,10 +1,9 @@
-
 export interface School {
   id: string;
   name: string;
   location: string | null;
   type: 'ivy_league' | 'public' | 'liberal_arts' | 'technical' | 'international' | null;
-  image?: string | null;
+  image: string | null;
 }
 
 export interface Major {

@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import Tag, { TagType } from './Tag';
 import { Avatar } from '@/components/ui/avatar';
+import { ProfileWithDetails } from '@/types/database';
 
 export interface TagData {
   id: string;
@@ -10,21 +11,25 @@ export interface TagData {
 }
 
 export interface ProfileCardProps {
-  id: string;
-  name: string;
-  image: string;
-  school: string;
-  major: string;
-  tags: TagData[];
+  profile: ProfileWithDetails;
 }
 
-const ProfileCard = ({ id, name, image, school, major, tags }: ProfileCardProps) => {
+const ProfileCard = ({ profile }: ProfileCardProps) => {
+  // Create tags from profile data
+  const tags: TagData[] = [
+    ...(profile.activities?.map(activity => ({
+      id: activity.id,
+      label: activity.name,
+      type: activity.type as TagType
+    })) || [])
+  ];
+  
   return (
-    <Link to={`/profile/${id}`} className="profile-card group">
+    <Link to={`/profile/${profile.id}`} className="profile-card group">
       <div className="relative aspect-[3/4] overflow-hidden">
         <img 
-          src={image} 
-          alt={`${name}'s profile`} 
+          src={profile.image || '/placeholder.svg'} 
+          alt={`${profile.name}'s profile`} 
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
         />
       </div>
@@ -32,16 +37,16 @@ const ProfileCard = ({ id, name, image, school, major, tags }: ProfileCardProps)
       <div className="p-5 flex flex-col flex-grow">
         <div className="flex items-center mb-2">
           <Avatar className="h-10 w-10 mr-3">
-            <img src={image} alt={name} className="object-cover" />
+            <img src={profile.image || '/placeholder.svg'} alt={profile.name} className="object-cover" />
           </Avatar>
           <div>
-            <h3 className="font-medium text-lg">{name}</h3>
-            <p className="text-gray-600 text-sm">{school}</p>
+            <h3 className="font-medium text-lg">{profile.name}</h3>
+            <p className="text-gray-600 text-sm">{profile.school?.name}</p>
           </div>
         </div>
         
         <div className="mt-1 mb-3">
-          <Tag type="major">{major}</Tag>
+          <Tag type="major">{profile.major?.name}</Tag>
         </div>
         
         <div className="mt-auto flex flex-wrap gap-2">
