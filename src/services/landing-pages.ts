@@ -1,119 +1,138 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { LandingPage, ContentBlock } from '@/types/database';
+import type { LandingPage, LandingPageTemplate, ContentBlock } from '@/types/database';
+
+export async function getLandingPageTemplates(): Promise<LandingPageTemplate[]> {
+  // Mock data until database tables are created
+  return [
+    {
+      id: '1',
+      name: 'School Profile',
+      slug: 'school-profile',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Major Profile',
+      slug: 'major-profile',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '3',
+      name: 'School + Major Combination',
+      slug: 'school-major-combo',
+      created_at: new Date().toISOString()
+    }
+  ];
+}
 
 export async function getLandingPageBySlug(slug: string): Promise<LandingPage | null> {
-  const { data, error } = await supabase
-    .from('landing_pages')
-    .select(`
-      *,
-      template:landing_page_templates(*),
-      school:schools(*),
-      major:majors(*)
-    `)
-    .eq('slug', slug)
-    .single();
-
-  if (error) {
-    console.error('Error fetching landing page:', error);
-    return null;
-  }
-
-  // Get content blocks for this landing page
-  const { data: contentBlocks, error: contentBlocksError } = await supabase
-    .from('content_blocks')
-    .select('*')
-    .or(`school_id.eq.${data.school_id},major_id.eq.${data.major_id},type.eq.general`)
-    .order('order_position');
-
-  if (contentBlocksError) {
-    console.error('Error fetching content blocks:', contentBlocksError);
-  } else {
-    data.content_blocks = contentBlocks;
-  }
-
-  return data;
-}
-
-export async function getSchoolLandingPages(): Promise<LandingPage[]> {
-  const { data, error } = await supabase
-    .from('landing_pages')
-    .select(`
-      *,
-      school:schools(*)
-    `)
-    .not('school_id', 'is', null)
-    .is('major_id', null)
-    .order('title');
-
-  if (error) {
-    console.error('Error fetching school landing pages:', error);
-    return [];
-  }
-
-  return data;
-}
-
-export async function getMajorLandingPages(): Promise<LandingPage[]> {
-  const { data, error } = await supabase
-    .from('landing_pages')
-    .select(`
-      *,
-      major:majors(*)
-    `)
-    .not('major_id', 'is', null)
-    .is('school_id', null)
-    .order('title');
-
-  if (error) {
-    console.error('Error fetching major landing pages:', error);
-    return [];
-  }
-
-  return data;
-}
-
-export async function getCombinedLandingPages(): Promise<LandingPage[]> {
-  const { data, error } = await supabase
-    .from('landing_pages')
-    .select(`
-      *,
-      school:schools(*),
-      major:majors(*)
-    `)
-    .not('school_id', 'is', null)
-    .not('major_id', 'is', null)
-    .order('title');
-
-  if (error) {
-    console.error('Error fetching combined landing pages:', error);
-    return [];
-  }
-
-  return data;
-}
-
-export async function getContentBlocksByType(type: string, id?: string): Promise<ContentBlock[]> {
-  let query = supabase
-    .from('content_blocks')
-    .select('*')
-    .eq('type', type)
-    .order('order_position');
-    
-  if (id) {
-    if (type === 'school') {
-      query = query.eq('school_id', id);
-    } else if (type === 'major') {
-      query = query.eq('major_id', id);
+  // Mock data until database tables are created
+  const pages = [
+    {
+      id: '1',
+      template_id: '3',
+      slug: 'harvard-economics',
+      title: 'Economics at Harvard',
+      school_id: '1',
+      major_id: '1',
+      meta_title: 'Economics at Harvard University | Student Insights',
+      meta_description: 'Learn what it\'s like to study Economics at Harvard University from current students and alumni.',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      template: {
+        id: '3',
+        name: 'School + Major Combination',
+        slug: 'school-major-combo',
+        created_at: new Date().toISOString()
+      },
+      school: {
+        id: '1',
+        name: 'Harvard University',
+        location: 'Cambridge, MA',
+        type: 'ivy_league'
+      },
+      major: {
+        id: '1',
+        name: 'Economics',
+        category: 'Social Sciences'
+      },
+      content_blocks: [
+        {
+          id: '1',
+          type: 'school',
+          title: 'About Harvard University',
+          content: 'Harvard University is a private Ivy League research university in Cambridge, Massachusetts...',
+          school_id: '1',
+          major_id: null,
+          order_position: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          type: 'major',
+          title: 'Economics at Harvard',
+          content: 'The Economics Department at Harvard is one of the most prestigious in the world...',
+          school_id: null,
+          major_id: '1',
+          order_position: 2,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: '3',
+          type: 'general',
+          title: 'Career Opportunities',
+          content: 'Economics graduates from Harvard have gone on to work in various fields...',
+          school_id: null,
+          major_id: null,
+          order_position: 3,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ]
     }
-  }
+  ];
   
-  const { data, error } = await query;
+  return pages.find(page => page.slug === slug) || null;
+}
 
-  if (error) {
-    console.error(`Error fetching ${type} content blocks:`, error);
-    return [];
-  }
-
-  return data;
+export async function getContentBlocks(schoolId?: string, majorId?: string): Promise<ContentBlock[]> {
+  // Mock data until database tables are created
+  return [
+    {
+      id: '1',
+      type: 'school',
+      title: 'About Harvard University',
+      content: 'Harvard University is a private Ivy League research university in Cambridge, Massachusetts...',
+      school_id: '1',
+      major_id: null,
+      order_position: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      type: 'major',
+      title: 'Economics at Harvard',
+      content: 'The Economics Department at Harvard is one of the most prestigious in the world...',
+      school_id: null,
+      major_id: '1',
+      order_position: 2,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+  ].filter(block => {
+    if (schoolId && majorId) {
+      return block.school_id === schoolId || block.major_id === majorId;
+    } 
+    if (schoolId) {
+      return block.school_id === schoolId;
+    }
+    if (majorId) {
+      return block.major_id === majorId;
+    }
+    return true;
+  });
 }

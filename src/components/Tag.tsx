@@ -1,7 +1,7 @@
 
 import { cn } from '@/lib/utils';
 
-export type TagType = 'major' | 'sport' | 'club' | 'study';
+export type TagType = 'major' | 'sport' | 'club' | 'study' | 'study_abroad';
 
 interface TagProps {
   type: TagType;
@@ -19,6 +19,7 @@ const Tag = ({ type, children, className }: TagProps) => {
           'tag-sport': type === 'sport',
           'tag-club': type === 'club',
           'tag-study': type === 'study',
+          'tag-study_abroad': type === 'study_abroad',
         },
         className
       )}
