@@ -8,7 +8,7 @@ export async function getLandingPageTemplates(): Promise<LandingPageTemplate[]> 
     .select('*');
 
   if (error) throw error;
-  return data as LandingPageTemplate[];
+  return data;
 }
 
 export async function getLandingPageBySlug(slug: string): Promise<LandingPage | null> {
@@ -40,7 +40,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
       created_at: data.template.created_at
     } : null,
     content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
-  } as unknown as LandingPage;
+  } as LandingPage;
 }
 
 export async function getLandingPageBySchool(schoolId: string): Promise<LandingPage | null> {
@@ -73,7 +73,7 @@ export async function getLandingPageBySchool(schoolId: string): Promise<LandingP
       created_at: data.template.created_at
     } : null,
     content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
-  } as unknown as LandingPage;
+  } as LandingPage;
 }
 
 export async function getLandingPageBySchoolAndMajor(schoolId: string, majorId: string): Promise<LandingPage | null> {
@@ -106,7 +106,7 @@ export async function getLandingPageBySchoolAndMajor(schoolId: string, majorId: 
       created_at: data.template.created_at
     } : null,
     content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
-  } as unknown as LandingPage;
+  } as LandingPage;
 }
 
 export async function getContentBlocks(schoolId?: string, majorId?: string): Promise<ContentBlock[]> {
@@ -123,5 +123,5 @@ export async function getContentBlocks(schoolId?: string, majorId?: string): Pro
   const { data, error } = await query.order('order_position');
 
   if (error) throw error;
-  return data as ContentBlock[];
+  return data;
 }

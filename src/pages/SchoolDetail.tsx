@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Tab } from '@headlessui/react';
@@ -283,10 +282,7 @@ const SchoolDetail = () => {
                   {profiles && profiles.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {profiles.map((profile) => (
-                        <ProfileCard 
-                          key={profile.id} 
-                          profile={profile as unknown as ProfileWithDetails} 
-                        />
+                        <ProfileCard key={profile.id} profile={profile} />
                       ))}
                     </div>
                   ) : (
