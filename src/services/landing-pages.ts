@@ -16,7 +16,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
     .from('landing_pages')
     .select(`
       *,
-      template:template_id(name, slug),
+      template:template_id(*),
       school:school_id(*),
       major:major_id(*),
       content_blocks:landing_page_blocks(
@@ -33,7 +33,13 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
 
   return {
     ...data,
-    content_blocks: data.content_blocks?.map((cb: any) => cb.block)
+    template: {
+      id: data.template.id,
+      name: data.template.name,
+      slug: data.template.slug,
+      created_at: data.template.created_at
+    },
+    content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
   };
 }
 

@@ -19,7 +19,8 @@ export async function getAllPosts(): Promise<BlogPost[]> {
 
   return data.map(post => ({
     ...post,
-    categories: post.categories?.map((c: any) => c.category)
+    categories: post.categories?.map((c: any) => c.category) || [],
+    author: post.author || { name: 'Anonymous', image: null }
   }));
 }
 
@@ -44,7 +45,8 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
 
   return {
     ...data,
-    categories: data.categories?.map((c: any) => c.category)
+    categories: data.categories?.map((c: any) => c.category) || [],
+    author: data.author || { name: 'Anonymous', image: null }
   };
 }
 
