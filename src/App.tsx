@@ -8,6 +8,7 @@ import AuthProvider from "@/components/AuthProvider";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import Profile from "./pages/Profile";
+import Blog from "./pages/Blog";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
@@ -25,9 +26,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/browse" element={<Browse />} />
             <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/blog" element={<Blog />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/sign-up" element={<SignUp />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

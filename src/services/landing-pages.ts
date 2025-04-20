@@ -50,7 +50,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
         id: '1',
         name: 'Harvard University',
         location: 'Cambridge, MA',
-        type: 'ivy_league'
+        type: 'ivy_league' as const  // Fixed type error by specifying literal type
       },
       major: {
         id: '1',
@@ -60,7 +60,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
       content_blocks: [
         {
           id: '1',
-          type: 'school',
+          type: 'school' as const,  // Fixed type error by specifying literal type
           title: 'About Harvard University',
           content: 'Harvard University is a private Ivy League research university in Cambridge, Massachusetts...',
           school_id: '1',
@@ -71,7 +71,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
         },
         {
           id: '2',
-          type: 'major',
+          type: 'major' as const,  // Fixed type error by specifying literal type
           title: 'Economics at Harvard',
           content: 'The Economics Department at Harvard is one of the most prestigious in the world...',
           school_id: null,
@@ -82,7 +82,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
         },
         {
           id: '3',
-          type: 'general',
+          type: 'general' as const,  // Fixed type error by specifying literal type
           title: 'Career Opportunities',
           content: 'Economics graduates from Harvard have gone on to work in various fields...',
           school_id: null,
