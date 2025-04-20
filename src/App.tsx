@@ -10,7 +10,6 @@ import Browse from "./pages/Browse";
 import Profile from "./pages/Profile";
 import Blog from "./pages/Blog";
 import HowItWorksPage from "./pages/HowItWorksPage";
-import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import BlogPost from "./pages/BlogPost";
 import LandingPage from "./pages/LandingPage";
@@ -32,7 +31,6 @@ const App = () => (
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/p/:slug" element={<LandingPage />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
-            <Route path="/sign-up" element={<SignUp />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
