@@ -30,6 +30,111 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      blog_post_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_post_categories_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string
+          excerpt: string | null
+          featured: boolean
+          featured_image: string | null
+          id: string
+          published: boolean
+          published_at: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          featured?: boolean
+          featured_image?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          featured?: boolean
+          featured_image?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       booking_options: {
         Row: {
           created_at: string | null
@@ -109,6 +214,175 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_blocks: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          major_id: string | null
+          order_position: number
+          school_id: string | null
+          title: string
+          type: Database["public"]["Enums"]["content_block_type"]
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          major_id?: string | null
+          order_position: number
+          school_id?: string | null
+          title: string
+          type: Database["public"]["Enums"]["content_block_type"]
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          major_id?: string | null
+          order_position?: number
+          school_id?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["content_block_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_blocks_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_blocks_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      landing_page_blocks: {
+        Row: {
+          content_block_id: string
+          created_at: string
+          id: string
+          landing_page_id: string
+        }
+        Insert: {
+          content_block_id: string
+          created_at?: string
+          id?: string
+          landing_page_id: string
+        }
+        Update: {
+          content_block_id?: string
+          created_at?: string
+          id?: string
+          landing_page_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landing_page_blocks_content_block_id_fkey"
+            columns: ["content_block_id"]
+            isOneToOne: false
+            referencedRelation: "content_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "landing_page_blocks_landing_page_id_fkey"
+            columns: ["landing_page_id"]
+            isOneToOne: false
+            referencedRelation: "landing_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      landing_page_templates: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      landing_pages: {
+        Row: {
+          created_at: string
+          id: string
+          major_id: string | null
+          meta_description: string | null
+          meta_title: string | null
+          school_id: string | null
+          slug: string
+          template_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          major_id?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          school_id?: string | null
+          slug: string
+          template_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          major_id?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          school_id?: string | null
+          slug?: string
+          template_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landing_pages_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "landing_pages_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "landing_pages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "landing_page_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -245,6 +519,56 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: Database["public"]["Enums"]["tag_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type: Database["public"]["Enums"]["tag_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: Database["public"]["Enums"]["tag_type"]
+        }
+        Relationships: []
+      }
+      user_tags: {
+        Row: {
+          created_at: string
+          id: string
+          tag_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -255,12 +579,20 @@ export type Database = {
     Enums: {
       activity_type: "club" | "sport" | "study_abroad"
       booking_status: "pending" | "confirmed" | "completed" | "cancelled"
+      content_block_type: "school" | "major" | "general"
       school_type:
         | "ivy_league"
         | "public"
         | "liberal_arts"
         | "technical"
         | "international"
+      tag_type:
+        | "major"
+        | "sport"
+        | "club"
+        | "study"
+        | "study_abroad"
+        | "interest"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -378,6 +710,7 @@ export const Constants = {
     Enums: {
       activity_type: ["club", "sport", "study_abroad"],
       booking_status: ["pending", "confirmed", "completed", "cancelled"],
+      content_block_type: ["school", "major", "general"],
       school_type: [
         "ivy_league",
         "public",
@@ -385,6 +718,7 @@ export const Constants = {
         "technical",
         "international",
       ],
+      tag_type: ["major", "sport", "club", "study", "study_abroad", "interest"],
     },
   },
 } as const

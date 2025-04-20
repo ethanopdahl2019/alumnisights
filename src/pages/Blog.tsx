@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useQuery } from '@tanstack/react-query';
@@ -25,16 +26,22 @@ const Blog = () => {
           {posts && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map(post => (
-                <article key={post.id} className="border rounded-lg overflow-hidden shadow-sm">
+                <Link 
+                  to={`/blog/${post.slug}`}
+                  key={post.id} 
+                  className="group block border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                >
                   {post.featured_image && (
                     <img 
                       src={post.featured_image} 
                       alt={post.title}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity"
                     />
                   )}
                   <div className="p-6">
-                    <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+                    <h2 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition-colors">
+                      {post.title}
+                    </h2>
                     <p className="text-gray-600 mb-4">{post.excerpt}</p>
                     <div className="flex items-center text-sm text-gray-500">
                       {post.author?.name && (
@@ -46,7 +53,7 @@ const Blog = () => {
                       <span>{new Date(post.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
-                </article>
+                </Link>
               ))}
             </div>
           )}
