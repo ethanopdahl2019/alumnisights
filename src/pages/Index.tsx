@@ -1,15 +1,29 @@
 
+import { useEffect, useState } from 'react';
+import { getFeaturedProfiles } from '@/services/profiles';
+import type { ProfileWithDetails } from '@/types/database';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import HowItWorks from '@/components/HowItWorks';
 import Carousel from '@/components/Carousel';
 import ProfileCard from '@/components/ProfileCard';
 import Footer from '@/components/Footer';
-import profiles from '@/data/profiles';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const [profiles, setProfiles] = useState<ProfileWithDetails[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfiles = async () => {
+      const featuredProfiles = await getFeaturedProfiles();
+      setProfiles(featuredProfiles);
+      setLoading(false);
+    };
+
+    loadProfiles();
+  }, []);
   
   return (
     <div className="min-h-screen bg-white">
@@ -25,19 +39,35 @@ const Index = () => {
               Connect with current students and alumni from top schools across the country
             </p>
             
-            <Carousel slidesToShow={isMobile ? 1 : 3}>
-              {profiles.map(profile => (
-                <ProfileCard 
-                  key={profile.id}
-                  id={profile.id}
-                  name={profile.name}
-                  image={profile.image}
-                  school={profile.school}
-                  major={profile.major}
-                  tags={profile.tags}
-                />
-              ))}
-            </Carousel>
+            {loading ? (
+              <div className="grid md:grid-cols-3 gap-6">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-200 aspect-[3/4] rounded-lg mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Carousel slidesToShow={isMobile ? 1 : Math.min(3, profiles.length)}>
+                {profiles.map(profile => (
+                  <ProfileCard 
+                    key={profile.id}
+                    id={profile.id}
+                    name={profile.name}
+                    image={profile.image || '/placeholder.svg'}
+                    school={profile.school.name}
+                    major={profile.major.name}
+                    tags={profile.activities.map(activity => ({
+                      id: activity.id,
+                      label: activity.name,
+                      type: activity.type
+                    }))}
+                  />
+                ))}
+              </Carousel>
+            )}
             
             <div className="mt-12 text-center">
               <a href="/browse" className="btn-secondary">

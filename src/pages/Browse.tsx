@@ -1,60 +1,133 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileCard from '@/components/ProfileCard';
 import ProfileFilter from '@/components/ProfileFilter';
-import profiles from '@/data/profiles';
-import filterCategories from '@/data/filters';
 
 const Browse = () => {
+  const [loading, setLoading] = useState(true);
+  const [profiles, setProfiles] = useState<ProfileWithDetails[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   
+  useEffect(() => {
+    const loadData = async () => {
+      const [profilesData, schoolsData, majorsData, activitiesData] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select(`
+            *,
+            school:schools(*),
+            major:majors(*),
+            activities:profile_activities(activities(*))
+          `),
+        supabase.from('schools').select('*'),
+        supabase.from('majors').select('*'),
+        supabase.from('activities').select('*')
+      ]);
+
+      if (profilesData.data) {
+        setProfiles(profilesData.data.map(profile => ({
+          ...profile,
+          activities: profile.activities.map((pa: any) => pa.activities)
+        })));
+      }
+      
+      if (schoolsData.data) setSchools(schoolsData.data);
+      if (majorsData.data) setMajors(majorsData.data);
+      if (activitiesData.data) setActivities(activitiesData.data);
+      
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
   const handleFilterChange = (categoryId: string, selectedIds: string[]) => {
     setActiveFilters((prev) => ({
       ...prev,
       [categoryId]: selectedIds
     }));
   };
-  
-  // Simple filtering logic for demonstration
+
+  const filterCategories = [
+    {
+      id: 'schools',
+      name: 'Schools',
+      options: schools.map(school => ({
+        id: school.id,
+        label: school.name
+      }))
+    },
+    {
+      id: 'majors',
+      name: 'Majors',
+      options: majors.map(major => ({
+        id: major.id,
+        label: major.name
+      }))
+    },
+    {
+      id: 'activities',
+      name: 'Activities & Interests',
+      options: activities.map(activity => ({
+        id: activity.id,
+        label: activity.name
+      }))
+    }
+  ];
+
   const filteredProfiles = profiles.filter((profile) => {
-    // If no filters are active, show all profiles
     if (Object.values(activeFilters).every((filters) => filters.length === 0)) {
       return true;
     }
-    
-    // Check if profile matches at least one filter in each active category
-    return Object.entries(activeFilters).every(([categoryId, selectedFilters]) => {
-      // If no filters selected in this category, it's not an active filter
-      if (selectedFilters.length === 0) {
-        return true;
+
+    return Object.entries(activeFilters).every(([categoryId, selectedIds]) => {
+      if (selectedIds.length === 0) return true;
+
+      switch (categoryId) {
+        case 'schools':
+          return selectedIds.includes(profile.school_id);
+        case 'majors':
+          return selectedIds.includes(profile.major_id);
+        case 'activities':
+          return profile.activities.some(activity => 
+            selectedIds.includes(activity.id)
+          );
+        default:
+          return true;
       }
-      
-      // Simple matching logic (would be more sophisticated in a real app)
-      if (categoryId === 'schools') {
-        return selectedFilters.some((filter) => 
-          profile.school.toLowerCase().includes(filter.replace('-', ' '))
-        );
-      }
-      
-      if (categoryId === 'majors') {
-        return selectedFilters.some((filter) => 
-          profile.major.toLowerCase().includes(filter.replace('-', ' '))
-        );
-      }
-      
-      if (categoryId === 'activities' || categoryId === 'sports') {
-        return profile.tags.some((tag) => 
-          selectedFilters.some((filter) => 
-            tag.label.toLowerCase().includes(filter.replace('-', ' '))
-          )
-        );
-      }
-      
-      return true;
     });
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main className="py-12">
+          <div className="container-custom">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
+              <div className="grid md:grid-cols-4 gap-8">
+                <div className="h-[400px] bg-gray-200 rounded"></div>
+                <div className="md:col-span-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-[300px] bg-gray-200 rounded"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -67,8 +140,8 @@ const Browse = () => {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="md:w-1/4">
               <ProfileFilter 
-                categories={filterCategories} 
-                onFilterChange={handleFilterChange} 
+                categories={filterCategories}
+                onFilterChange={handleFilterChange}
               />
             </div>
             
@@ -80,10 +153,14 @@ const Browse = () => {
                       key={profile.id}
                       id={profile.id}
                       name={profile.name}
-                      image={profile.image}
-                      school={profile.school}
-                      major={profile.major}
-                      tags={profile.tags}
+                      image={profile.image || '/placeholder.svg'}
+                      school={profile.school.name}
+                      major={profile.major.name}
+                      tags={profile.activities.map(activity => ({
+                        id: activity.id,
+                        label: activity.name,
+                        type: activity.type
+                      }))}
                     />
                   ))}
                 </div>

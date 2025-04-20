@@ -9,7 +9,242 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          type: Database["public"]["Enums"]["activity_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          type: Database["public"]["Enums"]["activity_type"]
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          type?: Database["public"]["Enums"]["activity_type"]
+        }
+        Relationships: []
+      }
+      booking_options: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration: string
+          id: string
+          price: number
+          profile_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration: string
+          id?: string
+          price: number
+          profile_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration?: string
+          id?: string
+          price?: number
+          profile_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_options_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          booking_option_id: string
+          created_at: string | null
+          id: string
+          profile_id: string
+          scheduled_at: string
+          status: Database["public"]["Enums"]["booking_status"] | null
+          user_id: string
+        }
+        Insert: {
+          booking_option_id: string
+          created_at?: string | null
+          id?: string
+          profile_id: string
+          scheduled_at: string
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          user_id: string
+        }
+        Update: {
+          booking_option_id?: string
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+          scheduled_at?: string
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_booking_option_id_fkey"
+            columns: ["booking_option_id"]
+            isOneToOne: false
+            referencedRelation: "booking_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      majors: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profile_activities: {
+        Row: {
+          activity_id: string
+          created_at: string | null
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string | null
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_activities_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_activities_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          featured: boolean | null
+          id: string
+          image: string | null
+          major_id: string
+          name: string
+          school_id: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          featured?: boolean | null
+          id?: string
+          image?: string | null
+          major_id: string
+          name: string
+          school_id: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          featured?: boolean | null
+          id?: string
+          image?: string | null
+          major_id?: string
+          name?: string
+          school_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          created_at: string | null
+          id: string
+          location: string | null
+          name: string
+          type: Database["public"]["Enums"]["school_type"] | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          type?: Database["public"]["Enums"]["school_type"] | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          type?: Database["public"]["Enums"]["school_type"] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +253,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      activity_type: "club" | "sport" | "study_abroad"
+      booking_status: "pending" | "confirmed" | "completed" | "cancelled"
+      school_type:
+        | "ivy_league"
+        | "public"
+        | "liberal_arts"
+        | "technical"
+        | "international"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +375,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      activity_type: ["club", "sport", "study_abroad"],
+      booking_status: ["pending", "confirmed", "completed", "cancelled"],
+      school_type: [
+        "ivy_league",
+        "public",
+        "liberal_arts",
+        "technical",
+        "international",
+      ],
+    },
   },
 } as const
