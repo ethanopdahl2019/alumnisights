@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { Profile, ProfileWithDetails } from '@/types/database';
+import type { Profile, ProfileWithDetails, School, Major, Activity } from '@/types/database';
 
 export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
   const { data: profiles, error } = await supabase
@@ -22,7 +22,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
   return profiles.map(profile => ({
     ...profile,
     activities: profile.activities.map((pa: any) => pa.activities)
-  }));
+  })) as unknown as ProfileWithDetails[];
 }
 
 export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
@@ -43,7 +43,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
   return profiles.map(profile => ({
     ...profile,
     activities: profile.activities.map((pa: any) => pa.activities)
-  }));
+  })) as unknown as ProfileWithDetails[];
 }
 
 export async function getProfileById(id: string): Promise<ProfileWithDetails | null> {
@@ -66,7 +66,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
   return {
     ...profile,
     activities: profile.activities.map((pa: any) => pa.activities)
-  };
+  } as unknown as ProfileWithDetails;
 }
 
 export async function getSchools() {
@@ -80,7 +80,7 @@ export async function getSchools() {
     return [];
   }
   
-  return data;
+  return data as unknown as School[];
 }
 
 export async function getMajors() {
@@ -94,7 +94,7 @@ export async function getMajors() {
     return [];
   }
   
-  return data;
+  return data as unknown as Major[];
 }
 
 export async function getActivities() {
@@ -108,5 +108,5 @@ export async function getActivities() {
     return [];
   }
   
-  return data;
+  return data as unknown as Activity[];
 }
