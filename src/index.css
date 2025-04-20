@@ -35,57 +35,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -96,6 +51,72 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white text-navy font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .tag {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium transition-colors duration-200;
+  }
+  
+  .tag-major {
+    @apply bg-tag-major text-tag-major-text;
+  }
+  
+  .tag-sport {
+    @apply bg-tag-sport text-tag-sport-text;
+  }
+  
+  .tag-club {
+    @apply bg-tag-club text-tag-club-text;
+  }
+  
+  .tag-study {
+    @apply bg-tag-study text-tag-study-text;
+  }
+  
+  .nav-link {
+    @apply inline-block py-2 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-navy after:transition-all hover:after:w-full;
+  }
+  
+  .profile-card {
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col;
+  }
+  
+  .btn-primary {
+    @apply inline-block border border-navy bg-navy text-white px-6 py-3 rounded-lg transition-all hover:bg-navy/90;
+  }
+  
+  .btn-secondary {
+    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-gray-50;
+  }
+  
+  .filter-pill {
+    @apply inline-block px-4 py-2 rounded-full border border-gray-200 transition-colors hover:border-navy;
+  }
+  
+  .filter-pill-active {
+    @apply bg-navy text-white border-navy;
   }
 }
