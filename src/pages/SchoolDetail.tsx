@@ -23,7 +23,7 @@ const SchoolDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('schools')
-        .select('*')
+        .select('id, name, location, type, image, created_at')
         .eq('id', id)
         .single();
 
@@ -32,7 +32,7 @@ const SchoolDetail = () => {
       // Ensure 'image' is present, even if null by default
       return {
         ...data,
-        image: data.image || null
+        image: data.image ?? null
       };
     },
     enabled: !!id

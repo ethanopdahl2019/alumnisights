@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { LandingPage, LandingPageTemplate, ContentBlock } from '@/types/database';
+import type { LandingPage, LandingPageTemplate, ContentBlock, School } from '@/types/database';
 
 export async function getLandingPageTemplates(): Promise<LandingPageTemplate[]> {
   const { data, error } = await supabase
@@ -17,7 +17,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
     .select(`
       *,
       template:template_id(*),
-      school:school_id(*),
+      school:school_id(id, name, location, type, image, created_at),
       major:major_id(*),
       content_blocks:landing_page_blocks(
         block:content_block_id(*)
@@ -31,6 +31,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
     throw error;
   }
 
+  // Patch school.image so it exists, or null if undefined
   return {
     ...data,
     template: data.template ? {
@@ -39,6 +40,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
       slug: data.template.slug,
       created_at: data.template.created_at
     } : null,
+    school: data.school ? { ...data.school, image: data.school.image ?? null } : null,
     content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
   } as LandingPage;
 }
@@ -49,7 +51,7 @@ export async function getLandingPageBySchool(schoolId: string): Promise<LandingP
     .select(`
       *,
       template:template_id(*),
-      school:school_id(*),
+      school:school_id(id, name, location, type, image, created_at),
       major:major_id(*),
       content_blocks:landing_page_blocks(
         block:content_block_id(*)
@@ -72,6 +74,7 @@ export async function getLandingPageBySchool(schoolId: string): Promise<LandingP
       slug: data.template.slug,
       created_at: data.template.created_at
     } : null,
+    school: data.school ? { ...data.school, image: data.school.image ?? null } : null,
     content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
   } as LandingPage;
 }
@@ -82,7 +85,7 @@ export async function getLandingPageBySchoolAndMajor(schoolId: string, majorId: 
     .select(`
       *,
       template:template_id(*),
-      school:school_id(*),
+      school:school_id(id, name, location, type, image, created_at),
       major:major_id(*),
       content_blocks:landing_page_blocks(
         block:content_block_id(*)
@@ -105,6 +108,7 @@ export async function getLandingPageBySchoolAndMajor(schoolId: string, majorId: 
       slug: data.template.slug,
       created_at: data.template.created_at
     } : null,
+    school: data.school ? { ...data.school, image: data.school.image ?? null } : null,
     content_blocks: data.content_blocks?.map((cb: any) => cb.block) || []
   } as LandingPage;
 }
@@ -125,3 +129,4 @@ export async function getContentBlocks(schoolId?: string, majorId?: string): Pro
   if (error) throw error;
   return data;
 }
+

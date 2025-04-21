@@ -22,23 +22,37 @@ const Browse = () => {
           .from('profiles')
           .select(`
             *,
-            school:schools(*),
+            school:schools(id, name, location, type, image, created_at),
             major:majors(*),
             activities:profile_activities(activities(*))
           `),
-        supabase.from('schools').select('*'),
+        supabase.from('schools').select('id, name, location, type, image, created_at'),
         supabase.from('majors').select('*'),
         supabase.from('activities').select('*')
       ]);
 
+      // Ensure school has image for both profiles and schools.
       if (profilesData.data) {
-        setProfiles(profilesData.data.map(profile => ({
-          ...profile,
-          activities: profile.activities.map((pa: any) => pa.activities)
-        })));
+        setProfiles(
+          profilesData.data.map(profile => ({
+            ...profile,
+            school: {
+              ...profile.school,
+              image: profile.school?.image ?? null
+            },
+            activities: profile.activities.map((pa: any) => pa.activities)
+          }))
+        );
       }
       
-      if (schoolsData.data) setSchools(schoolsData.data);
+      if (schoolsData.data) {
+        setSchools(
+          schoolsData.data.map((school: any) => ({
+            ...school,
+            image: school.image ?? null
+          }))
+        );
+      }
       if (majorsData.data) setMajors(majorsData.data);
       if (activitiesData.data) setActivities(activitiesData.data);
       
@@ -151,16 +165,7 @@ const Browse = () => {
                   {filteredProfiles.map((profile) => (
                     <ProfileCard
                       key={profile.id}
-                      id={profile.id}
-                      name={profile.name}
-                      image={profile.image || '/placeholder.svg'}
-                      school={profile.school.name}
-                      major={profile.major.name}
-                      tags={profile.activities.map(activity => ({
-                        id: activity.id,
-                        label: activity.name,
-                        type: activity.type
-                      }))}
+                      profile={profile}
                     />
                   ))}
                 </div>

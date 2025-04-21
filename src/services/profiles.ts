@@ -2,12 +2,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, ProfileWithDetails } from '@/types/database';
 
+// Add image when projecting schools
 export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select(`
       *,
-      school:schools(*),
+      school:schools(id, name, location, type, image, created_at),
       major:majors(*),
       activities:profile_activities(activities(*))
     `)
@@ -21,6 +22,10 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
 
   return profiles.map(profile => ({
     ...profile,
+    school: {
+      ...profile.school,
+      image: profile.school?.image ?? null
+    },
     activities: profile.activities.map((pa: any) => pa.activities)
   }));
 }
@@ -30,7 +35,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
     .from('profiles')
     .select(`
       *,
-      school:schools(*),
+      school:schools(id, name, location, type, image, created_at),
       major:majors(*),
       activities:profile_activities(activities(*))
     `);
@@ -42,6 +47,10 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
 
   return profiles.map(profile => ({
     ...profile,
+    school: {
+      ...profile.school,
+      image: profile.school?.image ?? null
+    },
     activities: profile.activities.map((pa: any) => pa.activities)
   }));
 }
@@ -51,7 +60,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     .from('profiles')
     .select(`
       *,
-      school:schools(*),
+      school:schools(id, name, location, type, image, created_at),
       major:majors(*),
       activities:profile_activities(activities(*))
     `)
@@ -65,6 +74,10 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
 
   return {
     ...profile,
+    school: {
+      ...profile.school,
+      image: profile.school?.image ?? null
+    },
     activities: profile.activities.map((pa: any) => pa.activities)
   };
 }
@@ -72,7 +85,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
 export async function getSchools() {
   const { data, error } = await supabase
     .from('schools')
-    .select('*')
+    .select('id, name, location, type, image, created_at')
     .order('name');
     
   if (error) {
@@ -80,7 +93,11 @@ export async function getSchools() {
     return [];
   }
   
-  return data;
+  // Add a fallback for missing images
+  return data.map((school: any) => ({
+    ...school,
+    image: school.image ?? null
+  }));
 }
 
 export async function getMajors() {
@@ -110,3 +127,4 @@ export async function getActivities() {
   
   return data;
 }
+
