@@ -499,7 +499,6 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          image: string | null
           location: string | null
           name: string
           type: Database["public"]["Enums"]["school_type"] | null
@@ -507,7 +506,6 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
-          image?: string | null
           location?: string | null
           name: string
           type?: Database["public"]["Enums"]["school_type"] | null
@@ -515,7 +513,6 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
-          image?: string | null
           location?: string | null
           name?: string
           type?: Database["public"]["Enums"]["school_type"] | null

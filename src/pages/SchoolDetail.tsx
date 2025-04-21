@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Tab } from '@headlessui/react';
@@ -18,7 +18,7 @@ function classNames(...classes: string[]) {
 const SchoolDetail = () => {
   const { id } = useParams<{ id: string }>();
 
-  const { data: schoolData, isLoading: loadingSchool, error: schoolError } = useQuery({
+  const { data: school, isLoading: loadingSchool } = useQuery({
     queryKey: ['school', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,12 +29,14 @@ const SchoolDetail = () => {
 
       if (error) throw error;
 
-      return data;
+      // Ensure 'image' is present, even if null by default
+      return {
+        ...data,
+        image: data.image ?? null
+      };
     },
     enabled: !!id
   });
-
-  const school = schoolData ?? null;
 
   const { data: landingPage } = useQuery({
     queryKey: ['school-landing', id],
@@ -49,7 +51,7 @@ const SchoolDetail = () => {
         .from('profiles')
         .select(`
           major_id,
-          majors(*)
+          majors (*)
         `)
         .eq('school_id', id)
         .not('major_id', 'is', null);
@@ -107,7 +109,7 @@ const SchoolDetail = () => {
         .eq('school_id', id)
         .limit(6);
 
-      if (error || !Array.isArray(data)) throw error;
+      if (error) throw error;
 
       return data.map((profile: any) => ({
         ...profile,
@@ -116,6 +118,13 @@ const SchoolDetail = () => {
     },
     enabled: !!id
   });
+
+  const tabs = [
+    { name: 'Overview', component: 'overview' },
+    { name: 'Majors', component: 'majors' },
+    { name: 'Activities', component: 'activities' },
+    { name: 'Alumni & Students', component: 'profiles' },
+  ];
 
   if (loadingSchool) {
     return (
@@ -131,7 +140,7 @@ const SchoolDetail = () => {
     );
   }
 
-  if (schoolError || !school) {
+  if (!school) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -189,12 +198,7 @@ const SchoolDetail = () => {
 
             <Tab.Group>
               <Tab.List className="flex space-x-1 rounded-xl bg-blue-50 p-1 mb-8">
-                {[
-                  { name: 'Overview', component: 'overview' },
-                  { name: 'Majors', component: 'majors' },
-                  { name: 'Activities', component: 'activities' },
-                  { name: 'Alumni & Students', component: 'profiles' },
-                ].map((tab) => (
+                {tabs.map((tab) => (
                   <Tab
                     key={tab.name}
                     className={({ selected }) =>
@@ -323,3 +327,4 @@ const SchoolDetail = () => {
 };
 
 export default SchoolDetail;
+

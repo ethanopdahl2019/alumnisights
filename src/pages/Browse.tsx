@@ -17,7 +17,7 @@ const Browse = () => {
   
   useEffect(() => {
     const loadData = async () => {
-      const [profilesResp, schoolsResp, majorsResp, activitiesResp] = await Promise.all([
+      const [profilesData, schoolsData, majorsData, activitiesData] = await Promise.all([
         supabase
           .from('profiles')
           .select(`
@@ -30,48 +30,31 @@ const Browse = () => {
         supabase.from('majors').select('*'),
         supabase.from('activities').select('*')
       ]);
-      
-      if (profilesResp.error || !Array.isArray(profilesResp.data)) {
-        setProfiles([]);
-        console.error('Error loading profiles:', profilesResp.error);
-      } else {
+
+      // Ensure school has image for both profiles and schools.
+      if (profilesData.data) {
         setProfiles(
-          profilesResp.data.map(profile => ({
+          profilesData.data.map(profile => ({
             ...profile,
             school: {
-              ...(profile.school ?? {}),
+              ...profile.school,
               image: profile.school?.image ?? null
             },
             activities: profile.activities.map((pa: any) => pa.activities)
           }))
         );
       }
-
-      if (schoolsResp.error || !Array.isArray(schoolsResp.data)) {
-        setSchools([]);
-        console.error('Error loading schools:', schoolsResp.error);
-      } else {
+      
+      if (schoolsData.data) {
         setSchools(
-          schoolsResp.data.map((school: any) => ({
+          schoolsData.data.map((school: any) => ({
             ...school,
             image: school.image ?? null
           }))
         );
       }
-
-      if (majorsResp.error || !Array.isArray(majorsResp.data)) {
-        setMajors([]);
-        console.error('Error loading majors:', majorsResp.error);
-      } else {
-        setMajors(majorsResp.data);
-      }
-
-      if (activitiesResp.error || !Array.isArray(activitiesResp.data)) {
-        setActivities([]);
-        console.error('Error loading activities:', activitiesResp.error);
-      } else {
-        setActivities(activitiesResp.data);
-      }
+      if (majorsData.data) setMajors(majorsData.data);
+      if (activitiesData.data) setActivities(activitiesData.data);
       
       setLoading(false);
     };

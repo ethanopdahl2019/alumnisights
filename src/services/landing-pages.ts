@@ -31,8 +31,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
     throw error;
   }
 
-  if (!data) return null;
-
+  // Patch school.image so it exists, or null if undefined
   return {
     ...data,
     template: data.template ? {
@@ -67,8 +66,6 @@ export async function getLandingPageBySchool(schoolId: string): Promise<LandingP
     throw error;
   }
 
-  if (!data) return null;
-
   return {
     ...data,
     template: data.template ? {
@@ -102,8 +99,6 @@ export async function getLandingPageBySchoolAndMajor(schoolId: string, majorId: 
     if (error.code === 'PGRST116') return null;
     throw error;
   }
-
-  if (!data) return null;
 
   return {
     ...data,

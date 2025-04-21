@@ -15,7 +15,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
     .eq('featured', true)
     .limit(3);
 
-  if (error || !Array.isArray(profiles)) {
+  if (error) {
     console.error('Error fetching featured profiles:', error);
     return [];
   }
@@ -23,7 +23,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
   return profiles.map(profile => ({
     ...profile,
     school: {
-      ...(profile.school ?? {}),
+      ...profile.school,
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities)
@@ -40,7 +40,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       activities:profile_activities(activities(*))
     `);
 
-  if (error || !Array.isArray(profiles)) {
+  if (error) {
     console.error('Error fetching profiles:', error);
     return [];
   }
@@ -48,7 +48,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
   return profiles.map(profile => ({
     ...profile,
     school: {
-      ...(profile.school ?? {}),
+      ...profile.school,
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities)
@@ -67,7 +67,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     .eq('id', id)
     .single();
 
-  if (error || !profile) {
+  if (error) {
     console.error('Error fetching profile:', error);
     return null;
   }
@@ -75,7 +75,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
   return {
     ...profile,
     school: {
-      ...(profile.school ?? {}),
+      ...profile.school,
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities)
@@ -88,7 +88,7 @@ export async function getSchools() {
     .select('id, name, location, type, image, created_at')
     .order('name');
     
-  if (error || !Array.isArray(data)) {
+  if (error) {
     console.error('Error fetching schools:', error);
     return [];
   }
@@ -106,7 +106,7 @@ export async function getMajors() {
     .select('*')
     .order('name');
     
-  if (error || !Array.isArray(data)) {
+  if (error) {
     console.error('Error fetching majors:', error);
     return [];
   }
@@ -120,7 +120,7 @@ export async function getActivities() {
     .select('*')
     .order('name');
     
-  if (error || !Array.isArray(data)) {
+  if (error) {
     console.error('Error fetching activities:', error);
     return [];
   }
