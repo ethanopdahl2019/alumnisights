@@ -28,12 +28,18 @@ export interface Profile {
   bio: string | null;
   featured: boolean;
   created_at: string;
+  price_15_min?: number | null;
+  price_30_min?: number | null;
+  price_60_min?: number | null;
 }
 
 export interface ProfileWithDetails extends Profile {
   school: School;
   major: Major;
   activities: Activity[];
+  price_15_min?: number | null;
+  price_30_min?: number | null;
+  price_60_min?: number | null;
 }
 
 // New types for authentication

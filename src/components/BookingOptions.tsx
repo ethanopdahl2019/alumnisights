@@ -5,7 +5,7 @@ import { Calendar, Clock } from 'lucide-react';
 interface BookingOption {
   id: string;
   title: string;
-  duration: string;
+  duration: string;  // ensure this is always required when passing booking options
   description: string;
   price: number;
 }

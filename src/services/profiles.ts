@@ -65,12 +65,14 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
       activities:profile_activities(activities(*))
     `)
     .eq('id', id)
-    .single();
+    .maybeSingle(); // more reliable than .single()
 
   if (error) {
     console.error('Error fetching profile:', error);
     return null;
   }
+
+  if (!profile) return null;
 
   return {
     ...profile,

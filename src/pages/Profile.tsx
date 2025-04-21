@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/AuthProvider';
@@ -31,7 +30,6 @@ const ProfilePage = () => {
         const profileData = await getProfileById(id);
         setProfile(profileData);
         
-        // Check if this is the user's own profile
         if (user && profileData) {
           const { data: userProfile } = await supabase
             .from('profiles')
@@ -44,9 +42,7 @@ const ProfilePage = () => {
           }
         }
         
-        // Fetch related profiles (this would be based on school or major)
         if (profileData) {
-          // This would be replaced with an actual API call to get related profiles
           const { data } = await supabase
             .from('profiles')
             .select(`
@@ -209,14 +205,10 @@ const ProfilePage = () => {
               </div>
               
               <div id="booking-section">
-                <BookingOptions 
-                  profileId={profile.id} 
-                  options={[
-                    { id: '1', title: '15 Minute Chat', price: 0, description: 'A quick introduction call' },
-                    { id: '2', title: '30 Minute Consultation', price: 25, description: 'In-depth discussion about your questions' },
-                    { id: '3', title: '1 Hour Mentoring', price: 50, description: 'Comprehensive guidance and advice' }
-                  ]}
-                />
+                <div className="p-8 rounded bg-yellow-50 text-yellow-900 border border-yellow-200 mb-8">
+                  <h4 className="text-lg font-semibold mb-2">Book a Conversation</h4>
+                  <p>Please complete your payment to unlock available times and book a session with this alumni.</p>
+                </div>
               </div>
               
               {relatedProfiles.length > 0 && (
