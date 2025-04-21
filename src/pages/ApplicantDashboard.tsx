@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 const ApplicantDashboard = () => {
   const { user } = useAuth();
   const [convos, setConvos] = useState<any[]>([]);
-
   useEffect(() => {
     if (user) {
       supabase
@@ -25,7 +24,7 @@ const ApplicantDashboard = () => {
       <main className="container-custom py-10">
         <h1 className="text-2xl font-bold mb-6">Applicant Dashboard</h1>
         <div>
-          <h2 className="font-semibold text-lg mb-3">Paid Alumni Conversations</h2>
+          <h2 className="font-semibold text-lg mb-3">Your Paid Alumni Conversations</h2>
           <ul>
             {convos.map((c) => (
               <li key={c.id} className="mb-4 border rounded-lg p-4 shadow-sm flex flex-col md:flex-row gap-3 items-center">
@@ -39,10 +38,11 @@ const ApplicantDashboard = () => {
                 </a>
               </li>
             ))}
+            {convos.length === 0 && (
+              <div className="text-gray-500 mt-6">No paid conversations. Browse profiles to get started.</div>
+            )}
           </ul>
         </div>
-        <h2 className="mt-8 font-semibold text-lg">Progress Tracker</h2>
-        <div className="my-2 p-4 bg-gray-50 border rounded">Progress features coming soon!</div>
       </main>
       <Footer />
     </div>

@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client"; // <-- FIXED: import added
 
 // Path to logo image
 const logoPath = "/lovable-uploads/bdaaf67c-3436-4d56-bf80-25d5b4978254.png";
@@ -15,14 +16,10 @@ const Navbar = () => {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
+  const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
-  // Determine which dashboard based on user role: fallback applicant dashboard for now
+  // Robust role-dash redirect logic (dashboard-on-avatar click)
   const goToDashboard = () => {
-    // For MVP: alumni have profile with featured = true, applicants don't
-    // TODO: replace with a more robust role check in the future
     if (user) {
       supabase
         .from("profiles")

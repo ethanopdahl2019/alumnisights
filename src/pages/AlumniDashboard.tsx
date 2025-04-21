@@ -48,8 +48,9 @@ const AlumniDashboard = () => {
             </div>
           </div>
         )}
-        <h2 className="mt-8 font-semibold text-lg">Recent Conversions & Earnings</h2>
-        <p className="text-gray-600">Messaging, payments, and booking management will appear here soon.</p>
+        {/* Removed booking/earnings extraneous info */}
+        <h2 className="mt-8 font-semibold text-lg">Your Conversations</h2>
+        <p className="text-gray-600">Messaging, payments, and applicant chats you participate in will appear here soon.</p>
       </main>
       <Footer />
     </div>

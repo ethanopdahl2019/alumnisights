@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/AuthProvider';
@@ -102,12 +101,11 @@ const ProfilePage = () => {
   // ---- Handle Payment ---- //
   const handlePurchase = async (productType: ProductType) => {
     if (!user) {
-      navigate('/auth'); // If not logged in, redirect to login
+      navigate('/auth');
       return;
     }
-    // Start/create conversation row as 'pending'
     if (!profile) return;
-    // Find/check if conversation already exists (pending or paid) for this applicant/alumni/product
+    // Check if already exists; if not, create as pending
     const { data: existing } = await supabase
       .from('conversations')
       .select('*')
@@ -133,16 +131,14 @@ const ProfilePage = () => {
       convId = conv?.id;
     }
 
-    // Call payment edge function (simulate w/ alert for now)
-    // TODO: Replace this with a call to `/functions/create-payment`
-    // and redirect to checkout
-    alert("Pretend we sent you to Stripe Checkout for: " + productType + ". After payment, you will be redirected to the messaging system.");
-    // After payment (simulate instantly for now)
-    // Mark payment as paid:
+    // Payment simulation: Replace with Stripe etc in future
+    alert("Pretend we sent you to payment for: " + productType + ". After payment, you will be redirected to the messaging system.");
+    // "After" payment, mark as paid:
     await supabase
       .from("conversations")
       .update({ payment_status: "paid" })
       .eq("id", convId);
+
     navigate(`/messages/${convId}`);
   };
 
@@ -273,7 +269,7 @@ const ProfilePage = () => {
                   <p>{profile.bio || 'No bio available.'}</p>
                 </div>
               </div>
-              
+              {/* Product/Checkout flow only -- booking REMOVED */}
               <div id="booking-section">
                 <div className="mb-8">
                   <h4 className="text-lg font-semibold mb-4">Book a Conversation</h4>
