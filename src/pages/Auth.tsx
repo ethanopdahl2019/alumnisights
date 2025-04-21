@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -144,10 +143,8 @@ const Auth = () => {
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      // Extract registration data
       const { email, password, firstName, lastName, userType, schoolId } = values;
-      
-      // Register the user
+
       await signUp({ 
         email, 
         password, 
@@ -155,23 +152,20 @@ const Auth = () => {
         lastName,
         metadata: {
           user_type: userType,
-          school_id: userType === 'alumni_student' ? schoolId : null
+          school_id: userType === 'alumni_student' ? schoolId : null,
+          role: userType === 'alumni_student' ? 'alumni' : 'applicant'
         }
       });
-      
-      // Show success message
+
       toast({
         title: "Registration successful",
         description: "Your account has been created. Please check your email to verify your account.",
       });
-      
-      // If user is alumni/student, redirect to profile completion
+
       if (userType === 'alumni_student') {
-        // Login user automatically
         await signIn({ email, password });
         navigate('/profile/complete');
       } else {
-        // Set active tab to login for prospects
         setActiveTab('login');
       }
     } catch (error: any) {

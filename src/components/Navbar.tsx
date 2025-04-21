@@ -7,7 +7,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Path to logo image
 const logoPath = "/lovable-uploads/bdaaf67c-3436-4d56-bf80-25d5b4978254.png";
 
 const Navbar = () => {
@@ -18,25 +17,28 @@ const Navbar = () => {
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
-  // Robust role-dash redirect logic (dashboard-on-avatar click)
-  const goToDashboard = () => {
+  // Dashboard redirection using role column in profiles table
+  const goToDashboard = async () => {
     if (user) {
-      supabase
-        .from("profiles")
-        .select("id, featured")
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data?.featured) {
-            navigate("/alumni-dashboard");
-          } else {
-            navigate("/applicant-dashboard");
-          }
-        })
-        .catch(error => {
-          console.error("Error fetching profile:", error);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (error || !data) {
           navigate("/applicant-dashboard");
-        });
+          return;
+        }
+        if (data.role === "alumni") {
+          navigate("/alumni-dashboard");
+        } else {
+          navigate("/applicant-dashboard");
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        navigate("/applicant-dashboard");
+      }
     }
   };
 
@@ -55,7 +57,6 @@ const Navbar = () => {
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            
             {mobileMenuOpen && (
               <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 py-4 shadow-md">
                 <div className="container-custom flex flex-col space-y-4">
@@ -72,13 +73,6 @@ const Navbar = () => {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Schools
-                  </Link>
-                  <Link 
-                    to="/blog" 
-                    className="text-navy font-medium py-2 hover:bg-gray-50 px-4 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Insights
                   </Link>
                   {!user ? (
                     <Link 
@@ -115,9 +109,6 @@ const Navbar = () => {
             </Link>
             <Link to="/schools" className="text-navy font-medium hover:text-navy/80">
               Schools
-            </Link>
-            <Link to="/blog" className="text-navy font-medium hover:text-navy/80">
-              Insights
             </Link>
             {!user ? (
               <Link to="/auth" className="ml-2 px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 font-medium transition-colors">

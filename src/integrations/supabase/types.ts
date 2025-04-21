@@ -513,6 +513,7 @@ export type Database = {
           price_15_min: number | null
           price_30_min: number | null
           price_60_min: number | null
+          role: string | null
           school_id: string
           user_id: string
         }
@@ -527,6 +528,7 @@ export type Database = {
           price_15_min?: number | null
           price_30_min?: number | null
           price_60_min?: number | null
+          role?: string | null
           school_id: string
           user_id: string
         }
@@ -541,6 +543,7 @@ export type Database = {
           price_15_min?: number | null
           price_30_min?: number | null
           price_60_min?: number | null
+          role?: string | null
           school_id?: string
           user_id?: string
         }
@@ -554,6 +557,84 @@ export type Database = {
           },
           {
             foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_activity_paragraphs: {
+        Row: {
+          activity_id: string | null
+          created_at: string | null
+          id: string
+          paragraph: string
+          school_id: string | null
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string | null
+          id?: string
+          paragraph: string
+          school_id?: string | null
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string | null
+          id?: string
+          paragraph?: string
+          school_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_activity_paragraphs_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_activity_paragraphs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_major_paragraphs: {
+        Row: {
+          created_at: string | null
+          id: string
+          major_id: string | null
+          paragraph: string
+          school_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          major_id?: string | null
+          paragraph: string
+          school_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          major_id?: string | null
+          paragraph?: string
+          school_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_major_paragraphs_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_major_paragraphs_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
