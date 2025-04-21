@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Menu } from "lucide-react";
-import logo from "/uploaded-logo.png"; // User's uploaded logo
+const logo = "/placeholder.svg"; // Use placeholder instead of missing uploaded-logo.png
 
 const links = [
   { to: "/browse", label: "Browse" },
@@ -69,3 +69,4 @@ const SimpleNavbar = () => {
 };
 
 export default SimpleNavbar;
+
