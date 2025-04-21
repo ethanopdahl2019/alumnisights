@@ -269,6 +269,36 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          alumni_id: string
+          applicant_id: string
+          created_at: string | null
+          id: string
+          payment_status: string | null
+          product_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          alumni_id: string
+          applicant_id: string
+          created_at?: string | null
+          id?: string
+          payment_status?: string | null
+          product_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          alumni_id?: string
+          applicant_id?: string
+          created_at?: string | null
+          id?: string
+          payment_status?: string | null
+          product_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       landing_page_blocks: {
         Row: {
           content_block_id: string
@@ -408,6 +438,33 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          read: boolean | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       profile_activities: {
         Row: {
           activity_id: string
@@ -453,6 +510,9 @@ export type Database = {
           image: string | null
           major_id: string
           name: string
+          price_15_min: number | null
+          price_30_min: number | null
+          price_60_min: number | null
           school_id: string
           user_id: string
         }
@@ -464,6 +524,9 @@ export type Database = {
           image?: string | null
           major_id: string
           name: string
+          price_15_min?: number | null
+          price_30_min?: number | null
+          price_60_min?: number | null
           school_id: string
           user_id: string
         }
@@ -475,6 +538,9 @@ export type Database = {
           image?: string | null
           major_id?: string
           name?: string
+          price_15_min?: number | null
+          price_30_min?: number | null
+          price_60_min?: number | null
           school_id?: string
           user_id?: string
         }

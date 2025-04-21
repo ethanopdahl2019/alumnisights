@@ -19,13 +19,33 @@ const Navbar = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // Determine which dashboard based on user role: fallback applicant dashboard for now
+  const goToDashboard = () => {
+    // For MVP: alumni have profile with featured = true, applicants don't
+    // TODO: replace with a more robust role check in the future
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("id, featured")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.featured) {
+            navigate("/alumni-dashboard");
+          } else {
+            navigate("/applicant-dashboard");
+          }
+        })
+        .catch(() => navigate("/applicant-dashboard"));
+    }
+  };
+
   return (
     <nav className="py-3 border-b border-gray-100 bg-white sticky top-0 z-50">
       <div className="container-custom flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img src={logoPath} alt="AlumniSights Logo" className="h-6" />
         </Link>
-        
         {isMobile ? (
           <>
             <button 
@@ -71,7 +91,7 @@ const Navbar = () => {
                   ) : (
                     <button
                       onClick={() => {
-                        navigate("/profile/" + (user.id || ""));
+                        goToDashboard();
                         setMobileMenuOpen(false);
                       }}
                       className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200"
@@ -105,7 +125,7 @@ const Navbar = () => {
               </Link>
             ) : (
               <button
-                onClick={() => navigate("/profile/" + (user.id || ""))}
+                onClick={goToDashboard}
                 className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200"
                 title={user.email}
               >

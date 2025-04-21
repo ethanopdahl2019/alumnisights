@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/AuthProvider';
@@ -5,9 +6,31 @@ import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Tag from '@/components/Tag';
-import BookingOptions from '@/components/BookingOptions';
 import { getProfileById } from '@/services/profiles';
 import { ProfileWithDetails } from '@/types/database';
+
+type ProductType = "15_min" | "30_min" | "60_min";
+
+const getProductDetails = (profile: ProfileWithDetails | null) => profile ? [
+  {
+    type: "15_min" as ProductType,
+    title: "15 Minute Chat",
+    description: "A quick introduction call",
+    price: profile.price_15_min ?? null,
+  },
+  {
+    type: "30_min" as ProductType,
+    title: "30 Minute Consultation",
+    description: "In-depth discussion about your questions",
+    price: profile.price_30_min ?? null,
+  },
+  {
+    type: "60_min" as ProductType,
+    title: "1 Hour Mentoring",
+    description: "Comprehensive guidance and advice",
+    price: profile.price_60_min ?? null,
+  },
+] : [];
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,31 +40,31 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [relatedProfiles, setRelatedProfiles] = useState<ProfileWithDetails[]>([]);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
-  
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (!id) {
         setLoading(false);
         return;
       }
-      
+
       setLoading(true);
       try {
         const profileData = await getProfileById(id);
         setProfile(profileData);
-        
+
         if (user && profileData) {
           const { data: userProfile } = await supabase
             .from('profiles')
             .select('id')
             .eq('user_id', user.id)
             .single();
-            
+
           if (userProfile && userProfile.id === profileData.id) {
             setIsOwnProfile(true);
           }
         }
-        
+
         if (profileData) {
           const { data } = await supabase
             .from('profiles')
@@ -54,7 +77,7 @@ const ProfilePage = () => {
             .neq('id', id)
             .or(`school_id.eq.${profileData.school_id},major_id.eq.${profileData.major_id}`)
             .limit(2);
-            
+
           if (data) {
             setRelatedProfiles(data.map(profile => ({
               ...profile,
@@ -72,10 +95,57 @@ const ProfilePage = () => {
         setLoading(false);
       }
     };
-    
+
     fetchProfile();
   }, [id, user]);
-  
+
+  // ---- Handle Payment ---- //
+  const handlePurchase = async (productType: ProductType) => {
+    if (!user) {
+      navigate('/auth'); // If not logged in, redirect to login
+      return;
+    }
+    // Start/create conversation row as 'pending'
+    if (!profile) return;
+    // Find/check if conversation already exists (pending or paid) for this applicant/alumni/product
+    const { data: existing } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('applicant_id', user.id)
+      .eq('alumni_id', profile.user_id)
+      .eq('product_type', productType)
+      .maybeSingle();
+
+    let convId: string | null = null;
+    if (existing) {
+      convId = existing.id;
+    } else {
+      const { data: conv } = await supabase
+        .from('conversations')
+        .insert({
+          applicant_id: user.id,
+          alumni_id: profile.user_id,
+          product_type: productType,
+          payment_status: 'pending'
+        })
+        .select()
+        .single();
+      convId = conv?.id;
+    }
+
+    // Call payment edge function (simulate w/ alert for now)
+    // TODO: Replace this with a call to `/functions/create-payment`
+    // and redirect to checkout
+    alert("Pretend we sent you to Stripe Checkout for: " + productType + ". After payment, you will be redirected to the messaging system.");
+    // After payment (simulate instantly for now)
+    // Mark payment as paid:
+    await supabase
+      .from("conversations")
+      .update({ payment_status: "paid" })
+      .eq("id", convId);
+    navigate(`/messages/${convId}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -92,7 +162,7 @@ const ProfilePage = () => {
       </div>
     );
   }
-  
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-white">
@@ -110,11 +180,11 @@ const ProfilePage = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      
+
       {isOwnProfile && (
         <div className="bg-navy text-white py-3">
           <div className="container-custom text-center">
@@ -128,7 +198,7 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
-      
+
       <main className="py-12">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row gap-12">
@@ -205,9 +275,33 @@ const ProfilePage = () => {
               </div>
               
               <div id="booking-section">
-                <div className="p-8 rounded bg-yellow-50 text-yellow-900 border border-yellow-200 mb-8">
-                  <h4 className="text-lg font-semibold mb-2">Book a Conversation</h4>
-                  <p>Please complete your payment to unlock available times and book a session with this alumni.</p>
+                <div className="mb-8">
+                  <h4 className="text-lg font-semibold mb-4">Book a Conversation</h4>
+                  <div className="grid gap-4">
+                    {getProductDetails(profile).map((prod) =>
+                      prod.price ? (
+                        <div key={prod.type} className="flex flex-col md:flex-row md:items-center justify-between border border-gray-100 bg-gray-50 rounded-xl p-4">
+                          <div>
+                            <div className="font-medium text-base">{prod.title}</div>
+                            <div className="text-gray-600">{prod.description}</div>
+                          </div>
+                          <div className="flex items-center mt-2 md:mt-0 gap-4">
+                            <div className="text-lg font-bold text-navy">${prod.price}</div>
+                            <button
+                              className="bg-navy text-white px-4 py-2 rounded hover:bg-navy/90 transition-colors"
+                              onClick={() => handlePurchase(prod.type)}
+                              disabled={isOwnProfile}
+                            >
+                              {user ? "Pay" : "Sign In to Pay"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : null
+                    )}
+                  </div>
+                  <div className="mt-3 text-sm text-yellow-900 bg-yellow-50 border border-yellow-200 rounded px-4 py-3">
+                    Please complete your payment to unlock messaging and coordinate directly with this alumni.
+                  </div>
                 </div>
               </div>
               
@@ -247,7 +341,7 @@ const ProfilePage = () => {
           </div>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
