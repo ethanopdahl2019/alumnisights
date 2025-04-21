@@ -1,7 +1,6 @@
 
 import { Link } from 'react-router-dom';
 import Tag, { TagType } from './Tag';
-import { Avatar } from '@/components/ui/avatar';
 import { ProfileWithDetails } from '@/types/database';
 
 export interface TagData {
@@ -25,7 +24,7 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
   ];
   
   return (
-    <Link to={`/profile/${profile.id}`} className="bg-white rounded-xl overflow-hidden flex flex-col items-center p-6 transition duration-300">
+    <Link to={`/profile/${profile.id}`} className="bg-white rounded-xl overflow-hidden flex flex-col items-center p-6 transition duration-300 hover:shadow-md">
       {/* Profile Image - big, circular, centered */}
       <div className="flex justify-center w-full mb-4">
         <img 

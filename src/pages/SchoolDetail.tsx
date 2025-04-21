@@ -2,18 +2,16 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Tab } from '@headlessui/react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileCard from '@/components/ProfileCard';
 import { getLandingPageBySchool } from '@/services/landing-pages';
+import { Book, Award, GraduationCap, Briefcase, Activity } from 'lucide-react';
 import type { ProfileWithDetails } from '@/types/database';
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-}
 
 const SchoolDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -106,8 +104,7 @@ const SchoolDetail = () => {
           major:majors(*),
           activities:profile_activities(activities(*))
         `)
-        .eq('school_id', id)
-        .limit(6);
+        .eq('school_id', id);
 
       if (error) throw error;
 
@@ -118,13 +115,6 @@ const SchoolDetail = () => {
     },
     enabled: !!id
   });
-
-  const tabs = [
-    { name: 'Overview', component: 'overview' },
-    { name: 'Majors', component: 'majors' },
-    { name: 'Activities', component: 'activities' },
-    { name: 'Alumni & Students', component: 'profiles' },
-  ];
 
   if (loadingSchool) {
     return (
@@ -196,128 +186,130 @@ const SchoolDetail = () => {
               </div>
             </div>
 
-            <Tab.Group>
-              <Tab.List className="flex space-x-1 rounded-xl bg-blue-50 p-1 mb-8">
-                {tabs.map((tab) => (
-                  <Tab
-                    key={tab.name}
-                    className={({ selected }) =>
-                      classNames(
-                        'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                        'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
-                        selected
-                          ? 'bg-white shadow text-blue-700'
-                          : 'text-gray-600 hover:bg-white/[0.12] hover:text-blue-700'
-                      )
-                    }
-                  >
-                    {tab.name}
-                  </Tab>
-                ))}
-              </Tab.List>
-              <Tab.Panels className="mt-2 mb-12">
-                <Tab.Panel>
-                  <div className="prose max-w-none">
-                    {landingPage ? (
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: landingPage.content_blocks
-                            .filter(
-                              (block) =>
-                                block.type === 'school' ||
-                                block.type === 'general'
-                            )
-                            .map(
-                              (block) =>
-                                `<h2>${block.title}</h2>${block.content}`
-                            )
-                            .join(''),
-                        }}
-                      />
-                    ) : (
-                      <div>
-                        <h2>About {school.name}</h2>
-                        <p>No detailed information available yet for this school.</p>
-                      </div>
-                    )}
-                  </div>
-                </Tab.Panel>
+            <Tabs defaultValue="overview" className="mb-12">
+              <TabsList className="bg-blue-50 mb-8">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="majors">Majors</TabsTrigger>
+                <TabsTrigger value="activities">Activities</TabsTrigger>
+                <TabsTrigger value="profiles">Alumni & Students</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="overview" className="mt-2">
+                <div className="prose max-w-none">
+                  {landingPage ? (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: landingPage.content_blocks
+                          .filter(
+                            (block) =>
+                              block.type === 'school' ||
+                              block.type === 'general'
+                          )
+                          .map(
+                            (block) =>
+                              `<h2>${block.title}</h2>${block.content}`
+                          )
+                          .join(''),
+                      }}
+                    />
+                  ) : (
+                    <div>
+                      <h2>About {school.name}</h2>
+                      <p className="mb-4">{school.name} is a {school.type?.replace(/_/g, ' ')} institution located in {school.location}.</p>
+                      <p>Students at {school.name} have access to a wide range of academic programs and extracurricular activities.</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
 
-                <Tab.Panel>
-                  <h2 className="text-2xl font-bold mb-6">
-                    Majors at {school.name}
-                  </h2>
-                  {majors && majors.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {majors.map((major) => (
-                        <Link
-                          key={major.id}
-                          to={`/schools/${school.id}/major/${major.id}`}
-                          className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow"
-                        >
-                          <h3 className="font-semibold text-lg">{major.name}</h3>
-                          {major.category && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              {major.category}
+              <TabsContent value="majors" className="mt-2">
+                <h2 className="text-2xl font-bold mb-6">
+                  Majors at {school.name}
+                </h2>
+                {majors && majors.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {majors.map((major) => (
+                      <Card key={major.id} className="hover:shadow-md transition-shadow">
+                        <Link to={`/schools/${school.id}/major/${major.id}`} className="block h-full">
+                          <CardHeader className="flex flex-row items-center space-y-0 gap-2">
+                            <div className="bg-blue-100 p-2 rounded-full">
+                              <GraduationCap className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <CardTitle className="text-lg">{major.name}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {major.category && (
+                              <p className="text-sm text-gray-500 mt-1">
+                                {major.category}
+                              </p>
+                            )}
+                          </CardContent>
+                        </Link>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">
+                    No majors information available yet.
+                  </p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="activities" className="mt-2">
+                <h2 className="text-2xl font-bold mb-6">
+                  Activities at {school.name}
+                </h2>
+                {activities && activities.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {activities.map((activity) => (
+                      <Card key={activity.id} className="hover:shadow-md transition-shadow">
+                        <Link to={`/schools/${school.id}/activity/${activity.id}`} className="block h-full">
+                          <CardHeader className="flex flex-row items-center space-y-0 gap-2">
+                            <div className="bg-blue-100 p-2 rounded-full">
+                              {activity.type === 'club' ? (
+                                <Award className="h-5 w-5 text-blue-600" />
+                              ) : activity.type === 'sport' ? (
+                                <Activity className="h-5 w-5 text-blue-600" />  
+                              ) : (
+                                <Book className="h-5 w-5 text-blue-600" />
+                              )}
+                            </div>
+                            <CardTitle className="text-lg">{activity.name}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-gray-500 mt-1 capitalize">
+                              {activity.type?.replace(/_/g, ' ')}
                             </p>
-                          )}
+                          </CardContent>
                         </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">
-                      No majors information available yet.
-                    </p>
-                  )}
-                </Tab.Panel>
-
-                <Tab.Panel>
-                  <h2 className="text-2xl font-bold mb-6">
-                    Activities at {school.name}
-                  </h2>
-                  {activities && activities.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {activities.map((activity) => (
-                        <Link
-                          key={activity.id}
-                          to={`/schools/${school.id}/activity/${activity.id}`}
-                          className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow"
-                        >
-                          <h3 className="font-semibold text-lg">
-                            {activity.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 mt-1 capitalize">
-                            {activity.type?.replace(/_/g, ' ')}
-                          </p>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">
-                      No activities information available yet.
-                    </p>
-                  )}
-                </Tab.Panel>
-
-                <Tab.Panel>
-                  <div className="mb-8 flex justify-between items-center">
-                    <h2 className="text-2xl font-bold">Students & Alumni</h2>
-                    <Button asChild variant="outline">
-                      <Link to="/browse">View All</Link>
-                    </Button>
+                      </Card>
+                    ))}
                   </div>
-                  {profiles && profiles.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {profiles.map((profile) => (
-                        <ProfileCard key={profile.id} profile={profile} />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">No profiles available yet.</p>
-                  )}
-                </Tab.Panel>
-              </Tab.Panels>
-            </Tab.Group>
+                ) : (
+                  <p className="text-gray-500">
+                    No activities information available yet.
+                  </p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="profiles" className="mt-2">
+                <div className="mb-8 flex justify-between items-center">
+                  <h2 className="text-2xl font-bold">Students & Alumni</h2>
+                  <Button asChild variant="outline">
+                    <Link to="/browse">View All</Link>
+                  </Button>
+                </div>
+                {profiles && profiles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {profiles.map((profile: ProfileWithDetails) => (
+                      <ProfileCard key={profile.id} profile={profile} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No profiles available yet.</p>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
@@ -327,4 +319,3 @@ const SchoolDetail = () => {
 };
 
 export default SchoolDetail;
-
