@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/components/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Tag from '@/components/Tag';
@@ -10,9 +12,12 @@ import { ProfileWithDetails } from '@/types/database';
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [relatedProfiles, setRelatedProfiles] = useState<ProfileWithDetails[]>([]);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
   
   useEffect(() => {
     const fetchProfile = async () => {
@@ -25,6 +30,19 @@ const ProfilePage = () => {
       try {
         const profileData = await getProfileById(id);
         setProfile(profileData);
+        
+        // Check if this is the user's own profile
+        if (user && profileData) {
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (userProfile && userProfile.id === profileData.id) {
+            setIsOwnProfile(true);
+          }
+        }
         
         // Fetch related profiles (this would be based on school or major)
         if (profileData) {
@@ -60,7 +78,7 @@ const ProfilePage = () => {
     };
     
     fetchProfile();
-  }, [id]);
+  }, [id, user]);
   
   if (loading) {
     return (
@@ -100,6 +118,20 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
+      
+      {isOwnProfile && (
+        <div className="bg-navy text-white py-3">
+          <div className="container-custom text-center">
+            <p className="text-sm mb-2">This is your public profile</p>
+            <button 
+              onClick={() => navigate('/alumni-dashboard')} 
+              className="px-4 py-1 bg-white text-navy rounded-md text-sm hover:bg-gray-100 transition-colors"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
       
       <main className="py-12">
         <div className="container-custom">
@@ -180,9 +212,9 @@ const ProfilePage = () => {
                 <BookingOptions 
                   profileId={profile.id} 
                   options={[
-                    { id: '1', title: '15 Minute Chat', price: 'Free', description: 'A quick introduction call' },
-                    { id: '2', title: '30 Minute Consultation', price: '$25', description: 'In-depth discussion about your questions' },
-                    { id: '3', title: '1 Hour Mentoring', price: '$50', description: 'Comprehensive guidance and advice' }
+                    { id: '1', title: '15 Minute Chat', price: 0, description: 'A quick introduction call' },
+                    { id: '2', title: '30 Minute Consultation', price: 25, description: 'In-depth discussion about your questions' },
+                    { id: '3', title: '1 Hour Mentoring', price: 50, description: 'Comprehensive guidance and advice' }
                   ]}
                 />
               </div>

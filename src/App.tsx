@@ -17,6 +17,8 @@ import Auth from "./pages/Auth";
 import ProfileComplete from "./pages/ProfileComplete";
 import Schools from "./pages/Schools";
 import SchoolDetail from "./pages/SchoolDetail";
+import AlumniDashboard from "./pages/AlumniDashboard";
+import ApplicantDashboard from "./pages/ApplicantDashboard";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ const App = () => (
             <Route path="/schools" element={<Schools />} />
             <Route path="/schools/:id" element={<SchoolDetail />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
+            <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

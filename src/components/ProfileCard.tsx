@@ -1,7 +1,10 @@
 
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/components/AuthProvider';
 import Tag, { TagType } from './Tag';
 import { ProfileWithDetails } from '@/types/database';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface TagData {
   id: string;
@@ -14,6 +17,27 @@ export interface ProfileCardProps {
 }
 
 const ProfileCard = ({ profile }: ProfileCardProps) => {
+  const { user } = useAuth();
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
+  
+  useEffect(() => {
+    const checkIfOwnProfile = async () => {
+      if (user && profile) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (data && data.id === profile.id) {
+          setIsOwnProfile(true);
+        }
+      }
+    };
+    
+    checkIfOwnProfile();
+  }, [user, profile]);
+
   // Make sure we have proper profile data
   if (!profile || !profile.id) {
     return null;
@@ -27,9 +51,14 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
     })) || [])
   ];
   
+  // Determine the link destination based on whether it's the user's own profile
+  const linkDestination = isOwnProfile 
+    ? '/alumni-dashboard' 
+    : `/profile/${profile.id}`;
+  
   return (
     <Link 
-      to={`/profile/${profile.id}`} 
+      to={linkDestination} 
       className="bg-white rounded-xl overflow-hidden flex flex-col items-center p-6 transition duration-300 hover:shadow-md" 
       data-testid="profile-card"
     >
