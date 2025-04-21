@@ -1,79 +1,141 @@
 
 import { useEffect, useState } from 'react';
-import { getFeaturedProfiles } from '@/services/profiles';
-import type { ProfileWithDetails } from '@/types/database';
-import Navbar from '@/components/Navbar';
+import { getFeaturedProfiles, getSchools } from '@/services/profiles';
+import type { ProfileWithDetails, School } from '@/types/database';
 import Hero from '@/components/Hero';
 import HowItWorks from '@/components/HowItWorks';
 import Carousel from '@/components/Carousel';
 import ProfileCard from '@/components/ProfileCard';
-import Footer from '@/components/Footer';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Simple responsive (dropdown for mobile) site navbar
+function SimpleHeader() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <header className="border-b border-gray-100 py-4 sticky top-0 z-20 bg-white">
+      <div className="flex items-center justify-between container-custom">
+        <a href="/" className="text-2xl font-bold text-navy">
+          AlumniSights
+        </a>
+        <nav className="hidden md:flex gap-8 items-center">
+          <a href="/browse" className="text-navy font-medium hover:underline">Browse</a>
+          <a href="/schools" className="text-navy font-medium hover:underline">Schools</a>
+          <a href="/blog" className="text-navy font-medium hover:underline">Insights</a>
+          <a href="/sign-in" className="text-navy font-medium hover:underline">Sign In</a>
+        </nav>
+        <button
+          className="md:hidden text-navy focus:outline-none"
+          aria-label="Open menu"
+          onClick={() => setMenuOpen(o => !o)}
+        >
+          <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16"/></svg>
+        </button>
+      </div>
+      {menuOpen && (
+        <div className="md:hidden bg-white absolute right-0 left-0 mt-2 shadow rounded z-30 animate-fade-in px-6 py-2">
+          <a href="/browse" className="block py-2 text-navy font-medium" onClick={()=>setMenuOpen(false)}>Browse</a>
+          <a href="/schools" className="block py-2 text-navy font-medium" onClick={()=>setMenuOpen(false)}>Schools</a>
+          <a href="/blog" className="block py-2 text-navy font-medium" onClick={()=>setMenuOpen(false)}>Insights</a>
+          <a href="/sign-in" className="block py-2 text-navy font-medium" onClick={()=>setMenuOpen(false)}>Sign In</a>
+        </div>
+      )}
+    </header>
+  );
+}
+
+function SchoolImageCarousel({ schools }: { schools: School[] }) {
+  return (
+    <div className="py-6 mb-8">
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-6 animate-fade-in">
+          {schools.map((school) => (
+            <div
+              key={school.id}
+              className="flex-shrink-0 w-20 h-20 rounded-full bg-gray-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden"
+              title={school.name}
+            >
+              <img
+                src={school.image || '/placeholder.svg'}
+                alt={school.name}
+                className="object-cover w-full h-full"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const Index = () => {
   const isMobile = useIsMobile();
   const [profiles, setProfiles] = useState<ProfileWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(true);
+  const [loadingSchools, setLoadingSchools] = useState(true);
 
   useEffect(() => {
-    const loadProfiles = async () => {
-      const featuredProfiles = await getFeaturedProfiles();
-      setProfiles(featuredProfiles);
-      setLoading(false);
-    };
-
-    loadProfiles();
+    getFeaturedProfiles().then((data) => {
+      setProfiles(data);
+      setLoadingProfiles(false);
+    });
+    getSchools().then((data) => {
+      setSchools(data);
+      setLoadingSchools(false);
+    });
   }, []);
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
+      <SimpleHeader />
       <main>
         <Hero />
 
-        <section className="py-20">
+        {/* School logo/image carousel */}
+        {!loadingSchools && schools.length > 0 && (
+          <SchoolImageCarousel schools={schools.slice(0, isMobile ? 8 : 16)} />
+        )}
+
+        {/* Featured Profiles (simplified carousel/card) */}
+        <section className="py-10">
           <div className="container-custom">
-            <h2 className="text-3xl md:text-4xl font-medium text-center mb-4">Featured Profiles</h2>
-            <p className="text-gray-600 text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-2xl md:text-3xl font-medium text-center mb-4">
+              Featured Profiles
+            </h2>
+            <p className="text-gray-600 text-center max-w-2xl mx-auto mb-8">
               Connect with current students and alumni from top schools across the country
             </p>
-            {loading ? (
-              <div className="grid md:grid-cols-3 gap-6">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="bg-gray-200 aspect-[3/4] rounded-lg mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+
+            {loadingProfiles ? (
+              <div className="flex gap-4 justify-center">
+                {[...Array(isMobile ? 1 : 3)].map((_, i) => (
+                  <div key={i} className="w-[140px] animate-pulse">
+                    <div className="bg-gray-200 aspect-square rounded-full mb-2" />
+                    <div className="h-3 w-2/3 bg-gray-100 rounded mx-auto mb-1"></div>
+                    <div className="h-3 w-1/2 bg-gray-100 rounded mx-auto"></div>
                   </div>
                 ))}
               </div>
             ) : (
-              <Carousel slidesToShow={isMobile ? 1 : Math.min(3, profiles.length)}>
+              <Carousel slidesToShow={isMobile ? 2 : 5} autoplay={false}>
                 {profiles.map(profile => (
-                  <ProfileCard 
-                    key={profile.id}
-                    profile={profile}
-                  />
+                  <ProfileCard key={profile.id} profile={profile} variant="compact" />
                 ))}
               </Carousel>
             )}
-            <div className="mt-12 text-center">
-              <a href="/browse" className="btn-secondary">
-                View All Profiles
-              </a>
-            </div>
           </div>
         </section>
 
         <HowItWorks />
 
+        {/* Insights CTA */}
         <section className="py-20 bg-gray-50">
           <div className="container-custom">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-medium text-center mb-12">
                 Get the insights that college websites don't tell you
               </h2>
-
               <div className="grid md:grid-cols-3 gap-8 text-center">
                 <div>
                   <div className="h-16 w-16 bg-tag-major rounded-full flex items-center justify-center mx-auto mb-4">
@@ -122,10 +184,8 @@ const Index = () => {
           </div>
         </section>
       </main>
-      <Footer />
     </div>
   );
 };
 
 export default Index;
-

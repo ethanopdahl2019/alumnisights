@@ -1,62 +1,73 @@
 
 import { Link } from 'react-router-dom';
 import Tag, { TagType } from './Tag';
-import { Avatar } from '@/components/ui/avatar';
 import { ProfileWithDetails } from '@/types/database';
-
-export interface TagData {
-  id: string;
-  label: string;
-  type: TagType;
-}
 
 export interface ProfileCardProps {
   profile: ProfileWithDetails;
+  variant?: "default" | "compact";
 }
 
-const ProfileCard = ({ profile }: ProfileCardProps) => {
-  // Create tags from profile data
-  const tags: TagData[] = [
-    ...(profile.activities?.map(activity => ({
+// Pills for tags
+const TagPill = ({ text, type }: { text: string; type: TagType }) => (
+  <span
+    className={`inline-block px-2 py-0.5 text-xs rounded-full bg-tag-${type} text-tag-${type}-text`}
+  >
+    {text}
+  </span>
+);
+
+const ProfileCard = ({ profile, variant = "default" }: ProfileCardProps) => {
+  // Create tags from profile data (show up to 2 in compact)
+  const tags =
+    profile.activities?.map((activity) => ({
       id: activity.id,
       label: activity.name,
-      type: activity.type as TagType
-    })) || [])
-  ];
-  
+      type: activity.type as TagType,
+    })) || [];
+  const showTags = variant === "compact" ? tags.slice(0, 2) : tags.slice(0, 3);
   return (
-    <Link to={`/profile/${profile.id}`} className="profile-card group">
-      <div className="relative aspect-[3/4] overflow-hidden">
-        <img 
-          src={profile.image || '/placeholder.svg'} 
-          alt={`${profile.name}'s profile`} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+    <Link
+      to={`/profile/${profile.id}`}
+      className={
+        variant === "compact"
+          ? "flex flex-col items-center px-4 py-4 mx-auto"
+          : "profile-card group"
+      }
+      style={
+        variant === "compact"
+          ? { background: "none" }
+          : {}
+      }
+    >
+      {/* Profile Image */}
+      <div
+        className={
+          variant === "compact"
+            ? "w-20 h-20 mb-2 rounded-full overflow-hidden border-2 border-white shadow"
+            : "relative aspect-[3/4] overflow-hidden"
+        }
+      >
+        <img
+          src={profile.image || '/placeholder.svg'}
+          alt={`${profile.name}'s profile`}
+          className={
+            variant === "compact"
+              ? "object-cover w-full h-full"
+              : "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          }
         />
       </div>
-      
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex items-center mb-2">
-          <Avatar className="h-10 w-10 mr-3">
-            <img src={profile.image || '/placeholder.svg'} alt={profile.name} className="object-cover" />
-          </Avatar>
-          <div>
-            <h3 className="font-medium text-lg">{profile.name}</h3>
-            <p className="text-gray-600 text-sm">{profile.school?.name}</p>
-          </div>
-        </div>
-        
-        <div className="mt-1 mb-3">
-          <Tag type="major">{profile.major?.name}</Tag>
-        </div>
-        
-        <div className="mt-auto flex flex-wrap gap-2">
-          {tags.slice(0, 3).map((tag) => (
-            <Tag key={tag.id} type={tag.type}>
-              {tag.label}
-            </Tag>
+      {/* Info */}
+      <div className={variant === "compact" ? "text-center flex flex-col items-center" : "p-5 flex flex-col flex-grow"}>
+        <h3 className="font-semibold text-base">{profile.name}</h3>
+        <p className="text-sm text-gray-600">{profile.school?.name}</p>
+        <div className="mt-1 flex flex-wrap gap-1 justify-center">
+          {showTags.map((tag) => (
+            <TagPill key={tag.id} text={tag.label} type={tag.type} />
           ))}
-          {tags.length > 3 && (
-            <span className="text-sm text-gray-500">+{tags.length - 3} more</span>
+          {tags.length > showTags.length && (
+            <span className="text-xs text-gray-400">+{tags.length - showTags.length} more</span>
           )}
         </div>
       </div>
