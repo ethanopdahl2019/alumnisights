@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile, ProfileWithDetails, School } from "@/types/database";
 
@@ -10,7 +9,6 @@ function safeSchool(school: any): School {
     location: school?.location ?? null,
     type: school?.type ?? null,
     image: school?.image ?? null,
-    created_at: school?.created_at || "",
   };
 }
 
@@ -20,7 +18,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
     .select(
       `
       *,
-      school:schools(id, name, location, type, image, created_at),
+      school:schools(id, name, location, type, image),
       major:majors(*),
       activities:profile_activities(activities(*))
     `
@@ -47,7 +45,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
     .select(
       `
       *,
-      school:schools(id, name, location, type, image, created_at),
+      school:schools(id, name, location, type, image),
       major:majors(*),
       activities:profile_activities(activities(*))
     `
@@ -72,7 +70,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     .select(
       `
       *,
-      school:schools(id, name, location, type, image, created_at),
+      school:schools(id, name, location, type, image),
       major:majors(*),
       activities:profile_activities(activities(*))
     `
@@ -96,7 +94,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
 export async function getSchools(): Promise<School[]> {
   const { data, error } = await supabase
     .from("schools")
-    .select("id, name, location, type, image, created_at")
+    .select("id, name, location, type, image")
     .order("name");
 
   if (error || !Array.isArray(data)) {

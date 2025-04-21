@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { getSchools } from "@/services/profiles";
+import { School } from "@/types/database";
 
 const placeholder =
   "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=facearea&w=400&q=80&facepad=2";

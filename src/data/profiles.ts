@@ -1,5 +1,5 @@
 
-import { TagData } from '@/components/ProfileCard';
+import { TagData } from '@/components/Tag';
 
 export interface Profile {
   id: string;

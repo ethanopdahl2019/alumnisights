@@ -3,6 +3,12 @@ import { cn } from '@/lib/utils';
 
 export type TagType = 'major' | 'sport' | 'club' | 'study' | 'study_abroad';
 
+export interface TagData {
+  id: string;
+  label: string;
+  type: TagType;
+}
+
 interface TagProps {
   type: TagType;
   children: React.ReactNode;
