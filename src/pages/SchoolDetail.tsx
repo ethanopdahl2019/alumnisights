@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,12 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileCard from '@/components/ProfileCard';
 import { getLandingPageBySchool } from '@/services/landing-pages';
 import { Book, Award, GraduationCap, Briefcase, Activity } from 'lucide-react';
 import type { ProfileWithDetails } from '@/types/database';
+import Header from "@/components/Header";
 
 const SchoolDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -119,7 +118,7 @@ const SchoolDetail = () => {
   if (loadingSchool) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <Header />
         <main className="flex-grow container mx-auto py-12 px-4">
           <div className="text-center py-12">
             <p>Loading school information...</p>
@@ -133,7 +132,7 @@ const SchoolDetail = () => {
   if (!school) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <Header />
         <main className="flex-grow container mx-auto py-12 px-4">
           <div className="text-center py-12">
             <h1 className="text-3xl font-bold mb-4">School Not Found</h1>
@@ -150,7 +149,7 @@ const SchoolDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <Header />
       <div className="bg-gradient-to-b from-blue-50 to-white">
         <div className="container mx-auto py-12 px-4">
           <div className="max-w-6xl mx-auto">
