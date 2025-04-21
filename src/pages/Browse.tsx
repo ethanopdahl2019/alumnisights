@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
@@ -21,11 +22,11 @@ const Browse = () => {
           .from('profiles')
           .select(`
             *,
-            school:schools(id, name, location, type, image),
+            school:schools(id, name, location, type, image, created_at),
             major:majors(*),
             activities:profile_activities(activities(*))
           `),
-        supabase.from('schools').select('id, name, location, type, image'),
+        supabase.from('schools').select('id, name, location, type, image, created_at'),
         supabase.from('majors').select('*'),
         supabase.from('activities').select('*')
       ]);
@@ -34,18 +35,16 @@ const Browse = () => {
         setProfiles([]);
         console.error('Error loading profiles:', profilesResp.error);
       } else {
-        const typedProfiles: ProfileWithDetails[] = profilesResp.data.map(profile => ({
-          ...profile,
-          school: {
-            id: profile.school?.id || "",
-            name: profile.school?.name || "",
-            location: profile.school?.location ?? null,
-            type: profile.school?.type ?? null,
-            image: profile.school?.image ?? null,
-          },
-          activities: profile.activities.map((pa: any) => pa.activities)
-        }));
-        setProfiles(typedProfiles);
+        setProfiles(
+          profilesResp.data.map(profile => ({
+            ...profile,
+            school: {
+              ...(profile.school ?? {}),
+              image: profile.school?.image ?? null
+            },
+            activities: profile.activities.map((pa: any) => pa.activities)
+          }))
+        );
       }
 
       if (schoolsResp.error || !Array.isArray(schoolsResp.data)) {

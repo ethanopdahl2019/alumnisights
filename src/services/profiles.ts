@@ -1,134 +1,130 @@
-import { supabase } from "@/integrations/supabase/client";
-import type { Profile, ProfileWithDetails, School } from "@/types/database";
 
-// Ensure returned school always matches the strong School type
-function safeSchool(school: any): School {
-  return {
-    id: school?.id || "",
-    name: school?.name || "",
-    location: school?.location ?? null,
-    type: school?.type ?? null,
-    image: school?.image ?? null,
-  };
-}
+import { supabase } from '@/integrations/supabase/client';
+import type { Profile, ProfileWithDetails } from '@/types/database';
 
+// Add image when projecting schools
 export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
   const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select(
-      `
+    .from('profiles')
+    .select(`
       *,
-      school:schools(id, name, location, type, image),
+      school:schools(id, name, location, type, image, created_at),
       major:majors(*),
       activities:profile_activities(activities(*))
-    `
-    )
-    .eq("featured", true)
+    `)
+    .eq('featured', true)
     .limit(3);
 
   if (error || !Array.isArray(profiles)) {
-    console.error("Error fetching featured profiles:", error);
+    console.error('Error fetching featured profiles:', error);
     return [];
   }
 
-  return profiles.map((profile: any) => ({
+  return profiles.map(profile => ({
     ...profile,
-    school: safeSchool(profile.school),
-    major: profile.major,
-    activities: (profile.activities || []).map((pa: any) => pa.activities),
+    school: {
+      ...(profile.school ?? {}),
+      image: profile.school?.image ?? null
+    },
+    activities: profile.activities.map((pa: any) => pa.activities)
   }));
 }
 
 export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
   const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select(
-      `
+    .from('profiles')
+    .select(`
       *,
-      school:schools(id, name, location, type, image),
+      school:schools(id, name, location, type, image, created_at),
       major:majors(*),
       activities:profile_activities(activities(*))
-    `
-    );
+    `);
 
   if (error || !Array.isArray(profiles)) {
-    console.error("Error fetching profiles:", error);
+    console.error('Error fetching profiles:', error);
     return [];
   }
 
-  return profiles.map((profile: any) => ({
+  return profiles.map(profile => ({
     ...profile,
-    school: safeSchool(profile.school),
-    major: profile.major,
-    activities: (profile.activities || []).map((pa: any) => pa.activities),
+    school: {
+      ...(profile.school ?? {}),
+      image: profile.school?.image ?? null
+    },
+    activities: profile.activities.map((pa: any) => pa.activities)
   }));
 }
 
 export async function getProfileById(id: string): Promise<ProfileWithDetails | null> {
   const { data: profile, error } = await supabase
-    .from("profiles")
-    .select(
-      `
+    .from('profiles')
+    .select(`
       *,
-      school:schools(id, name, location, type, image),
+      school:schools(id, name, location, type, image, created_at),
       major:majors(*),
       activities:profile_activities(activities(*))
-    `
-    )
-    .eq("id", id)
+    `)
+    .eq('id', id)
     .single();
 
   if (error || !profile) {
-    console.error("Error fetching profile:", error);
+    console.error('Error fetching profile:', error);
     return null;
   }
 
   return {
     ...profile,
-    school: safeSchool(profile.school),
-    major: profile.major,
-    activities: (profile.activities || []).map((pa: any) => pa.activities),
+    school: {
+      ...(profile.school ?? {}),
+      image: profile.school?.image ?? null
+    },
+    activities: profile.activities.map((pa: any) => pa.activities)
   };
 }
 
-export async function getSchools(): Promise<School[]> {
+export async function getSchools() {
   const { data, error } = await supabase
-    .from("schools")
-    .select("id, name, location, type, image")
-    .order("name");
-
+    .from('schools')
+    .select('id, name, location, type, image, created_at')
+    .order('name');
+    
   if (error || !Array.isArray(data)) {
-    console.error("Error fetching schools:", error);
+    console.error('Error fetching schools:', error);
     return [];
   }
-
-  return data.map((school: any) => safeSchool(school));
+  
+  // Add a fallback for missing images
+  return data.map((school: any) => ({
+    ...school,
+    image: school.image ?? null
+  }));
 }
 
 export async function getMajors() {
   const { data, error } = await supabase
-    .from("majors")
-    .select("*")
-    .order("name");
-
+    .from('majors')
+    .select('*')
+    .order('name');
+    
   if (error || !Array.isArray(data)) {
-    console.error("Error fetching majors:", error);
+    console.error('Error fetching majors:', error);
     return [];
   }
-
+  
   return data;
 }
 
 export async function getActivities() {
   const { data, error } = await supabase
-    .from("activities")
-    .select("*")
-    .order("name");
-
+    .from('activities')
+    .select('*')
+    .order('name');
+    
   if (error || !Array.isArray(data)) {
-    console.error("Error fetching activities:", error);
+    console.error('Error fetching activities:', error);
     return [];
   }
-
+  
   return data;
 }
+
