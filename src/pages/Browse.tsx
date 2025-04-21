@@ -177,7 +177,10 @@ const Browse = () => {
                   </p>
                   <button 
                     className="btn-secondary"
-                    onClick={() => setActiveFilters({})}
+                    onClick={() => {
+                      setActiveFilters({});
+                      filterCategories.forEach(cat => handleFilterChange(cat.id, []));
+                    }}
                   >
                     Clear All Filters
                   </button>

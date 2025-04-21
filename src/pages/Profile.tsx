@@ -5,18 +5,61 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Tag from '@/components/Tag';
 import BookingOptions from '@/components/BookingOptions';
-import profiles, { Profile } from '@/data/profiles';
+import { getProfileById } from '@/services/profiles';
+import { ProfileWithDetails } from '@/types/database';
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<ProfileWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [relatedProfiles, setRelatedProfiles] = useState<ProfileWithDetails[]>([]);
   
   useEffect(() => {
-    // Simulate fetching profile data
-    const foundProfile = profiles.find((p) => p.id === id);
-    setProfile(foundProfile || null);
-    setLoading(false);
+    const fetchProfile = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        const profileData = await getProfileById(id);
+        setProfile(profileData);
+        
+        // Fetch related profiles (this would be based on school or major)
+        if (profileData) {
+          // This would be replaced with an actual API call to get related profiles
+          const { data } = await supabase
+            .from('profiles')
+            .select(`
+              *,
+              school:schools(id, name, location, type, image, created_at),
+              major:majors(*),
+              activities:profile_activities(activities(*))
+            `)
+            .neq('id', id)
+            .or(`school_id.eq.${profileData.school_id},major_id.eq.${profileData.major_id}`)
+            .limit(2);
+            
+          if (data) {
+            setRelatedProfiles(data.map(profile => ({
+              ...profile,
+              school: {
+                ...profile.school,
+                image: profile.school?.image ?? null
+              },
+              activities: profile.activities.map((pa: any) => pa.activities)
+            })));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfile();
   }, [id]);
   
   if (loading) {
@@ -65,23 +108,25 @@ const ProfilePage = () => {
               <div className="sticky top-24">
                 <div className="aspect-[3/4] overflow-hidden rounded-xl mb-6">
                   <img 
-                    src={profile.image} 
+                    src={profile.image || '/placeholder.svg'} 
                     alt={`${profile.name}'s profile`} 
                     className="w-full h-full object-cover" 
                   />
                 </div>
                 
                 <h1 className="text-2xl md:text-3xl font-medium mb-1">{profile.name}</h1>
-                <p className="text-gray-600 mb-4">{profile.school}</p>
+                <p className="text-gray-600 mb-4">{profile.school?.name}</p>
                 
                 <div className="mb-6">
-                  <Tag type="major">{profile.major}</Tag>
+                  {profile.major && (
+                    <Tag type="major">{profile.major.name}</Tag>
+                  )}
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-8">
-                  {profile.tags.map((tag) => (
-                    <Tag key={tag.id} type={tag.type}>
-                      {tag.label}
+                  {profile.activities?.map((activity) => (
+                    <Tag key={activity.id} type={activity.type as "club" | "sport" | "study"}>
+                      {activity.name}
                     </Tag>
                   ))}
                 </div>
@@ -103,13 +148,19 @@ const ProfilePage = () => {
                       </button>
                     </li>
                     <li>
-                      <Link to={`/school/${profile.school.toLowerCase().replace(/\s+/g, '-')}`} className="text-navy hover:underline">
-                        More from {profile.school}
+                      <Link 
+                        to={`/schools/${profile.school?.id || ''}`} 
+                        className="text-navy hover:underline"
+                      >
+                        More from {profile.school?.name}
                       </Link>
                     </li>
                     <li>
-                      <Link to={`/major/${profile.major.toLowerCase().replace(/\s+/g, '-')}`} className="text-navy hover:underline">
-                        Similar {profile.major} Profiles
+                      <Link 
+                        to={`/browse?major=${profile.major?.id || ''}`} 
+                        className="text-navy hover:underline"
+                      >
+                        Similar {profile.major?.name} Profiles
                       </Link>
                     </li>
                   </ul>
@@ -121,49 +172,53 @@ const ProfilePage = () => {
               <div className="mb-12">
                 <h2 className="text-2xl md:text-3xl font-medium mb-6">About</h2>
                 <div className="prose prose-lg max-w-none">
-                  <p>{profile.bio}</p>
+                  <p>{profile.bio || 'No bio available.'}</p>
                 </div>
               </div>
               
               <div id="booking-section">
                 <BookingOptions 
                   profileId={profile.id} 
-                  options={profile.bookingOptions}
+                  options={[
+                    { id: '1', title: '15 Minute Chat', price: 'Free', description: 'A quick introduction call' },
+                    { id: '2', title: '30 Minute Consultation', price: '$25', description: 'In-depth discussion about your questions' },
+                    { id: '3', title: '1 Hour Mentoring', price: '$50', description: 'Comprehensive guidance and advice' }
+                  ]}
                 />
               </div>
               
-              <div className="mt-16 pt-8 border-t border-gray-200">
-                <h3 className="text-xl font-medium mb-6">You might also like</h3>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {profiles
-                    .filter(p => p.id !== profile.id)
-                    .filter(p => p.school === profile.school || p.major === profile.major)
-                    .slice(0, 2)
-                    .map(relatedProfile => (
+              {relatedProfiles.length > 0 && (
+                <div className="mt-16 pt-8 border-t border-gray-200">
+                  <h3 className="text-xl font-medium mb-6">You might also like</h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {relatedProfiles.map(relatedProfile => (
                       <Link
                         key={relatedProfile.id}
                         to={`/profile/${relatedProfile.id}`}
                         className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
                       >
                         <img
-                          src={relatedProfile.image}
+                          src={relatedProfile.image || '/placeholder.svg'}
                           alt={relatedProfile.name}
                           className="w-16 h-16 rounded-full object-cover mr-4"
                         />
                         <div>
                           <h4 className="font-medium mb-1">{relatedProfile.name}</h4>
-                          <p className="text-sm text-gray-600">{relatedProfile.school}</p>
+                          <p className="text-sm text-gray-600">{relatedProfile.school?.name}</p>
                           <div className="mt-1">
-                            <Tag type="major" className="text-xs py-0.5 px-2">
-                              {relatedProfile.major}
-                            </Tag>
+                            {relatedProfile.major && (
+                              <Tag type="major" className="text-xs py-0.5 px-2">
+                                {relatedProfile.major.name}
+                              </Tag>
+                            )}
                           </div>
                         </div>
                       </Link>
                     ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

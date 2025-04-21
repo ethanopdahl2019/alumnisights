@@ -13,8 +13,12 @@ export interface ProfileCardProps {
   profile: ProfileWithDetails;
 }
 
-// Link must point to /profile/:id, ID must be present and correct from profile.id
 const ProfileCard = ({ profile }: ProfileCardProps) => {
+  // Make sure we have proper profile data
+  if (!profile || !profile.id) {
+    return null;
+  }
+
   const tags: TagData[] = [
     ...(profile.activities?.map(activity => ({
       id: activity.id,
@@ -24,7 +28,11 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
   ];
   
   return (
-    <Link to={`/profile/${profile.id}`} className="bg-white rounded-xl overflow-hidden flex flex-col items-center p-6 transition duration-300 hover:shadow-md" data-profileid={profile.id}>
+    <Link 
+      to={`/profile/${profile.id}`} 
+      className="bg-white rounded-xl overflow-hidden flex flex-col items-center p-6 transition duration-300 hover:shadow-md" 
+      data-testid="profile-card"
+    >
       <div className="flex justify-center w-full mb-4">
         <img 
           src={profile.image || '/placeholder.svg'} 
@@ -36,7 +44,9 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
         <h3 className="font-medium text-lg text-center">{profile.name}</h3>
         <p className="text-gray-600 text-sm text-center mb-2">{profile.school?.name}</p>
         <div className="mb-3">
-          <Tag type="major">{profile.major?.name}</Tag>
+          {profile.major && (
+            <Tag type="major">{profile.major.name}</Tag>
+          )}
         </div>
         <div className="flex flex-wrap gap-2 justify-center">
           {tags.slice(0, 3).map((tag) => (
