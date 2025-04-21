@@ -6,26 +6,40 @@ import Footer from '@/components/Footer';
 import { useQuery } from '@tanstack/react-query';
 import { getAllPosts } from '@/services/blog';
 
+const EXAMPLE_POSTS = [
+  {
+    id: "1",
+    slug: "how-to-choose-your-college",
+    title: "How to Choose the Right College",
+    excerpt: "Tips for making your college selection process easier.",
+    content: "<p>Choosing a college can be daunting. Here's how to narrow your options...</p>",
+    featured_image: "/placeholder.svg",
+    created_at: new Date().toISOString(),
+    author: { name: "Jane Doe", image: null },
+    categories: [],
+  }
+];
+
 const Blog = () => {
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['posts'],
     queryFn: getAllPosts
   });
 
+  // Populate with static example posts if no data returned
+  const displayPosts = posts && posts.length > 0 ? posts : EXAMPLE_POSTS;
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      
       <main className="py-20">
         <div className="container-custom">
           <h1 className="text-4xl font-bold mb-8">Insights</h1>
-          
           {isLoading && <p>Loading...</p>}
           {error && <p>Error loading posts</p>}
-          
-          {posts && (
+          {displayPosts && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map(post => (
+              {displayPosts.map(post => (
                 <Link 
                   to={`/blog/${post.slug}`}
                   key={post.id} 
@@ -59,7 +73,6 @@ const Blog = () => {
           )}
         </div>
       </main>
-      
       <Footer />
     </div>
   );

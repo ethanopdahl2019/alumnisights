@@ -1,44 +1,48 @@
 
-import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/components/AuthProvider";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+// Path to logo image
+const logoPath = "/lovable-uploads/bdaaf67c-3436-4d56-bf80-25d5b4978254.png";
 
 const Navbar = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   return (
-    <nav className="py-6 border-b border-gray-100">
+    <nav className="py-4 border-b border-gray-100 bg-white">
       <div className="container-custom flex items-center justify-between">
-        <Link to="/" className="text-2xl font-bold text-navy">
-          AlumniSights
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logoPath} alt="AlumniSights Logo" className="h-10" />
         </Link>
-        
-        <div className="hidden md:flex items-center space-x-10">
-          <Link to="/browse" className="nav-link">
-            Browse Profiles
+        <div className="flex items-center gap-6">
+          <Link to="/browse" className="text-navy font-medium hover:text-navy/80">
+            Browse
           </Link>
-          <Link to="/how-it-works" className="nav-link">
-            How It Works
+          <Link to="/schools" className="text-navy font-medium hover:text-navy/80">
+            Schools
           </Link>
-          <Link to="/blog" className="nav-link">
+          <Link to="/blog" className="text-navy font-medium hover:text-navy/80">
             Insights
           </Link>
-        </div>
-        
-        <div className="flex items-center space-x-6">
-          <div className="relative hidden md:block">
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              className="pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:border-navy"
-            />
-            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          </div>
-          
-          <Link to="/sign-in" className="text-navy hover:text-navy/80">
-            Sign In
-          </Link>
-          
-          <Link to="/sign-up" className="btn-primary">
-            Join
-          </Link>
+          {!user ? (
+            <Link to="/auth" className="ml-2 px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 font-medium transition-colors">
+              Sign In
+            </Link>
+          ) : (
+            <button
+              onClick={() => navigate("/profile/" + (user.id || ""))}
+              className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200"
+              title={user.email}
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.user_metadata?.avatar_url} alt={user.email || "profile"} />
+                <AvatarFallback>{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="hidden md:inline text-sm font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>
