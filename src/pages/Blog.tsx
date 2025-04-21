@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Header from '@/components/Header';
+import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useQuery } from '@tanstack/react-query';
 import { getAllPosts } from '@/services/blog';
@@ -14,19 +14,22 @@ const Blog = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <Navbar />
+      
       <main className="py-20">
         <div className="container-custom">
           <h1 className="text-4xl font-bold mb-8">Insights</h1>
+          
           {isLoading && <p>Loading...</p>}
           {error && <p>Error loading posts</p>}
-          {posts && posts.length > 0 ? (
+          
+          {posts && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map(post => (
                 <Link 
                   to={`/blog/${post.slug}`}
                   key={post.id} 
-                  className="group block border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white"
+                  className="group block border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                 >
                   {post.featured_image && (
                     <img 
@@ -53,12 +56,10 @@ const Blog = () => {
                 </Link>
               ))}
             </div>
-          ) : (
-            !isLoading &&
-              <p className="text-gray-600">No blog posts found.</p>
           )}
         </div>
       </main>
+      
       <Footer />
     </div>
   );
