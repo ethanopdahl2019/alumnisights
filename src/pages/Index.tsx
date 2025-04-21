@@ -24,21 +24,19 @@ const Index = () => {
 
     loadProfiles();
   }, []);
-  
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      
       <main>
         <Hero />
-        
+
         <section className="py-20">
           <div className="container-custom">
             <h2 className="text-3xl md:text-4xl font-medium text-center mb-4">Featured Profiles</h2>
             <p className="text-gray-600 text-center max-w-3xl mx-auto mb-12">
               Connect with current students and alumni from top schools across the country
             </p>
-            
             {loading ? (
               <div className="grid md:grid-cols-3 gap-6">
                 {[...Array(3)].map((_, i) => (
@@ -54,21 +52,11 @@ const Index = () => {
                 {profiles.map(profile => (
                   <ProfileCard 
                     key={profile.id}
-                    id={profile.id}
-                    name={profile.name}
-                    image={profile.image || '/placeholder.svg'}
-                    school={profile.school.name}
-                    major={profile.major.name}
-                    tags={profile.activities.map(activity => ({
-                      id: activity.id,
-                      label: activity.name,
-                      type: activity.type
-                    }))}
+                    profile={profile}
                   />
                 ))}
               </Carousel>
             )}
-            
             <div className="mt-12 text-center">
               <a href="/browse" className="btn-secondary">
                 View All Profiles
@@ -76,16 +64,16 @@ const Index = () => {
             </div>
           </div>
         </section>
-        
+
         <HowItWorks />
-        
+
         <section className="py-20 bg-gray-50">
           <div className="container-custom">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-medium text-center mb-12">
                 Get the insights that college websites don't tell you
               </h2>
-              
+
               <div className="grid md:grid-cols-3 gap-8 text-center">
                 <div>
                   <div className="h-16 w-16 bg-tag-major rounded-full flex items-center justify-center mx-auto mb-4">
@@ -99,7 +87,6 @@ const Index = () => {
                     Hear real stories, not marketing materials
                   </p>
                 </div>
-                
                 <div>
                   <div className="h-16 w-16 bg-tag-sport rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-tag-sport-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -113,7 +100,6 @@ const Index = () => {
                     Connect with students from schools worldwide
                   </p>
                 </div>
-                
                 <div>
                   <div className="h-16 w-16 bg-tag-club rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-tag-club-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -127,7 +113,6 @@ const Index = () => {
                   </p>
                 </div>
               </div>
-              
               <div className="mt-12 text-center">
                 <a href="/sign-up" className="btn-primary">
                   Start Your Journey
@@ -137,10 +122,10 @@ const Index = () => {
           </div>
         </section>
       </main>
-      
       <Footer />
     </div>
   );
 };
 
 export default Index;
+
