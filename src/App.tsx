@@ -13,8 +13,6 @@ import Auth from "./pages/Auth";
 import ProfileComplete from "./pages/ProfileComplete";
 import Schools from "./pages/Schools";
 import SchoolDetail from "./pages/SchoolDetail";
-// REMOVE: AlumniDashboard, ApplicantDashboard, Profile, Blog, BlogPost, HowItWorksPage, Messages
-// ADD: New dashboards/pages
 import AlumniDashboard from "./pages/AlumniDashboard";
 import ApplicantDashboard from "./pages/ApplicantDashboard";
 import AlumniProfilePage from "./pages/AlumniProfilePage";

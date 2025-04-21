@@ -57,7 +57,10 @@ const Messages = () => {
         }
 
         // Check if user is part of this conversation
-        if (data.alumni_id !== user.id && data.applicant_id !== user.id) {
+        const userProfile = data.alumni?.user_id === user.id ? data.alumni : 
+                           data.applicant?.user_id === user.id ? data.applicant : null;
+        
+        if (!userProfile) {
           toast({
             title: "Access Denied",
             description: "You don't have permission to view this conversation",
@@ -70,7 +73,7 @@ const Messages = () => {
         setConversation(data);
 
         // Determine the other user in the conversation
-        if (data.alumni.user_id === user.id) {
+        if (data.alumni?.user_id === user.id) {
           setOtherUser(data.applicant);
         } else {
           setOtherUser(data.alumni);
