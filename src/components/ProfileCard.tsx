@@ -25,31 +25,28 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
   ];
   
   return (
-    <Link to={`/profile/${profile.id}`} className="profile-card group">
-      <div className="relative aspect-[3/4] overflow-hidden">
+    <Link to={`/profile/${profile.id}`} className="bg-white rounded-xl overflow-hidden flex flex-col items-center p-6 transition duration-300">
+      {/* Profile Image - big, circular, centered */}
+      <div className="flex justify-center w-full mb-4">
         <img 
           src={profile.image || '/placeholder.svg'} 
           alt={`${profile.name}'s profile`} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+          className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-sm"
         />
       </div>
       
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex items-center mb-2">
-          <Avatar className="h-10 w-10 mr-3">
-            <img src={profile.image || '/placeholder.svg'} alt={profile.name} className="object-cover" />
-          </Avatar>
-          <div>
-            <h3 className="font-medium text-lg">{profile.name}</h3>
-            <p className="text-gray-600 text-sm">{profile.school?.name}</p>
-          </div>
-        </div>
+      <div className="flex flex-col items-center flex-grow w-full">
+        {/* Name, School */}
+        <h3 className="font-medium text-lg text-center">{profile.name}</h3>
+        <p className="text-gray-600 text-sm text-center mb-2">{profile.school?.name}</p>
         
-        <div className="mt-1 mb-3">
+        {/* Major */}
+        <div className="mb-3">
           <Tag type="major">{profile.major?.name}</Tag>
         </div>
         
-        <div className="mt-auto flex flex-wrap gap-2">
+        {/* Activities/Tags */}
+        <div className="flex flex-wrap gap-2 justify-center">
           {tags.slice(0, 3).map((tag) => (
             <Tag key={tag.id} type={tag.type}>
               {tag.label}
