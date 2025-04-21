@@ -5,7 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client"; // <-- FIXED: import added
+import { supabase } from "@/integrations/supabase/client";
 
 // Path to logo image
 const logoPath = "/lovable-uploads/bdaaf67c-3436-4d56-bf80-25d5b4978254.png";
@@ -33,7 +33,10 @@ const Navbar = () => {
             navigate("/applicant-dashboard");
           }
         })
-        .catch(() => navigate("/applicant-dashboard"));
+        .catch(error => {
+          console.error("Error fetching profile:", error);
+          navigate("/applicant-dashboard");
+        });
     }
   };
 

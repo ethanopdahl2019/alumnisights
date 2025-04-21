@@ -1,158 +1,167 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import Tag from '@/components/Tag';
-import { getProfileById } from '@/services/profiles';
-import { ProfileWithDetails } from '@/types/database';
 
-type ProductType = "15_min" | "30_min" | "60_min";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/components/AuthProvider";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import Tag from "@/components/Tag";
+import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription,
+  CardFooter
+} from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-const getProductDetails = (profile: ProfileWithDetails | null) => profile ? [
-  {
-    type: "15_min" as ProductType,
-    title: "15 Minute Chat",
-    description: "A quick introduction call",
-    price: profile.price_15_min ?? null,
-  },
-  {
-    type: "30_min" as ProductType,
-    title: "30 Minute Consultation",
-    description: "In-depth discussion about your questions",
-    price: profile.price_30_min ?? null,
-  },
-  {
-    type: "60_min" as ProductType,
-    title: "1 Hour Mentoring",
-    description: "Comprehensive guidance and advice",
-    price: profile.price_60_min ?? null,
-  },
-] : [];
-
-const ProfilePage = () => {
+const Profile = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<ProfileWithDetails | null>(null);
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<any>(null);
+  const [school, setSchool] = useState<any>(null);
+  const [major, setMajor] = useState<any>(null);
+  const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [relatedProfiles, setRelatedProfiles] = useState<ProfileWithDetails[]>([]);
-  const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
+      if (!id) return;
 
-      setLoading(true);
       try {
-        const profileData = await getProfileById(id);
+        // Fetch profile with details
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (profileError) throw profileError;
         setProfile(profileData);
 
-        if (user && profileData) {
-          const { data: userProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('user_id', user.id)
+        // Fetch school
+        if (profileData.school_id) {
+          const { data: schoolData } = await supabase
+            .from("schools")
+            .select("*")
+            .eq("id", profileData.school_id)
             .single();
-
-          if (userProfile && userProfile.id === profileData.id) {
-            setIsOwnProfile(true);
-          }
+          setSchool(schoolData);
         }
 
-        if (profileData) {
-          const { data } = await supabase
-            .from('profiles')
-            .select(`
-              *,
-              school:schools(id, name, location, type, image, created_at),
-              major:majors(*),
-              activities:profile_activities(activities(*))
-            `)
-            .neq('id', id)
-            .or(`school_id.eq.${profileData.school_id},major_id.eq.${profileData.major_id}`)
-            .limit(2);
+        // Fetch major
+        if (profileData.major_id) {
+          const { data: majorData } = await supabase
+            .from("majors")
+            .select("*")
+            .eq("id", profileData.major_id)
+            .single();
+          setMajor(majorData);
+        }
 
-          if (data) {
-            setRelatedProfiles(data.map(profile => ({
-              ...profile,
-              school: {
-                ...profile.school,
-                image: profile.school?.image ?? null
-              },
-              activities: profile.activities.map((pa: any) => pa.activities)
-            })));
-          }
+        // Fetch activities
+        const { data: activityData } = await supabase
+          .from("profile_activities")
+          .select("activities(*)")
+          .eq("profile_id", id);
+
+        if (activityData) {
+          setActivities(activityData.map(item => item.activities));
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile data",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [id, user]);
+  }, [id, toast]);
 
-  // ---- Handle Payment ---- //
-  const handlePurchase = async (productType: ProductType) => {
+  const handleProductSelect = async (productType: string) => {
     if (!user) {
-      navigate('/auth');
+      toast({
+        title: "Login Required",
+        description: "Please sign in to purchase this product",
+        variant: "default",
+      });
+      navigate("/auth");
       return;
     }
-    if (!profile) return;
-    // Check if already exists; if not, create as pending
-    const { data: existing } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('applicant_id', user.id)
-      .eq('alumni_id', profile.user_id)
-      .eq('product_type', productType)
-      .maybeSingle();
 
-    let convId: string | null = null;
-    if (existing) {
-      convId = existing.id;
-    } else {
-      const { data: conv } = await supabase
-        .from('conversations')
+    setSelectedProduct(productType);
+  };
+
+  const handleCheckout = async () => {
+    if (!user || !profile || !selectedProduct) return;
+    
+    setProcessing(true);
+    
+    try {
+      // First check if the user already has a conversation with this alumni
+      const { data: existingConvo } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("applicant_id", user.id)
+        .eq("alumni_id", profile.user_id)
+        .eq("product_type", selectedProduct)
+        .maybeSingle();
+      
+      if (existingConvo) {
+        navigate(`/messages/${existingConvo.id}`);
+        return;
+      }
+      
+      // Create a new conversation
+      const { data: newConvo, error: convoError } = await supabase
+        .from("conversations")
         .insert({
           applicant_id: user.id,
           alumni_id: profile.user_id,
-          product_type: productType,
-          payment_status: 'pending'
+          product_type: selectedProduct,
+          payment_status: "paid" // For now, setting as paid immediately (would integrate with Stripe in production)
         })
-        .select()
+        .select("id")
         .single();
-      convId = conv?.id;
+      
+      if (convoError) throw convoError;
+      
+      toast({
+        title: "Purchase Successful",
+        description: "You can now message this alumni",
+      });
+      
+      // Redirect to messages
+      navigate(`/messages/${newConvo.id}`);
+    } catch (error) {
+      console.error("Error during checkout:", error);
+      toast({
+        title: "Checkout Failed",
+        description: "There was a problem processing your request",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
     }
-
-    // Payment simulation: Replace with Stripe etc in future
-    alert("Pretend we sent you to payment for: " + productType + ". After payment, you will be redirected to the messaging system.");
-    // "After" payment, mark as paid:
-    await supabase
-      .from("conversations")
-      .update({ payment_status: "paid" })
-      .eq("id", convId);
-
-    navigate(`/messages/${convId}`);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div>
         <Navbar />
         <div className="container-custom py-20 text-center">
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="w-32 h-32 bg-gray-200 rounded-full mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
-            <div className="h-24 bg-gray-200 rounded w-full max-w-2xl"></div>
-          </div>
+          <p>Loading profile...</p>
         </div>
         <Footer />
       </div>
@@ -161,16 +170,14 @@ const ProfilePage = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-white">
+      <div>
         <Navbar />
         <div className="container-custom py-20 text-center">
-          <h1 className="text-3xl md:text-4xl font-medium mb-6">Profile Not Found</h1>
-          <p className="text-gray-600 mb-8">
-            The profile you're looking for doesn't exist or has been removed.
-          </p>
-          <Link to="/browse" className="btn-primary">
+          <h1 className="text-2xl font-bold mb-4">Profile Not Found</h1>
+          <p>The profile you're looking for doesn't exist or has been removed.</p>
+          <Button className="mt-6" onClick={() => navigate("/browse")}>
             Browse Profiles
-          </Link>
+          </Button>
         </div>
         <Footer />
       </div>
@@ -178,169 +185,205 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div>
       <Navbar />
-
-      {isOwnProfile && (
-        <div className="bg-navy text-white py-3">
-          <div className="container-custom text-center">
-            <p className="text-sm mb-2">This is your public profile</p>
-            <button 
-              onClick={() => navigate('/alumni-dashboard')} 
-              className="px-4 py-1 bg-white text-navy rounded-md text-sm hover:bg-gray-100 transition-colors"
-            >
-              Go to Dashboard
-            </button>
-          </div>
-        </div>
-      )}
-
-      <main className="py-12">
-        <div className="container-custom">
-          <div className="flex flex-col md:flex-row gap-12">
-            <div className="md:w-1/3">
-              <div className="sticky top-24">
-                <div className="aspect-[3/4] overflow-hidden rounded-xl mb-6">
-                  <img 
-                    src={profile.image || '/placeholder.svg'} 
-                    alt={`${profile.name}'s profile`} 
-                    className="w-full h-full object-cover" 
-                  />
-                </div>
-                
-                <h1 className="text-2xl md:text-3xl font-medium mb-1">{profile.name}</h1>
-                <p className="text-gray-600 mb-4">{profile.school?.name}</p>
-                
-                <div className="mb-6">
-                  {profile.major && (
-                    <Tag type="major">{profile.major.name}</Tag>
-                  )}
-                </div>
-                
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {profile.activities?.map((activity) => (
-                    <Tag key={activity.id} type={activity.type as "club" | "sport" | "study"}>
-                      {activity.name}
-                    </Tag>
-                  ))}
-                </div>
-                
-                <div className="border-t border-gray-200 pt-6">
-                  <h3 className="text-lg font-medium mb-4">Quick Links</h3>
-                  <ul className="space-y-2">
-                    <li>
-                      <button 
-                        className="text-navy hover:underline focus:outline-none"
-                        onClick={() => {
-                          const bookingSection = document.getElementById('booking-section');
-                          if (bookingSection) {
-                            bookingSection.scrollIntoView({ behavior: 'smooth' });
-                          }
-                        }}
-                      >
-                        Book a Conversation
-                      </button>
-                    </li>
-                    <li>
-                      <Link 
-                        to={`/schools/${profile.school?.id || ''}`} 
-                        className="text-navy hover:underline"
-                      >
-                        More from {profile.school?.name}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link 
-                        to={`/browse?major=${profile.major?.id || ''}`} 
-                        className="text-navy hover:underline"
-                      >
-                        Similar {profile.major?.name} Profiles
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+      <main className="container-custom py-10">
+        <div className="max-w-4xl mx-auto">
+          {/* Alumni Header */}
+          <div className="flex flex-col md:flex-row gap-8 items-start mb-10">
+            <div className="w-full md:w-1/3 flex flex-col items-center">
+              <img
+                src={profile.image || "/placeholder.svg"}
+                alt={profile.name}
+                className="w-48 h-48 rounded-full object-cover shadow-md border-4 border-white"
+              />
             </div>
             
-            <div className="md:w-2/3">
-              <div className="mb-12">
-                <h2 className="text-2xl md:text-3xl font-medium mb-6">About</h2>
-                <div className="prose prose-lg max-w-none">
-                  <p>{profile.bio || 'No bio available.'}</p>
+            <div className="w-full md:w-2/3">
+              <h1 className="text-3xl font-bold">{profile.name}</h1>
+              
+              {school && (
+                <div className="text-lg text-gray-600 mt-1">
+                  {school.name}
                 </div>
-              </div>
-              {/* Product/Checkout flow only -- booking REMOVED */}
-              <div id="booking-section">
-                <div className="mb-8">
-                  <h4 className="text-lg font-semibold mb-4">Book a Conversation</h4>
-                  <div className="grid gap-4">
-                    {getProductDetails(profile).map((prod) =>
-                      prod.price ? (
-                        <div key={prod.type} className="flex flex-col md:flex-row md:items-center justify-between border border-gray-100 bg-gray-50 rounded-xl p-4">
-                          <div>
-                            <div className="font-medium text-base">{prod.title}</div>
-                            <div className="text-gray-600">{prod.description}</div>
-                          </div>
-                          <div className="flex items-center mt-2 md:mt-0 gap-4">
-                            <div className="text-lg font-bold text-navy">${prod.price}</div>
-                            <button
-                              className="bg-navy text-white px-4 py-2 rounded hover:bg-navy/90 transition-colors"
-                              onClick={() => handlePurchase(prod.type)}
-                              disabled={isOwnProfile}
-                            >
-                              {user ? "Pay" : "Sign In to Pay"}
-                            </button>
-                          </div>
-                        </div>
-                      ) : null
-                    )}
-                  </div>
-                  <div className="mt-3 text-sm text-yellow-900 bg-yellow-50 border border-yellow-200 rounded px-4 py-3">
-                    Please complete your payment to unlock messaging and coordinate directly with this alumni.
-                  </div>
+              )}
+              
+              {major && (
+                <div className="mt-3">
+                  <Tag type="major">{major.name}</Tag>
                 </div>
+              )}
+              
+              <div className="flex flex-wrap gap-2 mt-4">
+                {activities.map((activity, index) => (
+                  <Tag key={index} type={activity.type}>
+                    {activity.name}
+                  </Tag>
+                ))}
               </div>
               
-              {relatedProfiles.length > 0 && (
-                <div className="mt-16 pt-8 border-t border-gray-200">
-                  <h3 className="text-xl font-medium mb-6">You might also like</h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {relatedProfiles.map(relatedProfile => (
-                      <Link
-                        key={relatedProfile.id}
-                        to={`/profile/${relatedProfile.id}`}
-                        className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-                      >
-                        <img
-                          src={relatedProfile.image || '/placeholder.svg'}
-                          alt={relatedProfile.name}
-                          className="w-16 h-16 rounded-full object-cover mr-4"
-                        />
-                        <div>
-                          <h4 className="font-medium mb-1">{relatedProfile.name}</h4>
-                          <p className="text-sm text-gray-600">{relatedProfile.school?.name}</p>
-                          <div className="mt-1">
-                            {relatedProfile.major && (
-                              <Tag type="major" className="text-xs py-0.5 px-2">
-                                {relatedProfile.major.name}
-                              </Tag>
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+              {profile.bio && (
+                <div className="mt-6 text-gray-700">
+                  <h2 className="text-lg font-medium mb-2">About</h2>
+                  <p>{profile.bio}</p>
                 </div>
               )}
             </div>
           </div>
+          
+          {/* Product Cards */}
+          <h2 className="text-xl font-bold mb-4">Services Offered</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            {/* 15 min Product */}
+            <Card className={`${selectedProduct === "15min" ? "ring-2 ring-blue-500" : ""}`}>
+              <CardHeader>
+                <CardTitle>15 Minute Call</CardTitle>
+                <CardDescription>Quick questions & introductions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">${profile.price_15_min || 0}</div>
+                <ul className="mt-4 space-y-2">
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    Brief introduction
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    Quick application review
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    1-2 targeted questions
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full" 
+                  onClick={() => handleProductSelect("15min")}
+                  disabled={!profile.price_15_min}
+                >
+                  {!profile.price_15_min ? "Not Available" : "Select"}
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* 30 min Product */}
+            <Card className={`${selectedProduct === "30min" ? "ring-2 ring-blue-500" : ""}`}>
+              <CardHeader>
+                <CardTitle>30 Minute Call</CardTitle>
+                <CardDescription>Detailed discussion & advice</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">${profile.price_30_min || 0}</div>
+                <ul className="mt-4 space-y-2">
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    In-depth conversation
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    Application strategy
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    Answer multiple questions
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full" 
+                  onClick={() => handleProductSelect("30min")}
+                  disabled={!profile.price_30_min}
+                >
+                  {!profile.price_30_min ? "Not Available" : "Select"}
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* 60 min Product */}
+            <Card className={`${selectedProduct === "60min" ? "ring-2 ring-blue-500" : ""}`}>
+              <CardHeader>
+                <CardTitle>60 Minute Call</CardTitle>
+                <CardDescription>Comprehensive consultation</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">${profile.price_60_min || 0}</div>
+                <ul className="mt-4 space-y-2">
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    Full application review
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    Essay feedback & guidance
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span> 
+                    Comprehensive advice
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full" 
+                  onClick={() => handleProductSelect("60min")}
+                  disabled={!profile.price_60_min}
+                >
+                  {!profile.price_60_min ? "Not Available" : "Select"}
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+          
+          {/* Checkout Section */}
+          {selectedProduct && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Complete Your Purchase</CardTitle>
+                <CardDescription>
+                  You're purchasing a {selectedProduct} call with {profile.name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-md">
+                  <div>
+                    <div className="font-medium">{selectedProduct} Call</div>
+                    <div className="text-sm text-gray-500">
+                      Access to messaging and scheduling
+                    </div>
+                  </div>
+                  <div className="text-xl font-bold">
+                    ${selectedProduct === "15min" 
+                        ? profile.price_15_min 
+                        : selectedProduct === "30min" 
+                          ? profile.price_30_min 
+                          : profile.price_60_min}
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSelectedProduct(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCheckout}
+                  disabled={processing}
+                >
+                  {processing ? "Processing..." : "Complete Purchase"}
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
         </div>
       </main>
-
       <Footer />
     </div>
   );
 };
 
-export default ProfilePage;
+export default Profile;
