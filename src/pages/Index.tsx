@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getFeaturedProfiles } from '@/services/profiles';
@@ -19,14 +18,12 @@ const Index = () => {
   const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // References for animations
   const profilesRef = useRef<HTMLDivElement>(null);
   const benefitsRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
   const schoolsRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
   
-  // Check if elements are in view
   const profilesInView = useInView(profilesRef, { once: true, threshold: 0.1 });
   const benefitsInView = useInView(benefitsRef, { once: true, threshold: 0.1 });
   const successInView = useInView(successRef, { once: true, threshold: 0.1 });
@@ -36,11 +33,9 @@ const Index = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load featured profiles
         const featuredProfiles = await getFeaturedProfiles();
         setProfiles(featuredProfiles);
         
-        // Load schools for the schools showcase
         const { data: schoolsData } = await supabase
           .from('schools')
           .select('id, name, image')
@@ -118,8 +113,19 @@ const Index = () => {
       <Navbar />
       <main>
         <Hero />
+        
+        <section className="py-12 bg-gray-50">
+          <div className="container-custom text-center">
+            <h2 className="text-3xl md:text-4xl font-medium mb-6">
+              Connect with Students & Alumni for Authentic Insights
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Get personalized application guidance and insider perspectives from current 
+              students and alumni who've walked the path you're considering.
+            </p>
+          </div>
+        </section>
 
-        {/* Featured Profiles Section */}
         <section 
           ref={profilesRef}
           className={`py-20 transition-all duration-1000 ${
@@ -160,7 +166,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Benefits Section */}
         <section 
           ref={benefitsRef}
           className={`py-20 bg-gray-50 transition-all duration-1000 delay-100 ${
@@ -195,7 +200,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Success Stories */}
         <section 
           ref={successRef}
           className={`py-20 transition-all duration-1000 delay-200 ${
@@ -228,7 +232,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Schools Showcase */}
         <section 
           ref={schoolsRef}
           className={`py-20 bg-gray-50 overflow-hidden transition-all duration-1000 delay-300 ${
@@ -266,7 +269,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Testimonials */}
         <section 
           ref={testimonialsRef}
           className={`py-20 transition-all duration-1000 delay-400 ${

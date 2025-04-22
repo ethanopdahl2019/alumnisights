@@ -67,40 +67,72 @@ const AlumniProfilePage = () => {
   return (
     <div>
       <Navbar />
-      <main className="container-custom py-10 max-w-2xl mx-auto">
-        <Card className="p-8 mb-8">
-          <div className="flex flex-col items-center gap-4">
-            <img
-              src={profile.image || "/placeholder.svg"}
-              alt={profile.name}
-              className="rounded-full h-32 w-32 object-cover mb-4"
-            />
-            <h1 className="text-3xl font-bold">{profile.name}</h1>
-            <div className="text-lg text-gray-700">{school?.name}</div>
-            <div className="flex flex-wrap gap-2 my-3">
-              {tags.map(tag => (
-                <Tag key={tag.id} type={tag.type}>{tag.label}</Tag>
-              ))}
+      <main className="container-custom py-10">
+        <div className="max-w-4xl mx-auto">
+          {/* Hero Section */}
+          <Card className="p-8 mb-8">
+            <div className="flex flex-col md:flex-row items-start gap-8">
+              <div className="md:w-1/3 flex flex-col items-center">
+                <img
+                  src={profile?.image || "/placeholder.svg"}
+                  alt={profile?.name}
+                  className="rounded-full h-40 w-40 object-cover mb-4"
+                />
+                {school && (
+                  <div className="flex items-center gap-3 mt-2">
+                    <img 
+                      src={school.image || "/placeholder.svg"} 
+                      alt={school.name} 
+                      className="h-12 w-12 object-contain"
+                    />
+                    <div className="text-lg font-medium text-navy">{school.name}</div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="md:w-2/3">
+                <h1 className="text-3xl font-bold mb-2">{profile?.name}</h1>
+                <p className="text-gray-600 mb-4">{profile?.bio}</p>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {tags.map(tag => (
+                    <Tag key={tag.id} type={tag.type}>{tag.label}</Tag>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="space-y-4 w-full mt-6">
+          </Card>
+
+          {/* Booking Options */}
+          <Card className="p-8">
+            <h2 className="text-xl font-medium mb-6">Connect with {profile?.name}</h2>
+            <div className="space-y-4">
               {products.map((product) => (
-                <div key={product.key} className="flex items-center justify-between p-3 border rounded">
+                <div 
+                  key={product.key} 
+                  className="flex items-center justify-between p-4 border rounded-lg hover:border-navy/30 transition-colors"
+                >
                   <div>
                     <div className="font-medium">{product.label}</div>
-                    <div className="text-gray-500 text-sm">{product.duration}</div>
+                    <div className="text-sm text-gray-500">{product.duration}</div>
                   </div>
-                  <div className="font-bold text-lg">${profile[product.key] ?? 0}</div>
-                  <Button onClick={() => handleCheckout(product)}>
-                    Book & Checkout
-                  </Button>
+                  <div className="text-right">
+                    <div className="font-bold text-xl mb-1">${profile?.[product.key] ?? 0}</div>
+                    <Button 
+                      onClick={() => handleCheckout(product)}
+                      size="sm"
+                    >
+                      Book Session
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </main>
       <Footer />
     </div>
   );
 };
+
 export default AlumniProfilePage;

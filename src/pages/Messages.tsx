@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
@@ -11,15 +10,37 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
+interface ConversationParticipant {
+  id: string;
+  name: string;
+  image: string | null;
+  user_id: string;
+}
+
+interface Message {
+  id: string;
+  content: string;
+  sender_id: string;
+  created_at: string;
+}
+
+interface Conversation {
+  id: string;
+  alumni: ConversationParticipant;
+  applicant: ConversationParticipant;
+  product_type: string;
+  payment_status: string;
+}
+
 const Messages = () => {
   const { conversationId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [conversation, setConversation] = useState<any>(null);
-  const [otherUser, setOtherUser] = useState<any>(null);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [otherUser, setOtherUser] = useState<ConversationParticipant | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -33,25 +54,27 @@ const Messages = () => {
     const fetchData = async () => {
       try {
         // Get user's profile
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("user_id", user.id)
           .single();
 
+        if (profileError) throw profileError;
         setUserProfile(profileData);
 
-        // Get conversation
-        const { data: conversationData } = await supabase
+        // Get conversation with participants
+        const { data: conversationData, error: conversationError } = await supabase
           .from("conversations")
           .select(`
             *,
-            alumni:alumni_id(id, name, image, user_id),
-            applicant:applicant_id(id, name, image, user_id)
+            alumni:profiles!conversations_alumni_id_fkey(*),
+            applicant:profiles!conversations_applicant_id_fkey(*)
           `)
           .eq("id", conversationId)
           .single();
 
+        if (conversationError) throw conversationError;
         if (!conversationData) {
           toast({
             title: "Error",
@@ -64,42 +87,29 @@ const Messages = () => {
 
         setConversation(conversationData);
 
-        // Determine the other user in the conversation
-        const alumni = conversationData.alumni;
-        const applicant = conversationData.applicant;
-
-        if (!alumni || !applicant) {
-          throw new Error("Conversation participants not found");
-        }
-
-        // Check if current user is the alumni or the applicant
-        if (profileData.id === alumni.id) {
-          setOtherUser(applicant);
-        } else if (profileData.id === applicant.id) {
-          setOtherUser(alumni);
+        // Determine other participant
+        if (profileData.id === conversationData.alumni.id) {
+          setOtherUser(conversationData.applicant);
+        } else if (profileData.id === conversationData.applicant.id) {
+          setOtherUser(conversationData.alumni);
         } else {
-          toast({
-            title: "Access denied",
-            description: "You are not a participant in this conversation",
-            variant: "destructive"
-          });
-          navigate("/");
-          return;
+          throw new Error("Not a participant");
         }
 
         // Get messages
-        const { data: messagesData } = await supabase
+        const { data: messagesData, error: messagesError } = await supabase
           .from("messages")
           .select("*")
           .eq("conversation_id", conversationId)
           .order("created_at", { ascending: true });
 
+        if (messagesError) throw messagesError;
         setMessages(messagesData || []);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching data:", error);
         toast({
           title: "Error",
-          description: "Failed to load conversation",
+          description: error.message || "Failed to load conversation",
           variant: "destructive"
         });
       } finally {
@@ -109,7 +119,7 @@ const Messages = () => {
 
     fetchData();
 
-    // Subscribe to new messages
+    // Set up real-time subscription
     const subscription = supabase
       .channel(`conversation-${conversationId}`)
       .on("postgres_changes", {
@@ -118,7 +128,7 @@ const Messages = () => {
         table: "messages",
         filter: `conversation_id=eq.${conversationId}`,
       }, (payload) => {
-        setMessages((prev) => [...prev, payload.new]);
+        setMessages((prev) => [...prev, payload.new as Message]);
       })
       .subscribe();
 
