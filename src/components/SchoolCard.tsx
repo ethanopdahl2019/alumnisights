@@ -19,7 +19,7 @@ const SchoolCard = ({ id, name, image, location, type }: SchoolCardProps) => {
         {image ? (
           <img src={image} alt={name} className="max-w-full max-h-full object-contain" />
         ) : (
-          <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-2xl font-bold text-blue-400">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-blue-400">
             {name.charAt(0)}
           </div>
         )}
