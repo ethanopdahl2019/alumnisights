@@ -440,6 +440,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_url: string | null
           content: string
           created_at: string | null
           id: string
@@ -448,6 +449,7 @@ export type Database = {
           sender_id: string
         }
         Insert: {
+          attachment_url?: string | null
           content: string
           created_at?: string | null
           id?: string
@@ -456,6 +458,7 @@ export type Database = {
           sender_id: string
         }
         Update: {
+          attachment_url?: string | null
           content?: string
           created_at?: string | null
           id?: string

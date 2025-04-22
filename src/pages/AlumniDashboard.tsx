@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
@@ -10,22 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import ConversationPreview from "@/components/ConversationPreview";
-
-interface Conversation {
-  id: string;
-  applicant: {
-    id: string;
-    name: string;
-    image: string | null;
-  };
-  product_type: string;
-  payment_status: string;
-  updated_at: string;
-  last_message?: {
-    content: string;
-    created_at: string;
-  };
-}
+import { Conversation } from "@/types/database";
 
 const AlumniDashboard = () => {
   const { user } = useAuth();
@@ -48,7 +33,6 @@ const AlumniDashboard = () => {
 
     const fetchData = async () => {
       try {
-        // Check if user is an alumni
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -74,7 +58,6 @@ const AlumniDashboard = () => {
           price_60_min: profileData.price_60_min || 0
         });
 
-        // Fetch conversations with last message
         const { data: conversationsData, error: conversationsError } = await supabase
           .from("conversations")
           .select(`
@@ -94,23 +77,24 @@ const AlumniDashboard = () => {
 
         if (conversationsError) throw conversationsError;
 
-        // Fetch the last message for each conversation
-        const conversationsWithLastMessage = await Promise.all((conversationsData || []).map(async (conv) => {
-          const { data: lastMessageData } = await supabase
-            .from("messages")
-            .select("content, created_at")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
+        const conversationsWithLastMessage: Conversation[] = await Promise.all(
+          (conversationsData || []).map(async (conv: any) => {
+            const { data: lastMessageData } = await supabase
+              .from("messages")
+              .select("content, created_at")
+              .eq("conversation_id", conv.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
 
-          return {
-            ...conv,
-            last_message: lastMessageData
-          };
-        }));
+            return {
+              ...conv,
+              last_message: lastMessageData || undefined,
+            };
+          })
+        );
 
-        setConversations(conversationsWithLastMessage || []);
+        setConversations(conversationsWithLastMessage);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({

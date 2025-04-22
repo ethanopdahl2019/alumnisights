@@ -1,5 +1,4 @@
-
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
@@ -11,30 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MessageCircle, PaperclipIcon, SendIcon } from "lucide-react";
-
-// Define simplified types to avoid circular references
-interface Profile {
-  id: string;
-  name: string;
-  image: string | null;
-  user_id: string;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  created_at: string;
-  attachment_url: string | null;
-}
-
-interface Conversation {
-  id: string;
-  alumni_id: string;
-  applicant_id: string;
-  product_type: string;
-  payment_status: string;
-}
+import { Message } from "@/types/database";
 
 const Messages = () => {
   const { conversationId } = useParams();
@@ -54,7 +30,6 @@ const Messages = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Predefined messages for unpaid conversations
   const predefinedMessages = [
     "I'm interested in booking a conversation",
     "Could you tell me more about your experience?",
@@ -70,7 +45,6 @@ const Messages = () => {
 
     const fetchData = async () => {
       try {
-        // Get user's profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("id, name, image, user_id")
@@ -80,7 +54,6 @@ const Messages = () => {
         if (profileError) throw profileError;
         setUserProfile(profileData);
 
-        // Get conversation data
         const { data: conversationData, error: conversationError } = await supabase
           .from("conversations")
           .select("*")
@@ -100,14 +73,12 @@ const Messages = () => {
 
         setConversation(conversationData);
         
-        // Check if conversation is paid or free
         const isPaidOrFree = 
           conversationData.payment_status === "completed" || 
           conversationData.payment_status === "free";
         
         setIsPaid(isPaidOrFree);
 
-        // Determine if user is alumni or applicant and get other user's profile
         const isAlumni = profileData.id === conversationData.alumni_id;
         const otherUserId = isAlumni ? conversationData.applicant_id : conversationData.alumni_id;
 
@@ -120,7 +91,6 @@ const Messages = () => {
         if (otherUserError) throw otherUserError;
         setOtherUser(otherUserData);
 
-        // Get messages
         const { data: messagesData, error: messagesError } = await supabase
           .from("messages")
           .select("*")
@@ -128,7 +98,13 @@ const Messages = () => {
           .order("created_at", { ascending: true });
 
         if (messagesError) throw messagesError;
-        setMessages(messagesData || []);
+        
+        const typedMessages: Message[] = messagesData?.map(msg => ({
+          ...msg,
+          attachment_url: msg.attachment_url || null
+        })) || [];
+
+        setMessages(typedMessages);
       } catch (error: any) {
         console.error("Error fetching data:", error);
         toast({
@@ -144,7 +120,6 @@ const Messages = () => {
 
     fetchData();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel(`conversation-${conversationId}`)
       .on(
@@ -166,7 +141,6 @@ const Messages = () => {
     };
   }, [user, conversationId, navigate, toast]);
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -193,7 +167,6 @@ const Messages = () => {
 
       if (uploadError) throw uploadError;
       
-      // Get public URL
       const { data } = supabase.storage
         .from('message-attachments')
         .getPublicUrl(filePath);
@@ -220,13 +193,11 @@ const Messages = () => {
     try {
       setSending(true);
       
-      // Handle attachment if present
       let attachmentUrl = null;
       if (selectedFile) {
         attachmentUrl = await uploadFile(selectedFile);
       }
       
-      // For unpaid conversations, only allow sending predefined messages
       let messageContent = newMessage;
       if (!isPaid && userProfile.id === conversation.applicant_id) {
         if (!predefinedMessages.includes(messageContent)) {
@@ -385,7 +356,6 @@ const Messages = () => {
           </div>
 
           {!isPaid && userProfile?.id === conversation?.applicant_id ? (
-            // For unpaid applicants, show predefined messages
             <div className="space-y-2">
               <p className="text-sm text-gray-500 mb-2">Select a message to send:</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -406,7 +376,6 @@ const Messages = () => {
               </div>
             </div>
           ) : (
-            // For paid conversations or alumni, show full message input
             <form onSubmit={sendMessage} className="space-y-3">
               <Textarea
                 value={newMessage}

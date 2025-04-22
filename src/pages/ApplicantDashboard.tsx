@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
@@ -9,25 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import ConversationPreview from "@/components/ConversationPreview";
-
-interface Conversation {
-  id: string;
-  alumni: {
-    id: string;
-    name: string;
-    image: string | null;
-    schools?: {
-      name: string;
-    };
-  };
-  product_type: string;
-  payment_status: string;
-  updated_at: string;
-  last_message?: {
-    content: string;
-    created_at: string;
-  };
-}
+import { Conversation } from "@/types/database";
 
 const ApplicantDashboard = () => {
   const { user } = useAuth();
@@ -88,22 +69,24 @@ const ApplicantDashboard = () => {
         if (conversationsError) throw conversationsError;
 
         // Fetch the last message for each conversation
-        const conversationsWithLastMessage = await Promise.all((conversationsData || []).map(async (conv) => {
-          const { data: lastMessageData } = await supabase
-            .from("messages")
-            .select("content, created_at")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
+        const conversationsWithLastMessage: Conversation[] = await Promise.all(
+          (conversationsData || []).map(async (conv: any) => {
+            const { data: lastMessageData } = await supabase
+              .from("messages")
+              .select("content, created_at")
+              .eq("conversation_id", conv.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
 
-          return {
-            ...conv,
-            last_message: lastMessageData
-          };
-        }));
+            return {
+              ...conv,
+              last_message: lastMessageData || undefined,
+            };
+          })
+        );
 
-        setConversations(conversationsWithLastMessage || []);
+        setConversations(conversationsWithLastMessage);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({
