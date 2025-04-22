@@ -16,7 +16,6 @@ import SchoolDetail from "./pages/SchoolDetail";
 import AlumniDashboard from "./pages/AlumniDashboard";
 import ApplicantDashboard from "./pages/ApplicantDashboard";
 import AlumniProfilePage from "./pages/AlumniProfilePage";
-import Messages from "./pages/Messages";
 import SchoolMajorLanding from "./pages/SchoolMajorLanding";
 import SchoolActivityLanding from "./pages/SchoolActivityLanding";
 
@@ -36,11 +35,10 @@ const App = () => (
             <Route path="/profile/complete" element={<ProfileComplete />} />
             <Route path="/schools" element={<Schools />} />
             <Route path="/schools/:id" element={<SchoolDetail />} />
-            {/* New dashboards and alumni profiles */}
+            {/* Dashboards and alumni profiles */}
             <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
             <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
             <Route path="/alumni/:id" element={<AlumniProfilePage />} />
-            <Route path="/messages/:conversationId" element={<Messages />} />
             <Route path="/p/:slug" element={<LandingPage />} />
             {/* School x Major/Activity landing pages */}
             <Route path="/schools/:schoolId/majors/:majorId" element={<SchoolMajorLanding />} />

@@ -6,16 +6,19 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { ProfileWithDetails } from "@/types/database";
+import ProfileCard from "@/components/ProfileCard";
+import { getAllProfiles } from "@/services/profiles";
 
 const ApplicantDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
-  const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recommendedAlumni, setRecommendedAlumni] = useState<ProfileWithDetails[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -46,18 +49,11 @@ const ApplicantDashboard = () => {
 
         setProfile(profileData);
 
-        // Fetch conversations
-        const { data: conversationsData, error: conversationsError } = await supabase
-          .from("conversations")
-          .select(`
-            *,
-            alumni:alumni_id(id, name, user_id, image, school_id, schools:school_id(name))
-          `)
-          .eq("applicant_id", profileData.id)
-          .order("updated_at", { ascending: false });
-
-        if (conversationsError) throw conversationsError;
-        setConversations(conversationsData || []);
+        // Get recommended alumni
+        const allProfiles = await getAllProfiles();
+        const alumni = allProfiles.filter(p => p.role === "alumni").slice(0, 3);
+        setRecommendedAlumni(alumni);
+        
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({
@@ -89,76 +85,65 @@ const ApplicantDashboard = () => {
     <div>
       <Navbar />
       <div className="container-custom py-10">
-        <h1 className="text-3xl font-bold mb-6">Applicant Dashboard</h1>
+        <motion.h1 
+          className="text-3xl font-bold mb-6"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Applicant Dashboard
+        </motion.h1>
 
-        <section className="mb-10">
+        <motion.section 
+          className="mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
           <Card>
             <CardHeader>
-              <CardTitle>Your Conversations</CardTitle>
+              <CardTitle>Welcome to AlumniSights</CardTitle>
             </CardHeader>
             <CardContent>
-              {conversations.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">You haven't spoken with any alumni yet</p>
-                  <button 
-                    onClick={() => navigate("/browse")}
-                    className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors"
-                  >
-                    Browse Alumni
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {conversations.map((conversation) => (
-                    <div 
-                      key={conversation.id} 
-                      className="border rounded-lg p-4 flex justify-between items-center hover:bg-gray-50 cursor-pointer"
-                      onClick={() => navigate(`/messages/${conversation.id}`)}
-                    >
-                      <div className="flex items-center">
-                        <Avatar className="h-10 w-10 mr-3">
-                          <AvatarImage src={conversation.alumni?.image} alt={conversation.alumni?.name || "Alumni"} />
-                          <AvatarFallback>{conversation.alumni?.name?.charAt(0) || "A"}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-medium">{conversation.alumni?.name || "Unnamed Alumni"}</h3>
-                          <p className="text-sm text-gray-500">
-                            {conversation.alumni?.schools?.name || "Unknown School"} · {conversation.product_type}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          conversation.payment_status === "paid" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}>
-                          {conversation.payment_status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Recommended Alumni</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* This would be populated with ProfileCard components based on user preferences */}
-            <div className="text-center py-8 col-span-full">
-              <p className="text-gray-500 mb-4">Explore alumni profiles to find your perfect match</p>
+              <p className="mb-4">
+                Connect with students and alumni to gain unique insights about your target schools. 
+                Learn about campus culture, academic programs, and get application advice from those 
+                who've been through the process.
+              </p>
               <button 
                 onClick={() => navigate("/browse")}
                 className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors"
               >
-                Browse All Alumni
+                Browse Alumni
               </button>
-            </div>
+            </CardContent>
+          </Card>
+        </motion.section>
+
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <h2 className="text-2xl font-bold mb-4">Recommended Alumni</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {recommendedAlumni.length > 0 ? (
+              recommendedAlumni.map(alumni => (
+                <ProfileCard key={alumni.id} profile={alumni} />
+              ))
+            ) : (
+              <div className="text-center py-8 col-span-full">
+                <p className="text-gray-500 mb-4">Explore alumni profiles to find your perfect match</p>
+                <button 
+                  onClick={() => navigate("/browse")}
+                  className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors"
+                >
+                  Browse All Alumni
+                </button>
+              </div>
+            )}
           </div>
-        </section>
+        </motion.section>
       </div>
       <Footer />
     </div>

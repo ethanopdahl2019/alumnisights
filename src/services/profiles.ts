@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { Profile, ProfileWithDetails } from '@/types/database';
+import type { Profile, ProfileWithDetails, School } from '@/types/database';
 
 // Add image when projecting schools
 export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
@@ -26,7 +26,8 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
       ...profile.school,
       image: profile.school?.image ?? null
     },
-    activities: profile.activities.map((pa: any) => pa.activities)
+    activities: profile.activities.map((pa: any) => pa.activities),
+    role: profile.role as 'applicant' | 'alumni'
   }));
 }
 
@@ -51,7 +52,8 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       ...profile.school,
       image: profile.school?.image ?? null
     },
-    activities: profile.activities.map((pa: any) => pa.activities)
+    activities: profile.activities.map((pa: any) => pa.activities),
+    role: profile.role as 'applicant' | 'alumni'
   }));
 }
 
@@ -80,11 +82,12 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
       ...profile.school,
       image: profile.school?.image ?? null
     },
-    activities: profile.activities.map((pa: any) => pa.activities)
+    activities: profile.activities.map((pa: any) => pa.activities),
+    role: profile.role as 'applicant' | 'alumni'
   };
 }
 
-export async function getSchools() {
+export async function getSchools(): Promise<School[]> {
   const { data, error } = await supabase
     .from('schools')
     .select('id, name, location, type, image, created_at')
@@ -129,4 +132,3 @@ export async function getActivities() {
   
   return data;
 }
-

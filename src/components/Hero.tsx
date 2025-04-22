@@ -1,4 +1,5 @@
 
+import { motion } from 'framer-motion';
 import TypeWriter from './TypeWriter';
 
 const schoolExamples = [
@@ -36,26 +37,56 @@ const Hero = () => {
       </div>
       
       <div className="container-custom relative z-10">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-medium mb-6 tracking-tight">
+        <motion.div 
+          className="max-w-3xl mx-auto text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+        >
+          <motion.h1 
+            className="text-5xl md:text-6xl lg:text-7xl font-medium mb-6 tracking-tight"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+          >
             Connect with a <br />
             <TypeWriter words={schoolExamples} typingSpeed={100} deletingSpeed={50} />
-          </h1>
+          </motion.h1>
           
-          <p className="text-xl text-gray-700 mb-10 max-w-2xl mx-auto">
+          <motion.p 
+            className="text-xl text-gray-700 mb-10 max-w-2xl mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
             Book conversations with current students and alumni to gain authentic, 
-            school-specific insights for your college journey.
-          </p>
+            school-specific insights for your college journey and application process.
+          </motion.p>
           
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <a href="/browse" className="btn-primary min-w-[180px]">
+          <motion.div 
+            className="flex flex-col sm:flex-row justify-center items-center gap-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+          >
+            <motion.a 
+              href="/browse" 
+              className="btn-primary min-w-[180px]"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               Find Your Connection
-            </a>
-            <a href="/sign-up" className="btn-secondary min-w-[180px]">
+            </motion.a>
+            <motion.a 
+              href="/sign-up" 
+              className="btn-secondary min-w-[180px]"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               Join as Alumni/Student
-            </a>
-          </div>
-        </div>
+            </motion.a>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
