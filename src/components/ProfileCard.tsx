@@ -54,12 +54,12 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
   // Determine the link destination based on whether it's the user's own profile
   const linkDestination = isOwnProfile 
     ? '/alumni-dashboard' 
-    : `/profile/${profile.id}`;
+    : `/alumni/${profile.id}`;
   
   return (
     <Link 
       to={linkDestination} 
-      className="bg-white rounded-xl overflow-hidden flex flex-col items-center p-6 transition duration-300 hover:shadow-md" 
+      className="bg-white rounded-xl overflow-hidden flex flex-col items-center p-6 transition duration-300 hover:shadow-md hover:-translate-y-1" 
       data-testid="profile-card"
     >
       <div className="flex justify-center w-full mb-4">
