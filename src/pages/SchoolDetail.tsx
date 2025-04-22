@@ -10,7 +10,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileCard from '@/components/ProfileCard';
 import { getLandingPageBySchool } from '@/services/landing-pages';
-import { Book, Award, GraduationCap, Briefcase, Activity } from 'lucide-react';
+import { Book, Award, GraduationCap, Briefcase, Activity, MapPin, Info, Users, Star } from 'lucide-react';
 import type { ProfileWithDetails } from '@/types/database';
 
 const SchoolDetail = () => {
@@ -27,7 +27,6 @@ const SchoolDetail = () => {
 
       if (error) throw error;
 
-      // Ensure 'image' is present, even if null by default
       return {
         ...data,
         image: data.image ?? null
@@ -116,6 +115,14 @@ const SchoolDetail = () => {
     enabled: !!id
   });
 
+  // Mock data for key facts - in a real app, this would come from a database
+  const keyFacts = [
+    { icon: <Users size={20} />, title: "Student Body", value: "15,000+" },
+    { icon: <MapPin size={20} />, title: "Campus Size", value: "550 acres" },
+    { icon: <Star size={20} />, title: "Ranking", value: "Top 50 National" },
+    { icon: <Info size={20} />, title: "Founded", value: "1887" }
+  ];
+
   if (loadingSchool) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -155,7 +162,7 @@ const SchoolDetail = () => {
         <div className="container mx-auto py-12 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
-              <div className="w-24 h-24 bg-white rounded-lg shadow-sm flex items-center justify-center">
+              <div className="w-24 h-24 bg-white rounded-lg shadow-sm flex items-center justify-center overflow-hidden">
                 {school.image ? (
                   <img
                     src={school.image}
@@ -186,12 +193,32 @@ const SchoolDetail = () => {
               </div>
             </div>
 
+            {/* Key Facts Section */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+              {keyFacts.map((fact, index) => (
+                <Card key={index} className="border border-blue-100">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-blue-50 p-2 rounded-full">
+                        {fact.icon}
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">{fact.title}</p>
+                        <p className="font-semibold">{fact.value}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
             <Tabs defaultValue="overview" className="mb-12">
               <TabsList className="bg-blue-50 mb-8">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="majors">Majors</TabsTrigger>
                 <TabsTrigger value="activities">Activities</TabsTrigger>
                 <TabsTrigger value="profiles">Alumni & Students</TabsTrigger>
+                <TabsTrigger value="reputation">Reputation & Rankings</TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview" className="mt-2">
@@ -217,29 +244,41 @@ const SchoolDetail = () => {
                       <h2>About {school.name}</h2>
                       <p className="mb-4">{school.name} is a {school.type?.replace(/_/g, ' ')} institution located in {school.location}.</p>
                       <p>Students at {school.name} have access to a wide range of academic programs and extracurricular activities.</p>
+                      
+                      <h3 className="mt-6 mb-3 text-xl font-semibold">What {school.name} is Known For</h3>
+                      <p className="mb-4">{school.name} is renowned for its excellence in research, innovative teaching methods, and strong community engagement. The campus offers state-of-the-art facilities and a vibrant student life.</p>
+                      
+                      <h3 className="mt-6 mb-3 text-xl font-semibold">Campus Life</h3>
+                      <p>The campus features modern dormitories, multiple dining options, recreation centers, and extensive libraries. Students can participate in numerous clubs, organizations, and events throughout the academic year.</p>
                     </div>
                   )}
                 </div>
               </TabsContent>
 
               <TabsContent value="majors" className="mt-2">
-                <h2 className="text-2xl font-bold mb-6">
-                  Majors at {school.name}
-                </h2>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold mb-2">
+                    Majors at {school.name}
+                  </h2>
+                  <p className="text-gray-600 mb-6">
+                    {school.name} offers a diverse range of academic programs designed to prepare students for successful careers and further education.
+                  </p>
+                </div>
+                
                 {majors && majors.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {majors.map((major) => (
-                      <Card key={major.id} className="hover:shadow-md transition-shadow">
+                      <Card key={major.id} className="hover:shadow-md transition-shadow border-blue-100">
                         <Link to={`/schools/${school.id}/major/${major.id}`} className="block h-full">
-                          <CardHeader className="flex flex-row items-center space-y-0 gap-2">
+                          <CardHeader className="flex flex-row items-center space-y-0 gap-2 p-4">
                             <div className="bg-blue-100 p-2 rounded-full">
                               <GraduationCap className="h-5 w-5 text-blue-600" />
                             </div>
                             <CardTitle className="text-lg">{major.name}</CardTitle>
                           </CardHeader>
-                          <CardContent>
+                          <CardContent className="pt-0 pb-4 px-4">
                             {major.category && (
-                              <p className="text-sm text-gray-500 mt-1">
+                              <p className="text-sm text-gray-500">
                                 {major.category}
                               </p>
                             )}
@@ -256,15 +295,21 @@ const SchoolDetail = () => {
               </TabsContent>
 
               <TabsContent value="activities" className="mt-2">
-                <h2 className="text-2xl font-bold mb-6">
-                  Activities at {school.name}
-                </h2>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold mb-2">
+                    Activities at {school.name}
+                  </h2>
+                  <p className="text-gray-600 mb-6">
+                    From sports to clubs and special programs, {school.name} offers a wide variety of extracurricular activities for students to enhance their college experience.
+                  </p>
+                </div>
+                
                 {activities && activities.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {activities.map((activity) => (
-                      <Card key={activity.id} className="hover:shadow-md transition-shadow">
+                      <Card key={activity.id} className="hover:shadow-md transition-shadow border-blue-100">
                         <Link to={`/schools/${school.id}/activity/${activity.id}`} className="block h-full">
-                          <CardHeader className="flex flex-row items-center space-y-0 gap-2">
+                          <CardHeader className="flex flex-row items-center space-y-0 gap-2 p-4">
                             <div className="bg-blue-100 p-2 rounded-full">
                               {activity.type === 'club' ? (
                                 <Award className="h-5 w-5 text-blue-600" />
@@ -276,8 +321,8 @@ const SchoolDetail = () => {
                             </div>
                             <CardTitle className="text-lg">{activity.name}</CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-gray-500 mt-1 capitalize">
+                          <CardContent className="pt-0 pb-4 px-4">
+                            <p className="text-sm text-gray-500 capitalize">
                               {activity.type?.replace(/_/g, ' ')}
                             </p>
                           </CardContent>
@@ -294,11 +339,15 @@ const SchoolDetail = () => {
 
               <TabsContent value="profiles" className="mt-2">
                 <div className="mb-8 flex justify-between items-center">
-                  <h2 className="text-2xl font-bold">Students & Alumni</h2>
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Students & Alumni</h2>
+                    <p className="text-gray-600">Connect with current students and graduates from {school.name}</p>
+                  </div>
                   <Button asChild variant="outline">
                     <Link to="/browse">View All</Link>
                   </Button>
                 </div>
+                
                 {profiles && profiles.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {profiles.map((profile: ProfileWithDetails) => (
@@ -308,6 +357,72 @@ const SchoolDetail = () => {
                 ) : (
                   <p className="text-gray-500">No profiles available yet.</p>
                 )}
+              </TabsContent>
+              
+              <TabsContent value="reputation" className="mt-2">
+                <div className="prose max-w-none">
+                  <h2 className="text-2xl font-bold mb-4">Reputation & Rankings</h2>
+                  
+                  <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    <Card className="border-blue-100">
+                      <CardHeader>
+                        <CardTitle className="text-xl">National Rankings</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-3">
+                          <li className="flex justify-between">
+                            <span>U.S. News & World Report</span>
+                            <span className="font-medium">#42</span>
+                          </li>
+                          <li className="flex justify-between">
+                            <span>Forbes</span>
+                            <span className="font-medium">#38</span>
+                          </li>
+                          <li className="flex justify-between">
+                            <span>Princeton Review</span>
+                            <span className="font-medium">Top 50</span>
+                          </li>
+                        </ul>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-blue-100">
+                      <CardHeader>
+                        <CardTitle className="text-xl">Program Strengths</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-3">
+                          <li className="flex justify-between">
+                            <span>Engineering</span>
+                            <span className="font-medium">Top 20</span>
+                          </li>
+                          <li className="flex justify-between">
+                            <span>Business</span>
+                            <span className="font-medium">Top 25</span>
+                          </li>
+                          <li className="flex justify-between">
+                            <span>Computer Science</span>
+                            <span className="font-medium">Top 30</span>
+                          </li>
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <h3 className="text-xl font-semibold mb-3">What Sets {school.name} Apart</h3>
+                  <p className="mb-4">
+                    {school.name} is distinguished by its commitment to innovation, research opportunities, and holistic 
+                    student development. The school maintains strong industry connections, providing students with 
+                    valuable internship and career opportunities.
+                  </p>
+                  
+                  <h3 className="text-xl font-semibold mb-3">Alumni Success</h3>
+                  <p>
+                    Graduates of {school.name} have gone on to successful careers in various fields, including 
+                    Fortune 500 companies, startups, academia, and public service. The strong alumni network provides 
+                    ongoing support and opportunities for current students and recent graduates.
+                  </p>
+                </div>
               </TabsContent>
             </Tabs>
           </div>

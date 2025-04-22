@@ -11,7 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
-interface ConversationParticipant {
+// Simplified types to avoid circular references
+interface Profile {
   id: string;
   name: string;
   image: string | null;
@@ -27,10 +28,12 @@ interface Message {
 
 interface Conversation {
   id: string;
-  alumni: ConversationParticipant;
-  applicant: ConversationParticipant;
+  alumni_id: string;
+  applicant_id: string;
   product_type: string;
   payment_status: string;
+  alumni: Profile | null;
+  applicant: Profile | null;
 }
 
 const Messages = () => {
@@ -41,10 +44,10 @@ const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [otherUser, setOtherUser] = useState<ConversationParticipant | null>(null);
+  const [otherUser, setOtherUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -64,7 +67,7 @@ const Messages = () => {
         if (profileError) throw profileError;
         setUserProfile(profileData);
 
-        // Get conversation details - first get the conversation
+        // Get basic conversation data
         const { data: conversationBasic, error: conversationError } = await supabase
           .from("conversations")
           .select("*")
@@ -82,24 +85,37 @@ const Messages = () => {
           return;
         }
 
-        // Then get the alumni and applicant profiles separately
+        // Check if payment is required but not made
+        if (conversationBasic.payment_status !== "completed" && 
+            conversationBasic.payment_status !== "free") {
+          toast({
+            title: "Access Restricted",
+            description: "You need to purchase this service to message this alumni",
+            variant: "destructive"
+          });
+          navigate("/browse");
+          return;
+        }
+
+        // Get alumni profile
         const { data: alumniData, error: alumniError } = await supabase
           .from("profiles")
-          .select("*")
+          .select("id, name, image, user_id")
           .eq("id", conversationBasic.alumni_id)
           .single();
           
         if (alumniError) throw alumniError;
         
+        // Get applicant profile
         const { data: applicantData, error: applicantError } = await supabase
           .from("profiles")
-          .select("*")
+          .select("id, name, image, user_id")
           .eq("id", conversationBasic.applicant_id)
           .single();
           
         if (applicantError) throw applicantError;
 
-        // Combine the data into the expected format
+        // Build the conversation object
         const fullConversation = {
           ...conversationBasic,
           alumni: alumniData,
@@ -108,13 +124,13 @@ const Messages = () => {
         
         setConversation(fullConversation);
 
-        // Determine other participant
-        if (profileData.id === fullConversation.alumni.id) {
-          setOtherUser(fullConversation.applicant);
-        } else if (profileData.id === fullConversation.applicant.id) {
-          setOtherUser(fullConversation.alumni);
+        // Determine which user is the other participant
+        if (profileData.id === alumniData.id) {
+          setOtherUser(applicantData);
+        } else if (profileData.id === applicantData.id) {
+          setOtherUser(alumniData);
         } else {
-          throw new Error("Not a participant");
+          throw new Error("You are not a participant in this conversation");
         }
 
         // Get messages
@@ -133,6 +149,7 @@ const Messages = () => {
           description: error.message || "Failed to load conversation",
           variant: "destructive"
         });
+        navigate("/");
       } finally {
         setLoading(false);
       }
@@ -141,7 +158,7 @@ const Messages = () => {
     fetchData();
 
     // Set up real-time subscription
-    const subscription = supabase
+    const channel = supabase
       .channel(`conversation-${conversationId}`)
       .on("postgres_changes", {
         event: "INSERT",
@@ -154,20 +171,20 @@ const Messages = () => {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [user, conversationId, navigate, toast]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !otherUser || !userProfile) return;
 
     try {
       setSending(true);
       const { error } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: userProfile.id,
-        recipient_id: otherUser?.id,
+        recipient_id: otherUser.id,
         content: newMessage,
       });
 
@@ -241,14 +258,14 @@ const Messages = () => {
                   <div
                     key={message.id}
                     className={`flex ${
-                      message.sender_id === userProfile.id
+                      message.sender_id === userProfile?.id
                         ? "justify-end"
                         : "justify-start"
                     }`}
                   >
                     <div
                       className={`max-w-[70%] rounded-lg p-3 ${
-                        message.sender_id === userProfile.id
+                        message.sender_id === userProfile?.id
                           ? "bg-navy text-white"
                           : "bg-white border"
                       }`}
@@ -256,7 +273,7 @@ const Messages = () => {
                       {message.content}
                       <div
                         className={`text-xs mt-1 ${
-                          message.sender_id === userProfile.id
+                          message.sender_id === userProfile?.id
                             ? "text-white/70"
                             : "text-gray-500"
                         }`}
