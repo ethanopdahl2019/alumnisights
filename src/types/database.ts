@@ -1,4 +1,3 @@
-
 export interface School {
   id: string;
   name: string;
@@ -32,15 +31,18 @@ export interface Profile {
   price_15_min?: number | null;
   price_30_min?: number | null;
   price_60_min?: number | null;
-  role: 'applicant' | 'alumni';
 }
 
 export interface ProfileWithDetails extends Profile {
   school: School;
   major: Major;
   activities: Activity[];
+  price_15_min?: number | null;
+  price_30_min?: number | null;
+  price_60_min?: number | null;
 }
 
+// New types for authentication
 export interface UserCredentials {
   email: string;
   password: string;
