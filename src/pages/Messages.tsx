@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
@@ -63,19 +64,15 @@ const Messages = () => {
         if (profileError) throw profileError;
         setUserProfile(profileData);
 
-        // Get conversation with participants
-        const { data: conversationData, error: conversationError } = await supabase
+        // Get conversation details - first get the conversation
+        const { data: conversationBasic, error: conversationError } = await supabase
           .from("conversations")
-          .select(`
-            *,
-            alumni:profiles!conversations_alumni_id_fkey(*),
-            applicant:profiles!conversations_applicant_id_fkey(*)
-          `)
+          .select("*")
           .eq("id", conversationId)
           .single();
 
         if (conversationError) throw conversationError;
-        if (!conversationData) {
+        if (!conversationBasic) {
           toast({
             title: "Error",
             description: "Conversation not found",
@@ -85,13 +82,37 @@ const Messages = () => {
           return;
         }
 
-        setConversation(conversationData);
+        // Then get the alumni and applicant profiles separately
+        const { data: alumniData, error: alumniError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", conversationBasic.alumni_id)
+          .single();
+          
+        if (alumniError) throw alumniError;
+        
+        const { data: applicantData, error: applicantError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", conversationBasic.applicant_id)
+          .single();
+          
+        if (applicantError) throw applicantError;
+
+        // Combine the data into the expected format
+        const fullConversation = {
+          ...conversationBasic,
+          alumni: alumniData,
+          applicant: applicantData
+        };
+        
+        setConversation(fullConversation);
 
         // Determine other participant
-        if (profileData.id === conversationData.alumni.id) {
-          setOtherUser(conversationData.applicant);
-        } else if (profileData.id === conversationData.applicant.id) {
-          setOtherUser(conversationData.alumni);
+        if (profileData.id === fullConversation.alumni.id) {
+          setOtherUser(fullConversation.applicant);
+        } else if (profileData.id === fullConversation.applicant.id) {
+          setOtherUser(fullConversation.alumni);
         } else {
           throw new Error("Not a participant");
         }
@@ -146,7 +167,7 @@ const Messages = () => {
       const { error } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: userProfile.id,
-        recipient_id: otherUser.id,
+        recipient_id: otherUser?.id,
         content: newMessage,
       });
 
