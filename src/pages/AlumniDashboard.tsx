@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
@@ -9,15 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import ConversationPreview from "@/components/ConversationPreview";
-import { Conversation } from "@/types/database";
 
 const AlumniDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [prices, setPrices] = useState({
     price_15_min: 0,
@@ -33,6 +32,7 @@ const AlumniDashboard = () => {
 
     const fetchData = async () => {
       try {
+        // Check if user is an alumni
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -58,43 +58,18 @@ const AlumniDashboard = () => {
           price_60_min: profileData.price_60_min || 0
         });
 
+        // Fetch conversations
         const { data: conversationsData, error: conversationsError } = await supabase
           .from("conversations")
           .select(`
-            id,
-            applicant_id,
-            product_type,
-            payment_status,
-            updated_at,
-            applicant:profiles!conversations_applicant_id_fkey(
-              id, 
-              name, 
-              image
-            )
+            *,
+            applicant:applicant_id(id, name, user_id, image)
           `)
           .eq("alumni_id", profileData.id)
           .order("updated_at", { ascending: false });
 
         if (conversationsError) throw conversationsError;
-
-        const conversationsWithLastMessage: Conversation[] = await Promise.all(
-          (conversationsData || []).map(async (conv: any) => {
-            const { data: lastMessageData } = await supabase
-              .from("messages")
-              .select("content, created_at")
-              .eq("conversation_id", conv.id)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .single();
-
-            return {
-              ...conv,
-              last_message: lastMessageData || undefined,
-            };
-          })
-        );
-
-        setConversations(conversationsWithLastMessage);
+        setConversations(conversationsData || []);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({
@@ -175,18 +150,36 @@ const AlumniDashboard = () => {
                 ) : (
                   <div className="space-y-4">
                     {conversations.map((conversation) => (
-                      <ConversationPreview
-                        key={conversation.id}
-                        id={conversation.id}
-                        otherUser={{
-                          name: conversation.applicant.name || "Unnamed",
-                          image: conversation.applicant.image
-                        }}
-                        lastMessage={conversation.last_message?.content}
-                        timestamp={conversation.last_message?.created_at || conversation.updated_at}
-                        paymentStatus={conversation.payment_status}
-                        productType={conversation.product_type}
-                      />
+                      <div 
+                        key={conversation.id} 
+                        className="border rounded-lg p-4 flex justify-between items-center hover:bg-gray-50 cursor-pointer"
+                        onClick={() => navigate(`/messages/${conversation.id}`)}
+                      >
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 rounded-full bg-gray-200 mr-3 overflow-hidden">
+                            {conversation.applicant?.image && (
+                              <img 
+                                src={conversation.applicant.image} 
+                                alt={conversation.applicant.name}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-medium">{conversation.applicant?.name || "Unnamed"}</h3>
+                            <p className="text-sm text-gray-500">{conversation.product_type}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            conversation.payment_status === "paid" 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}>
+                            {conversation.payment_status}
+                          </span>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -260,7 +253,7 @@ const AlumniDashboard = () => {
                   <div className="bg-gray-50 rounded-lg p-6 text-center">
                     <p className="text-gray-500 mb-2">Paid Conversations</p>
                     <p className="text-3xl font-bold">
-                      {conversations.filter(c => c.payment_status === "completed" || c.payment_status === "free").length}
+                      {conversations.filter(c => c.payment_status === "paid").length}
                     </p>
                   </div>
                 </div>

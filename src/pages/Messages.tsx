@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
@@ -7,35 +8,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { MessageCircle, PaperclipIcon, SendIcon } from "lucide-react";
-import { Message } from "@/types/database";
 
 const Messages = () => {
   const { conversationId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [otherUser, setOtherUser] = useState<Profile | null>(null);
+  const [conversation, setConversation] = useState<any>(null);
+  const [otherUser, setOtherUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [userProfile, setUserProfile] = useState<Profile | null>(null);
-  const [isPaid, setIsPaid] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const predefinedMessages = [
-    "I'm interested in booking a conversation",
-    "Could you tell me more about your experience?",
-    "What advice would you give to applicants?",
-    "I'd like to learn more about your school"
-  ];
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     if (!user) {
@@ -45,22 +32,26 @@ const Messages = () => {
 
     const fetchData = async () => {
       try {
-        const { data: profileData, error: profileError } = await supabase
+        // Get user's profile
+        const { data: profileData } = await supabase
           .from("profiles")
-          .select("id, name, image, user_id")
+          .select("*")
           .eq("user_id", user.id)
           .single();
 
-        if (profileError) throw profileError;
         setUserProfile(profileData);
 
-        const { data: conversationData, error: conversationError } = await supabase
+        // Get conversation
+        const { data: conversationData } = await supabase
           .from("conversations")
-          .select("*")
+          .select(`
+            *,
+            alumni:alumni_id(id, name, image, user_id),
+            applicant:applicant_id(id, name, image, user_id)
+          `)
           .eq("id", conversationId)
           .single();
 
-        if (conversationError) throw conversationError;
         if (!conversationData) {
           toast({
             title: "Error",
@@ -72,47 +63,45 @@ const Messages = () => {
         }
 
         setConversation(conversationData);
-        
-        const isPaidOrFree = 
-          conversationData.payment_status === "completed" || 
-          conversationData.payment_status === "free";
-        
-        setIsPaid(isPaidOrFree);
 
-        const isAlumni = profileData.id === conversationData.alumni_id;
-        const otherUserId = isAlumni ? conversationData.applicant_id : conversationData.alumni_id;
+        // Determine the other user in the conversation
+        const alumni = conversationData.alumni;
+        const applicant = conversationData.applicant;
 
-        const { data: otherUserData, error: otherUserError } = await supabase
-          .from("profiles")
-          .select("id, name, image, user_id")
-          .eq("id", otherUserId)
-          .single();
+        if (!alumni || !applicant) {
+          throw new Error("Conversation participants not found");
+        }
 
-        if (otherUserError) throw otherUserError;
-        setOtherUser(otherUserData);
+        // Check if current user is the alumni or the applicant
+        if (profileData.id === alumni.id) {
+          setOtherUser(applicant);
+        } else if (profileData.id === applicant.id) {
+          setOtherUser(alumni);
+        } else {
+          toast({
+            title: "Access denied",
+            description: "You are not a participant in this conversation",
+            variant: "destructive"
+          });
+          navigate("/");
+          return;
+        }
 
-        const { data: messagesData, error: messagesError } = await supabase
+        // Get messages
+        const { data: messagesData } = await supabase
           .from("messages")
           .select("*")
           .eq("conversation_id", conversationId)
           .order("created_at", { ascending: true });
 
-        if (messagesError) throw messagesError;
-        
-        const typedMessages: Message[] = messagesData?.map(msg => ({
-          ...msg,
-          attachment_url: msg.attachment_url || null
-        })) || [];
-
-        setMessages(typedMessages);
-      } catch (error: any) {
+        setMessages(messagesData || []);
+      } catch (error) {
         console.error("Error fetching data:", error);
         toast({
           title: "Error",
-          description: error.message || "Failed to load conversation",
+          description: "Failed to load conversation",
           variant: "destructive"
         });
-        navigate("/");
       } finally {
         setLoading(false);
       }
@@ -120,112 +109,39 @@ const Messages = () => {
 
     fetchData();
 
-    const channel = supabase
+    // Subscribe to new messages
+    const subscription = supabase
       .channel(`conversation-${conversationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `conversation_id=eq.${conversationId}`,
+      }, (payload) => {
+        setMessages((prev) => [...prev, payload.new]);
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      subscription.unsubscribe();
     };
   }, [user, conversationId, navigate, toast]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  const uploadFile = async (file: File): Promise<string | null> => {
-    try {
-      setUploading(true);
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${conversationId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('message-attachments')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-      
-      const { data } = supabase.storage
-        .from('message-attachments')
-        .getPublicUrl(filePath);
-        
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: "Upload Error",
-        description: "Failed to upload attachment",
-        variant: "destructive"
-      });
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if ((!newMessage.trim() && !selectedFile) || !otherUser || !userProfile || !conversation) return;
-    
+    if (!newMessage.trim()) return;
+
     try {
       setSending(true);
-      
-      let attachmentUrl = null;
-      if (selectedFile) {
-        attachmentUrl = await uploadFile(selectedFile);
-      }
-      
-      let messageContent = newMessage;
-      if (!isPaid && userProfile.id === conversation.applicant_id) {
-        if (!predefinedMessages.includes(messageContent)) {
-          toast({
-            title: "Message not sent",
-            description: "Please select a predefined message or purchase a service from this alumni",
-            variant: "destructive"
-          });
-          setSending(false);
-          return;
-        }
-      }
-
       const { error } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: userProfile.id,
         recipient_id: otherUser.id,
-        content: messageContent,
-        attachment_url: attachmentUrl,
+        content: newMessage,
       });
 
       if (error) throw error;
-      
       setNewMessage("");
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
@@ -277,25 +193,16 @@ const Messages = () => {
               <div>
                 <h2 className="text-lg font-medium">{otherUser?.name}</h2>
                 <p className="text-sm text-gray-500">
-                  {conversation?.product_type} - {isPaid ? "Paid" : "Unpaid"}
+                  {conversation?.product_type} - {conversation?.payment_status}
                 </p>
               </div>
             </div>
           </Card>
 
-          {!isPaid && userProfile?.id === conversation?.applicant_id && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-              <p className="text-amber-800">
-                This is an unpaid conversation. You can only send predefined messages until you purchase a service.
-              </p>
-            </div>
-          )}
-
           <div className="bg-gray-50 rounded-lg p-4 mb-6 h-[50vh] overflow-y-auto">
             {messages.length === 0 ? (
               <div className="text-center py-10 text-gray-500">
-                <MessageCircle className="mx-auto h-12 w-12 text-gray-300 mb-2" />
-                <p>No messages yet. Start the conversation!</p>
+                No messages yet. Start the conversation!
               </div>
             ) : (
               <div className="space-y-4">
@@ -303,41 +210,22 @@ const Messages = () => {
                   <div
                     key={message.id}
                     className={`flex ${
-                      message.sender_id === userProfile?.id
+                      message.sender_id === userProfile.id
                         ? "justify-end"
                         : "justify-start"
                     }`}
                   >
                     <div
                       className={`max-w-[70%] rounded-lg p-3 ${
-                        message.sender_id === userProfile?.id
+                        message.sender_id === userProfile.id
                           ? "bg-navy text-white"
                           : "bg-white border"
                       }`}
                     >
                       {message.content}
-                      
-                      {message.attachment_url && (
-                        <div className="mt-2">
-                          <a 
-                            href={message.attachment_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className={`flex items-center text-xs ${
-                              message.sender_id === userProfile?.id
-                                ? "text-white/90 hover:text-white"
-                                : "text-blue-500 hover:text-blue-700"
-                            }`}
-                          >
-                            <PaperclipIcon className="h-3 w-3 mr-1" />
-                            Attachment
-                          </a>
-                        </div>
-                      )}
-                      
                       <div
                         className={`text-xs mt-1 ${
-                          message.sender_id === userProfile?.id
+                          message.sender_id === userProfile.id
                             ? "text-white/70"
                             : "text-gray-500"
                         }`}
@@ -350,73 +238,22 @@ const Messages = () => {
                     </div>
                   </div>
                 ))}
-                <div ref={messagesEndRef} />
               </div>
             )}
           </div>
 
-          {!isPaid && userProfile?.id === conversation?.applicant_id ? (
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500 mb-2">Select a message to send:</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {predefinedMessages.map((message, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    onClick={() => {
-                      setNewMessage(message);
-                      setTimeout(() => sendMessage(new Event('submit') as any), 100);
-                    }}
-                    className="justify-start text-left h-auto py-2"
-                    disabled={sending}
-                  >
-                    {message}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={sendMessage} className="space-y-3">
-              <Textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                disabled={sending || uploading}
-                className="w-full resize-none"
-                rows={3}
-              />
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={triggerFileInput}
-                    disabled={sending || uploading}
-                  >
-                    <PaperclipIcon className="h-4 w-4 mr-2" />
-                    {selectedFile ? selectedFile.name : "Attach File"}
-                  </Button>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  disabled={sending || uploading || (!newMessage.trim() && !selectedFile)}
-                  className="flex items-center"
-                >
-                  <SendIcon className="h-4 w-4 mr-2" />
-                  Send
-                </Button>
-              </div>
-            </form>
-          )}
+          <form onSubmit={sendMessage} className="flex gap-2">
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type your message..."
+              disabled={sending}
+              className="flex-grow"
+            />
+            <Button type="submit" disabled={sending}>
+              Send
+            </Button>
+          </form>
         </div>
       </div>
       <Footer />

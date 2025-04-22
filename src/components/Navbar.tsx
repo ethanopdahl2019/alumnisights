@@ -46,7 +46,7 @@ const Navbar = () => {
     <nav className="py-3 border-b border-gray-100 bg-white sticky top-0 z-50">
       <div className="container-custom flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logoPath} alt="AlumniSights Logo" className="h-4" /> {/* Reduced from h-6 to h-4 */}
+          <img src={logoPath} alt="AlumniSights Logo" className="h-6" />
         </Link>
         {isMobile ? (
           <>

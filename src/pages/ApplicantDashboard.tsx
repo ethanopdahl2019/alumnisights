@@ -1,21 +1,20 @@
-import React, { useEffect, useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import ConversationPreview from "@/components/ConversationPreview";
-import { Conversation } from "@/types/database";
 
 const ApplicantDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,46 +46,18 @@ const ApplicantDashboard = () => {
 
         setProfile(profileData);
 
-        // Fetch conversations with last message
+        // Fetch conversations
         const { data: conversationsData, error: conversationsError } = await supabase
           .from("conversations")
           .select(`
-            id,
-            alumni_id,
-            product_type,
-            payment_status,
-            updated_at,
-            alumni:profiles!conversations_alumni_id_fkey(
-              id, 
-              name, 
-              image,
-              schools:schools(name)
-            )
+            *,
+            alumni:alumni_id(id, name, user_id, image, school_id, schools:school_id(name))
           `)
           .eq("applicant_id", profileData.id)
           .order("updated_at", { ascending: false });
 
         if (conversationsError) throw conversationsError;
-
-        // Fetch the last message for each conversation
-        const conversationsWithLastMessage: Conversation[] = await Promise.all(
-          (conversationsData || []).map(async (conv: any) => {
-            const { data: lastMessageData } = await supabase
-              .from("messages")
-              .select("content, created_at")
-              .eq("conversation_id", conv.id)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .single();
-
-            return {
-              ...conv,
-              last_message: lastMessageData || undefined,
-            };
-          })
-        );
-
-        setConversations(conversationsWithLastMessage);
+        setConversations(conversationsData || []);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({
@@ -129,29 +100,43 @@ const ApplicantDashboard = () => {
               {conversations.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">You haven't spoken with any alumni yet</p>
-                  <Button 
+                  <button 
                     onClick={() => navigate("/browse")}
-                    variant="default"
+                    className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors"
                   >
                     Browse Alumni
-                  </Button>
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {conversations.map((conversation) => (
-                    <ConversationPreview
-                      key={conversation.id}
-                      id={conversation.id}
-                      otherUser={{
-                        name: conversation.alumni.name || "Unnamed Alumni",
-                        image: conversation.alumni.image
-                      }}
-                      lastMessage={conversation.last_message?.content}
-                      timestamp={conversation.last_message?.created_at || conversation.updated_at}
-                      paymentStatus={conversation.payment_status}
-                      productType={conversation.product_type}
-                      schoolName={conversation.alumni.schools?.name}
-                    />
+                    <div 
+                      key={conversation.id} 
+                      className="border rounded-lg p-4 flex justify-between items-center hover:bg-gray-50 cursor-pointer"
+                      onClick={() => navigate(`/messages/${conversation.id}`)}
+                    >
+                      <div className="flex items-center">
+                        <Avatar className="h-10 w-10 mr-3">
+                          <AvatarImage src={conversation.alumni?.image} alt={conversation.alumni?.name || "Alumni"} />
+                          <AvatarFallback>{conversation.alumni?.name?.charAt(0) || "A"}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-medium">{conversation.alumni?.name || "Unnamed Alumni"}</h3>
+                          <p className="text-sm text-gray-500">
+                            {conversation.alumni?.schools?.name || "Unknown School"} · {conversation.product_type}
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          conversation.payment_status === "paid" 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                          {conversation.payment_status}
+                        </span>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -165,12 +150,12 @@ const ApplicantDashboard = () => {
             {/* This would be populated with ProfileCard components based on user preferences */}
             <div className="text-center py-8 col-span-full">
               <p className="text-gray-500 mb-4">Explore alumni profiles to find your perfect match</p>
-              <Button 
+              <button 
                 onClick={() => navigate("/browse")}
-                variant="default"
+                className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors"
               >
                 Browse All Alumni
-              </Button>
+              </button>
             </div>
           </div>
         </section>
