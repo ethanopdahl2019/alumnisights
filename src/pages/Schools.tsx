@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,6 +7,30 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+
+const SchoolCard = ({ school }: { school: School }) => (
+  <Link 
+    to={`/schools/${school.id}`}
+    className="flex items-center gap-4 py-4 hover:bg-gray-50 transition-colors"
+  >
+    <div className="w-12 h-12 flex items-center justify-center">
+      {school.image ? (
+        <img src={school.image} alt={school.name} className="w-full h-full object-contain" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500 text-lg font-medium rounded">
+          {school.name.charAt(0)}
+        </div>
+      )}
+    </div>
+    <div>
+      <h3 className="font-medium">{school.name}</h3>
+      <div className="text-sm text-gray-500 space-x-2">
+        {school.location && <span>{school.location}</span>}
+        {school.type && <span className="capitalize">{school.type.replace('_', ' ')}</span>}
+      </div>
+    </div>
+  </Link>
+);
 
 const Schools = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,36 +69,7 @@ const Schools = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredSchools.map((school) => (
-                <Link 
-                  key={school.id} 
-                  to={`/schools/${school.id}`}
-                  className="transform transition-transform hover:scale-105"
-                >
-                  <Card className="h-full overflow-hidden border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                    <div className="h-32 bg-gray-100 flex items-center justify-center">
-                      {school.image ? (
-                        <img 
-                          src={school.image} 
-                          alt={school.name} 
-                          className="max-h-full max-w-full object-contain p-4"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
-                          <span className="text-2xl font-bold text-slate-500">
-                            {school.name.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-lg mb-1">{school.name}</h3>
-                      <p className="text-sm text-gray-600">{school.location || "Location unavailable"}</p>
-                      <p className="text-xs text-gray-500 mt-1 capitalize">
-                        {school.type?.replace(/_/g, ' ') || "Type unavailable"}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <SchoolCard key={school.id} school={school} />
               ))}
               
               {filteredSchools.length === 0 && (

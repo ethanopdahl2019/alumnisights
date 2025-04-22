@@ -1,5 +1,6 @@
 
 import TypeWriter from './TypeWriter';
+import { motion } from 'framer-motion';
 
 const schoolExamples = [
   'Harvard economics major',
@@ -17,7 +18,6 @@ const schoolExamples = [
 const Hero = () => {
   return (
     <section className="relative min-h-[80vh] flex items-center">
-      {/* Background video */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <video
           autoPlay
@@ -36,26 +36,41 @@ const Hero = () => {
       </div>
       
       <div className="container-custom relative z-10">
-        <div className="max-w-3xl mx-auto text-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-3xl mx-auto text-center"
+        >
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-medium mb-6 tracking-tight">
             Connect with a <br />
             <TypeWriter words={schoolExamples} typingSpeed={100} deletingSpeed={50} />
           </h1>
           
-          <p className="text-xl text-gray-700 mb-10 max-w-2xl mx-auto">
-            Book conversations with current students and alumni to gain authentic, 
-            school-specific insights for your college journey.
-          </p>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-xl text-gray-700 mb-10 max-w-2xl mx-auto"
+          >
+            Gain authentic insights directly from current students and alumni. 
+            Get personalized application advice and discover what makes each school unique.
+          </motion.p>
           
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
+            className="flex flex-col sm:flex-row justify-center items-center gap-4"
+          >
             <a href="/browse" className="btn-primary min-w-[180px]">
               Find Your Connection
             </a>
             <a href="/sign-up" className="btn-secondary min-w-[180px]">
               Join as Alumni/Student
             </a>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
