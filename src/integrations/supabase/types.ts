@@ -506,11 +506,15 @@ export type Database = {
       }
       profiles: {
         Row: {
+          achievements: string[] | null
           bio: string | null
           created_at: string | null
           featured: boolean | null
+          graduation_year: number | null
+          headline: string | null
           id: string
           image: string | null
+          location: string | null
           major_id: string
           name: string
           price_15_min: number | null
@@ -518,14 +522,19 @@ export type Database = {
           price_60_min: number | null
           role: string | null
           school_id: string
+          social_links: Json | null
           user_id: string
         }
         Insert: {
+          achievements?: string[] | null
           bio?: string | null
           created_at?: string | null
           featured?: boolean | null
+          graduation_year?: number | null
+          headline?: string | null
           id?: string
           image?: string | null
+          location?: string | null
           major_id: string
           name: string
           price_15_min?: number | null
@@ -533,14 +542,19 @@ export type Database = {
           price_60_min?: number | null
           role?: string | null
           school_id: string
+          social_links?: Json | null
           user_id: string
         }
         Update: {
+          achievements?: string[] | null
           bio?: string | null
           created_at?: string | null
           featured?: boolean | null
+          graduation_year?: number | null
+          headline?: string | null
           id?: string
           image?: string | null
+          location?: string | null
           major_id?: string
           name?: string
           price_15_min?: number | null
@@ -548,6 +562,7 @@ export type Database = {
           price_60_min?: number | null
           role?: string | null
           school_id?: string
+          social_links?: Json | null
           user_id?: string
         }
         Relationships: [
@@ -606,6 +621,76 @@ export type Database = {
           },
         ]
       }
+      school_highlights: {
+        Row: {
+          created_at: string | null
+          icon: string | null
+          id: string
+          order_position: number
+          school_id: string
+          title: string
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          order_position: number
+          school_id: string
+          title: string
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          order_position?: number
+          school_id?: string
+          title?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_highlights_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_images: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          id: string
+          image_url: string
+          school_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          image_url: string
+          school_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_images_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_major_paragraphs: {
         Row: {
           created_at: string | null
@@ -647,28 +732,58 @@ export type Database = {
       }
       schools: {
         Row: {
+          acceptance_rate: number | null
+          campus_size: string | null
           created_at: string | null
+          description: string | null
+          founded_year: number | null
           id: string
           image: string | null
           location: string | null
           name: string
+          notable_alumni: string[] | null
+          ranking: number | null
+          student_population: number | null
+          tuition_in_state: number | null
+          tuition_out_state: number | null
           type: Database["public"]["Enums"]["school_type"] | null
+          website_url: string | null
         }
         Insert: {
+          acceptance_rate?: number | null
+          campus_size?: string | null
           created_at?: string | null
+          description?: string | null
+          founded_year?: number | null
           id?: string
           image?: string | null
           location?: string | null
           name: string
+          notable_alumni?: string[] | null
+          ranking?: number | null
+          student_population?: number | null
+          tuition_in_state?: number | null
+          tuition_out_state?: number | null
           type?: Database["public"]["Enums"]["school_type"] | null
+          website_url?: string | null
         }
         Update: {
+          acceptance_rate?: number | null
+          campus_size?: string | null
           created_at?: string | null
+          description?: string | null
+          founded_year?: number | null
           id?: string
           image?: string | null
           location?: string | null
           name?: string
+          notable_alumni?: string[] | null
+          ranking?: number | null
+          student_population?: number | null
+          tuition_in_state?: number | null
+          tuition_out_state?: number | null
           type?: Database["public"]["Enums"]["school_type"] | null
+          website_url?: string | null
         }
         Relationships: []
       }

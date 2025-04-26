@@ -1,11 +1,13 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
+import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileCard from '@/components/ProfileCard';
 import ProfileFilter from '@/components/ProfileFilter';
+import SearchInput from '@/components/SearchInput';
 
 const Browse = () => {
   const [loading, setLoading] = useState(true);
@@ -14,6 +16,7 @@ const Browse = () => {
   const [majors, setMajors] = useState<Major[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+  const [searchTerm, setSearchTerm] = useState('');
   
   useEffect(() => {
     const loadData = async () => {
@@ -99,6 +102,12 @@ const Browse = () => {
   ];
 
   const filteredProfiles = profiles.filter((profile) => {
+    const matchesSearch = profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.school?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.major?.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (!matchesSearch) return false;
+
     if (Object.values(activeFilters).every((filters) => filters.length === 0)) {
       return true;
     }
@@ -148,51 +157,77 @@ const Browse = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      
       <main className="py-12">
         <div className="container-custom">
-          <h1 className="text-3xl md:text-4xl font-medium mb-8">Browse Profiles</h1>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl md:text-4xl font-medium mb-6">Browse Profiles</h1>
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search by name, school, or major..."
+              className="max-w-2xl"
+            />
+          </motion.div>
           
           <div className="flex flex-col md:flex-row gap-8">
-            <div className="md:w-1/4">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="md:w-1/4"
+            >
               <ProfileFilter 
                 categories={filterCategories}
                 onFilterChange={handleFilterChange}
               />
-            </div>
+            </motion.div>
             
             <div className="md:w-3/4">
               {filteredProfiles.length > 0 ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
                   {filteredProfiles.map((profile) => (
                     <ProfileCard
                       key={profile.id}
                       profile={profile}
                     />
                   ))}
-                </div>
+                </motion.div>
               ) : (
-                <div className="text-center py-12">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center py-12"
+                >
                   <h3 className="text-xl font-medium mb-2">No matching profiles</h3>
                   <p className="text-gray-600 mb-6">
-                    Try adjusting your filters to find more profiles
+                    Try adjusting your search or filters to find more profiles
                   </p>
                   <button 
                     className="btn-secondary"
                     onClick={() => {
                       setActiveFilters({});
-                      filterCategories.forEach(cat => handleFilterChange(cat.id, []));
+                      setSearchTerm('');
                     }}
                   >
                     Clear All Filters
                   </button>
-                </div>
+                </motion.div>
               )}
             </div>
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );
