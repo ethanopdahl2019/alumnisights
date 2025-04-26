@@ -40,7 +40,9 @@ const Browse = () => {
               ...profile.school,
               image: profile.school?.image ?? null
             },
-            activities: profile.activities.map((pa: any) => pa.activities)
+            activities: profile.activities.map((pa: any) => pa.activities),
+            // Explicitly cast the role to the correct type
+            role: (profile.role as 'applicant' | 'alumni') || 'applicant'
           }))
         );
       }
