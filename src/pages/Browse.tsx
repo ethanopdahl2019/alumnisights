@@ -34,10 +34,21 @@ const Browse = () => {
         supabase.from('activities').select('*')
       ]);
 
-      // Ensure school has image for both profiles and schools.
+      // Process profile data
       if (profilesData.data) {
-        setProfiles(
-          profilesData.data.map(profile => ({
+        const processedProfiles = profilesData.data.map(profile => {
+          // Parse social_links if it's a string
+          let socialLinks = profile.social_links;
+          if (typeof socialLinks === 'string' && socialLinks) {
+            try {
+              socialLinks = JSON.parse(socialLinks);
+            } catch (error) {
+              console.error('Error parsing social links:', error);
+              socialLinks = null;
+            }
+          }
+          
+          return {
             ...profile,
             school: {
               ...profile.school,
@@ -45,9 +56,12 @@ const Browse = () => {
             },
             activities: profile.activities.map((pa: any) => pa.activities),
             // Explicitly cast the role to the correct type
-            role: (profile.role as 'applicant' | 'alumni') || 'applicant'
-          }))
-        );
+            role: (profile.role as 'applicant' | 'alumni') || 'applicant',
+            social_links: socialLinks
+          };
+        });
+        
+        setProfiles(processedProfiles as ProfileWithDetails[]);
       }
       
       if (schoolsData.data) {

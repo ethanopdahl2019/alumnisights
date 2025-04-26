@@ -52,6 +52,11 @@ const AlumniProfilePage = () => {
     );
   }
 
+  // Parse social_links if it's a string
+  const socialLinks = typeof profile.social_links === 'string' && profile.social_links
+    ? JSON.parse(profile.social_links)
+    : profile.social_links || {};
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -187,11 +192,11 @@ const AlumniProfilePage = () => {
               </motion.div>
 
               {/* Social Links */}
-              {profile.social_links && (
+              {socialLinks && Object.keys(socialLinks).length > 0 && (
                 <Card className="p-6">
                   <h3 className="font-semibold mb-4">Connect</h3>
                   <div className="space-y-3">
-                    {Object.entries(profile.social_links).map(([platform, url]) => (
+                    {Object.entries(socialLinks).map(([platform, url]) => (
                       <a
                         key={platform}
                         href={url as string}

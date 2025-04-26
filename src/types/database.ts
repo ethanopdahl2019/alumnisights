@@ -1,3 +1,4 @@
+
 export interface School {
   id: string;
   name: string;
@@ -45,7 +46,7 @@ export interface Profile {
   headline?: string | null;
   graduation_year?: number | null;
   location?: string | null;
-  social_links?: Record<string, any> | null;
+  social_links?: Record<string, any> | string | null;
   achievements?: string[] | null;
 }
 
@@ -60,7 +61,7 @@ export interface ProfileWithDetails extends Profile {
   headline?: string | null;
   graduation_year?: number | null;
   location?: string | null;
-  social_links?: Record<string, any> | null;
+  social_links?: Record<string, any> | string | null;
   achievements?: string[] | null;
 }
 

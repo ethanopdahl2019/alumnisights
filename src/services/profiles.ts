@@ -2,6 +2,28 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, ProfileWithDetails, School } from '@/types/database';
 
+// Helper function to parse social links
+const parseSocialLinks = (socialLinks: any): Record<string, any> | null => {
+  if (!socialLinks) return null;
+  
+  // If it's already an object, return it
+  if (typeof socialLinks === 'object' && !Array.isArray(socialLinks)) {
+    return socialLinks;
+  }
+  
+  // If it's a string, try to parse it
+  if (typeof socialLinks === 'string') {
+    try {
+      return JSON.parse(socialLinks);
+    } catch (error) {
+      console.error('Error parsing social links:', error);
+      return null;
+    }
+  }
+  
+  return null;
+};
+
 // Add image when projecting schools
 export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
   const { data: profiles, error } = await supabase
@@ -27,7 +49,8 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities),
-    role: profile.role as 'applicant' | 'alumni'
+    role: profile.role as 'applicant' | 'alumni',
+    social_links: parseSocialLinks(profile.social_links)
   }));
 }
 
@@ -53,7 +76,8 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities),
-    role: profile.role as 'applicant' | 'alumni'
+    role: profile.role as 'applicant' | 'alumni',
+    social_links: parseSocialLinks(profile.social_links)
   }));
 }
 
@@ -83,7 +107,8 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities),
-    role: profile.role as 'applicant' | 'alumni'
+    role: profile.role as 'applicant' | 'alumni',
+    social_links: parseSocialLinks(profile.social_links)
   };
 }
 
