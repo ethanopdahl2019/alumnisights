@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
 import { motion } from 'framer-motion';

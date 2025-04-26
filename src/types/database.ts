@@ -1,10 +1,19 @@
-
 export interface School {
   id: string;
   name: string;
   location: string | null;
   type: 'ivy_league' | 'public' | 'liberal_arts' | 'technical' | 'international' | null;
   image: string | null;
+  description?: string | null;
+  founded_year?: number | null;
+  student_population?: number | null;
+  acceptance_rate?: number | null;
+  website_url?: string | null;
+  campus_size?: string | null;
+  ranking?: number | null;
+  tuition_in_state?: number | null;
+  tuition_out_state?: number | null;
+  notable_alumni?: string[] | null;
 }
 
 export interface Major {
@@ -33,6 +42,11 @@ export interface Profile {
   price_30_min?: number | null;
   price_60_min?: number | null;
   role?: 'applicant' | 'alumni';
+  headline?: string | null;
+  graduation_year?: number | null;
+  location?: string | null;
+  social_links?: Record<string, any> | null;
+  achievements?: string[] | null;
 }
 
 export interface ProfileWithDetails extends Profile {
@@ -43,6 +57,11 @@ export interface ProfileWithDetails extends Profile {
   price_30_min?: number | null;
   price_60_min?: number | null;
   role?: 'applicant' | 'alumni';
+  headline?: string | null;
+  graduation_year?: number | null;
+  location?: string | null;
+  social_links?: Record<string, any> | null;
+  achievements?: string[] | null;
 }
 
 // New types for authentication
