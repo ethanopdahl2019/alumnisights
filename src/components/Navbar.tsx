@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
@@ -5,6 +6,15 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 const logoPath = "/lovable-uploads/bdaaf67c-3436-4d56-bf80-25d5b4978254.png";
 
@@ -41,6 +51,30 @@ const Navbar = () => {
     }
   };
 
+  // Insights dropdown items
+  const insightsItems = [
+    {
+      title: "Undergraduate Admissions",
+      href: "/insights/undergraduate-admissions",
+      description: "Learn about undergraduate admission processes and strategies",
+    },
+    {
+      title: "Graduate Admissions",
+      href: "/insights/graduate-admissions",
+      description: "Explore graduate school application insights and tips",
+    },
+    {
+      title: "Industry Insights",
+      href: "/insights/industry",
+      description: "Discover trends and opportunities across various industries",
+    },
+    {
+      title: "Clubs & Greek Life",
+      href: "/insights/clubs-and-greek-life",
+      description: "Find information about campus organizations and Greek life",
+    },
+  ];
+
   return (
     <nav className="py-3 border-b border-gray-100 bg-white sticky top-0 z-50">
       <div className="container-custom flex items-center justify-between">
@@ -73,6 +107,26 @@ const Navbar = () => {
                   >
                     Schools
                   </Link>
+                  
+                  {/* Mobile Insights Dropdown */}
+                  <div className="flex flex-col gap-2">
+                    <div className="text-navy font-medium py-2 px-4">
+                      Insights
+                    </div>
+                    <div className="pl-4 flex flex-col gap-1">
+                      {insightsItems.map((item) => (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          className="text-navy py-2 px-4 hover:bg-gray-50 rounded"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {item.title}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                  
                   {!user ? (
                     <Link 
                       to="/auth" 
@@ -109,6 +163,37 @@ const Navbar = () => {
             <Link to="/schools" className="text-navy font-medium hover:text-navy/80">
               Schools
             </Link>
+            
+            {/* Desktop Insights Dropdown */}
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-navy font-medium hover:text-navy/80 hover:bg-transparent focus:bg-transparent">Insights</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-4 w-[400px] md:grid-cols-2">
+                      {insightsItems.map((item) => (
+                        <li key={item.href}>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to={item.href}
+                              className={cn(
+                                "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                              )}
+                            >
+                              <div className="text-sm font-medium leading-none">{item.title}</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                {item.description}
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+            
             {!user ? (
               <Link to="/auth" className="ml-2 px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 font-medium transition-colors">
                 Sign In

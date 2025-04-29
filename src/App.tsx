@@ -19,6 +19,12 @@ import AlumniProfilePage from "./pages/AlumniProfilePage";
 import SchoolMajorLanding from "./pages/SchoolMajorLanding";
 import SchoolActivityLanding from "./pages/SchoolActivityLanding";
 
+// Import the new Insights pages
+import UndergraduateAdmissions from "./pages/insights/UndergraduateAdmissions";
+import GraduateAdmissions from "./pages/insights/GraduateAdmissions";
+import IndustryInsights from "./pages/insights/IndustryInsights";
+import ClubsAndGreekLife from "./pages/insights/ClubsAndGreekLife";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -43,6 +49,13 @@ const App = () => (
             {/* School x Major/Activity landing pages */}
             <Route path="/schools/:schoolId/majors/:majorId" element={<SchoolMajorLanding />} />
             <Route path="/schools/:schoolId/activities/:activityId" element={<SchoolActivityLanding />} />
+            
+            {/* New Insights routes */}
+            <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
+            <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
+            <Route path="/insights/industry" element={<IndustryInsights />} />
+            <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
