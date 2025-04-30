@@ -35,8 +35,8 @@ const universities: Record<string, University> = {
       "Final Perspective:",
       "Stanford is often called a \"place where tomorrow is made\" — and for good reason. Its students, faculty, and alumni have reshaped entire industries, advanced the frontiers of knowledge, and set new standards for leadership and service. What defines Stanford above all is its culture of ambition combined with a spirit of collaboration — a belief that true excellence emerges not from competition alone, but from a shared commitment to building a better future. As former Stanford President John Hennessy said, \"We educate students to think big, think deep, and think forward.\" Stanford remains one of the most vibrant, influential, and forward-thinking institutions in the world today."
     ]
-  }
-},
+  },
+
   harvard: {
     id: "harvard",
     name: "Harvard University",
