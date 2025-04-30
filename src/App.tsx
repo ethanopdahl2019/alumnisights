@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import AuthProvider from "@/components/AuthProvider";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
@@ -30,36 +31,38 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/browse" element={<Browse />} />
-            <Route path="/profile/complete" element={<ProfileComplete />} />
-            <Route path="/schools" element={<Schools />} />
-            <Route path="/schools/:id" element={<SchoolDetail />} />
-            {/* Dashboards and alumni profiles */}
-            <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
-            <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
-            <Route path="/alumni/:id" element={<AlumniProfilePage />} />
-            <Route path="/p/:slug" element={<LandingPage />} />
-            {/* School x Major/Activity landing pages */}
-            <Route path="/schools/:schoolId/majors/:majorId" element={<SchoolMajorLanding />} />
-            <Route path="/schools/:schoolId/activities/:activityId" element={<SchoolActivityLanding />} />
-            
-            {/* New Insights routes */}
-            <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-            <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
-            <Route path="/insights/industry" element={<IndustryInsights />} />
-            <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+      <HelmetProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/browse" element={<Browse />} />
+              <Route path="/profile/complete" element={<ProfileComplete />} />
+              <Route path="/schools" element={<Schools />} />
+              <Route path="/schools/:id" element={<SchoolDetail />} />
+              {/* Dashboards and alumni profiles */}
+              <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
+              <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
+              <Route path="/alumni/:id" element={<AlumniProfilePage />} />
+              <Route path="/p/:slug" element={<LandingPage />} />
+              {/* School x Major/Activity landing pages */}
+              <Route path="/schools/:schoolId/majors/:majorId" element={<SchoolMajorLanding />} />
+              <Route path="/schools/:schoolId/activities/:activityId" element={<SchoolActivityLanding />} />
+              
+              {/* New Insights routes */}
+              <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
+              <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
+              <Route path="/insights/industry" element={<IndustryInsights />} />
+              <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </HelmetProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
