@@ -25,6 +25,7 @@ import UndergraduateAdmissions from "./pages/insights/UndergraduateAdmissions";
 import GraduateAdmissions from "./pages/insights/GraduateAdmissions";
 import IndustryInsights from "./pages/insights/IndustryInsights";
 import ClubsAndGreekLife from "./pages/insights/ClubsAndGreekLife";
+import UniversityAdmissions from "./pages/insights/UniversityAdmissions";
 
 const queryClient = new QueryClient();
 
@@ -52,11 +53,14 @@ const App = () => (
               <Route path="/schools/:schoolId/majors/:majorId" element={<SchoolMajorLanding />} />
               <Route path="/schools/:schoolId/activities/:activityId" element={<SchoolActivityLanding />} />
               
-              {/* New Insights routes */}
+              {/* Insights routes */}
               <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
               <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
               <Route path="/insights/industry" element={<IndustryInsights />} />
               <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
+              
+              {/* Add the new route for university admissions pages */}
+              <Route path="/insights/undergraduate-admissions/:id" element={<UniversityAdmissions />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
