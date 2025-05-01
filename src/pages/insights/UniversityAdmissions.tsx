@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
@@ -11,6 +12,7 @@ interface University {
   name: string;
   title: string;
   content: string[];
+  image?: string;
 }
 
 const universities: Record<string, University> = {
@@ -18,6 +20,7 @@ const universities: Record<string, University> = {
     id: "stanford",
     name: "Stanford University",
     title: "How to Get into Stanford University",
+    image: "/lovable-uploads/ac4ac494-9f39-4376-94ee-435e6eeaad53.png",
     content: [
       "Founded in 1885 by Leland and Jane Stanford in memory of their only child, Stanford University is a private research university located in Stanford, California, in the heart of Silicon Valley. Widely regarded as one of the most prestigious institutions in the world, Stanford has played a central role in advancing education, entrepreneurship, science, technology, and public leadership across the modern era. Its motto, \"Die Luft der Freiheit weht\" (\"The wind of freedom blows\"), reflects the university's spirit of intellectual independence and innovation.",
       "Stanford's seven schools — Humanities and Sciences, Engineering, Earth Sciences, Education, Business, Law, and Medicine — offer students unparalleled academic opportunities. The university's undergraduate program emphasizes interdisciplinary learning, research experience, and the freedom to explore intellectual passions across fields. Stanford students can choose from over 65 major fields, and many pursue interdisciplinary programs, dual majors, or individually designed courses of study.",
@@ -159,7 +162,7 @@ const UniversityAdmissions = () => {
       <Navbar />
       
       <main className="container-custom py-12">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <Button 
               onClick={() => navigate("/insights/undergraduate-admissions")}
@@ -176,8 +179,25 @@ const UniversityAdmissions = () => {
             <div className="w-20 h-1 bg-blue-600 rounded-full mb-8"></div>
           </div>
           
+          {university.image && (
+            <div className="mb-8 flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/3">
+                <p className="text-lg text-gray-700 mb-4">
+                  {university.content[0]}
+                </p>
+              </div>
+              <div className="md:w-2/3">
+                <img 
+                  src={university.image} 
+                  alt={university.name} 
+                  className="rounded-lg w-full h-auto shadow-md"
+                />
+              </div>
+            </div>
+          )}
+          
           <div className="prose prose-lg max-w-none">
-            {university.content.map((paragraph, index) => (
+            {university.content.slice(university.image ? 1 : 0).map((paragraph, index) => (
               <p key={index} className="mb-4 text-gray-700">
                 {paragraph}
               </p>

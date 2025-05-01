@@ -43,7 +43,7 @@ const UndergraduateAdmissions = () => {
             <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {universities.map((university) => (
               <Link 
                 key={university.id}
@@ -53,9 +53,9 @@ const UndergraduateAdmissions = () => {
                 <Card className="overflow-hidden border shadow hover:shadow-md h-full">
                   <CardContent className="p-4 flex flex-col items-center justify-center text-center">
                     <div className="bg-blue-50 rounded-full p-4 mb-3">
-                      <University className="h-10 w-10 text-blue-600" />
+                      <University className="h-8 w-8 text-blue-600" />
                     </div>
-                    <h3 className="font-medium text-navy text-sm sm:text-base">
+                    <h3 className="font-medium text-navy">
                       {university.name}
                     </h3>
                   </CardContent>
