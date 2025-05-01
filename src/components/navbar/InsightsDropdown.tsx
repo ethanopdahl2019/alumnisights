@@ -1,16 +1,17 @@
-
+// src/components/navbar/InsightsDropdown.tsx
+import React from "react";
 import { Link } from "react-router-dom";
 import {
   NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
+  NavigationMenuItem,
   NavigationMenuTrigger,
+  NavigationMenuContent,
+  NavigationMenuLink,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 
-export const insightsItems = [
+const insightsItems = [
   {
     title: "Undergraduate Admissions",
     href: "/insights/undergraduate-admissions",
@@ -23,7 +24,7 @@ export const insightsItems = [
   },
   {
     title: "Industry Insights",
-    href: "/insights/industry",
+    href: "/insights/industry-insights",
     description: "Discover trends and opportunities across various industries",
   },
   {
@@ -33,31 +34,30 @@ export const insightsItems = [
   },
 ];
 
-export const InsightsDropdown = () => {
+export const InsightsDropdown: React.FC = () => {
   return (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
--         <NavigationMenuTrigger className="bg-transparent text-navy font-medium hover:text-navy/80 hover:bg-transparent focus:bg-transparent">
-+         <NavigationMenuTrigger className="px-4 py-2 text-sm font-medium">
+          {/* match Browse/Schools sizing */}
+          <NavigationMenuTrigger className="px-4 py-2 text-sm font-medium">
             Insights
           </NavigationMenuTrigger>
+
           <NavigationMenuContent>
--           <ul className="grid gap-3 p-4 w-[400px] md:grid-cols-2">
-+           <ul className="grid grid-cols-1 gap-3 p-4 w-[250px]">
+            {/* single-column roll-down */}
+            <ul className="grid grid-cols-1 gap-3 p-4 w-[250px]">
               {insightsItems.map((item) => (
                 <li key={item.href}>
                   <NavigationMenuLink asChild>
                     <Link
                       to={item.href}
                       className={cn(
-                        "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        "block select-none space-y-1 rounded-md px-4 py-2 text-sm font-medium no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                       )}
                     >
-                      <div className="text-sm font-medium leading-none">
-                        {item.title}
-                      </div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                      <div className="leading-none">{item.title}</div>
+                      <p className="line-clamp-2 leading-snug text-muted-foreground">
                         {item.description}
                       </p>
                     </Link>
