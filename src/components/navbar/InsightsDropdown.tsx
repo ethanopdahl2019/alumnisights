@@ -1,3 +1,4 @@
+
 // src/components/navbar/InsightsDropdown.tsx
 import React from "react";
 import { Link } from "react-router-dom";
@@ -11,7 +12,8 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 
-const insightsItems = [
+// Export the array so it can be used in MobileMenu.tsx
+export const insightsItems = [
   {
     title: "Undergraduate Admissions",
     href: "/insights/undergraduate-admissions",
