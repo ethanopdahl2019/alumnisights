@@ -35,8 +35,6 @@ const UndergraduateAdmissions = () => {
   { id: "boise-state-university", name: "Boise State University" },
   { id: "boston-college", name: "Boston College" }
 ];
-
-
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
