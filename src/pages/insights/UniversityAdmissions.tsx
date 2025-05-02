@@ -50,6 +50,26 @@ const universities: Record<string, University> = {
       "Harvard's admissions process is highly selective with an acceptance rate typically around 3-5%. While academic excellence is essential, with successful applicants generally scoring in the top percentiles on standardized tests, Harvard values a holistic approach that considers personal qualities, extracurricular achievements, community involvement, and potential for leadership and growth. Essays and recommendations provide crucial insight into applicants' character, motivations, and unique perspectives."
     ]
   },
+  yale: {
+    id: "yale",
+    name: "Yale University",
+    title: "How to Get into Yale University",
+    content: [
+      "Yale University, founded in 1701, is one of America's most historic and prestigious institutions of higher learning. Located in New Haven, Connecticut, Yale combines centuries of tradition with cutting-edge research and education. Its distinctive residential college system creates tight-knit communities within the larger university, fostering close relationships between students and faculty.",
+      "Yale College offers a liberal arts curriculum that encourages students to think critically across disciplines before specializing in one of over 80 possible majors. The university is particularly renowned for its programs in law, drama, music, architecture, and management, alongside strong offerings in sciences and humanities.",
+      "Yale's admissions process is highly competitive, with an acceptance rate typically around 5-6%. While academic excellence is expected, with most admitted students ranking at the top of their high school classes, Yale emphasizes a holistic review process that values intellectual curiosity, leadership potential, and diverse perspectives. The university seeks students who will contribute to campus life and make an impact after graduation through their chosen fields."
+    ]
+  },
+  mit: {
+    id: "mit",
+    name: "MIT",
+    title: "How to Get into MIT",
+    content: [
+      "The Massachusetts Institute of Technology (MIT), established in 1861, is a world-renowned institution dedicated to advancing knowledge and educating students in science, technology, and other fields of study. Located in Cambridge, Massachusetts, MIT has been at the forefront of scientific breakthroughs and technological innovations that have shaped our modern world.",
+      "MIT's educational approach emphasizes hands-on problem solving, interdisciplinary collaboration, and the pursuit of rigorous analytical thinking. Students engage with cutting-edge research from the beginning of their undergraduate careers, often working alongside faculty who are leaders in their fields.",
+      "MIT's admissions process is extremely selective, with an acceptance rate typically around 4%. While strong academic preparation in mathematics and science is essential, MIT looks for students who demonstrate creativity, collaborative spirit, and a passion for making a positive impact through technology and science. Applicants should showcase their innovative thinking, hands-on projects, and genuine intellectual curiosity throughout their application."
+    ]
+  },
   alleghenyCollege: {
   id: "allegheny-college",
   name: "Allegheny College",
@@ -161,28 +181,8 @@ bostonCollege: {
   content: [
     "Content coming"
   ]
-}
+},
 
-  yale: {
-    id: "yale",
-    name: "Yale University",
-    title: "How to Get into Yale University",
-    content: [
-      "Yale University, founded in 1701, is one of America's most historic and prestigious institutions of higher learning. Located in New Haven, Connecticut, Yale combines centuries of tradition with cutting-edge research and education. Its distinctive residential college system creates tight-knit communities within the larger university, fostering close relationships between students and faculty.",
-      "Yale College offers a liberal arts curriculum that encourages students to think critically across disciplines before specializing in one of over 80 possible majors. The university is particularly renowned for its programs in law, drama, music, architecture, and management, alongside strong offerings in sciences and humanities.",
-      "Yale's admissions process is highly competitive, with an acceptance rate typically around 5-6%. While academic excellence is expected, with most admitted students ranking at the top of their high school classes, Yale emphasizes a holistic review process that values intellectual curiosity, leadership potential, and diverse perspectives. The university seeks students who will contribute to campus life and make an impact after graduation through their chosen fields."
-    ]
-  },
-  mit: {
-    id: "mit",
-    name: "MIT",
-    title: "How to Get into MIT",
-    content: [
-      "The Massachusetts Institute of Technology (MIT), established in 1861, is a world-renowned institution dedicated to advancing knowledge and educating students in science, technology, and other fields of study. Located in Cambridge, Massachusetts, MIT has been at the forefront of scientific breakthroughs and technological innovations that have shaped our modern world.",
-      "MIT's educational approach emphasizes hands-on problem solving, interdisciplinary collaboration, and the pursuit of rigorous analytical thinking. Students engage with cutting-edge research from the beginning of their undergraduate careers, often working alongside faculty who are leaders in their fields.",
-      "MIT's admissions process is extremely selective, with an acceptance rate typically around 4%. While strong academic preparation in mathematics and science is essential, MIT looks for students who demonstrate creativity, collaborative spirit, and a passion for making a positive impact through technology and science. Applicants should showcase their innovative thinking, hands-on projects, and genuine intellectual curiosity throughout their application."
-    ]
-  },
   princeton: {
     id: "princeton",
     name: "Princeton University",
