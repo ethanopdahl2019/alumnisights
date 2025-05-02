@@ -1,5 +1,3 @@
-
-// src/components/navbar/InsightsDropdown.tsx
 import React from "react";
 import { Link } from "react-router-dom";
 import {
@@ -12,28 +10,12 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 
-// Export the array so it can be used in MobileMenu.tsx
+// your items
 export const insightsItems = [
-  {
-    title: "Undergraduate Admissions",
-    href: "/insights/undergraduate-admissions",
-    description: "Learn about undergraduate admission processes and strategies",
-  },
-  {
-    title: "Graduate Admissions",
-    href: "/insights/graduate-admissions",
-    description: "Explore graduate school application insights and tips",
-  },
-  {
-    title: "Industry Insights",
-    href: "/insights/industry-insights",
-    description: "Discover trends and opportunities across various industries",
-  },
-  {
-    title: "Clubs & Greek Life",
-    href: "/insights/clubs-and-greek-life",
-    description: "Find information about campus organizations and Greek life",
-  },
+  { title: "Undergraduate Admissions", href: "/insights/undergraduate-admissions", description: "Learn about undergraduate admission processes and strategies" },
+  { title: "Graduate Admissions",     href: "/insights/graduate-admissions",    description: "Explore graduate school application insights and tips" },
+  { title: "Industry Insights",       href: "/insights/industry-insights",     description: "Discover trends and opportunities across various industries" },
+  { title: "Clubs & Greek Life",      href: "/insights/clubs-and-greek-life",   description: "Find information about campus organizations and Greek life" },
 ];
 
 export const InsightsDropdown: React.FC = () => {
@@ -41,13 +23,13 @@ export const InsightsDropdown: React.FC = () => {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          {/* match Browse/Schools sizing */}
-          <NavigationMenuTrigger className="px-4 py-2 text-sm font-medium">
+          {/* 1) Bigger trigger text */}
+          <NavigationMenuTrigger className="px-4 py-2 text-base font-medium">
             Insights
           </NavigationMenuTrigger>
 
-          <NavigationMenuContent>
-            {/* single-column roll-down */}
+          {/* 2) Attach our custom “roll-down” CSS animation */}
+          <NavigationMenuContent className="origin-top-center">
             <ul className="grid grid-cols-1 gap-3 p-4 w-[250px]">
               {insightsItems.map((item) => (
                 <li key={item.href}>
@@ -55,7 +37,9 @@ export const InsightsDropdown: React.FC = () => {
                     <Link
                       to={item.href}
                       className={cn(
-                        "block select-none space-y-1 rounded-md px-4 py-2 text-sm font-medium no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        "block select-none space-y-1 rounded-md px-4 py-2 text-base font-medium no-underline outline-none transition-colors",
+                        "hover:bg-accent hover:text-accent-foreground",
+                        "focus:bg-accent focus:text-accent-foreground"
                       )}
                     >
                       <div className="leading-none">{item.title}</div>
