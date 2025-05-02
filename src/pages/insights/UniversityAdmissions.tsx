@@ -50,6 +50,119 @@ const universities: Record<string, University> = {
       "Harvard's admissions process is highly selective with an acceptance rate typically around 3-5%. While academic excellence is essential, with successful applicants generally scoring in the top percentiles on standardized tests, Harvard values a holistic approach that considers personal qualities, extracurricular achievements, community involvement, and potential for leadership and growth. Essays and recommendations provide crucial insight into applicants' character, motivations, and unique perspectives."
     ]
   },
+  alleghenyCollege: {
+  id: "allegheny-college",
+  name: "Allegheny College",
+  title: "How to Get into Allegheny College",
+  content: [
+    "Content coming"
+  ]
+},
+americanUniversity: {
+  id: "american-university",
+  name: "American University",
+  title: "How to Get into American University",
+  content: [
+    "Content coming"
+  ]
+},
+amherstCollege: {
+  id: "amherst-college",
+  name: "Amherst College",
+  title: "How to Get into Amherst College",
+  content: [
+    "Content coming"
+  ]
+},
+appalachianStateUniversity: {
+  id: "appalachian-state-university",
+  name: "Appalachian State University",
+  title: "How to Get into Appalachian State University",
+  content: [
+    "Content coming"
+  ]
+},
+auburnUniversity: {
+  id: "auburn-university",
+  name: "Auburn University",
+  title: "How to Get into Auburn University",
+  content: [
+    "Content coming"
+  ]
+},
+augustanaCollegeIL: {
+  id: "augustana-college-il",
+  name: "Augustana College (IL)",
+  title: "How to Get into Augustana College (IL)",
+  content: [
+    "Content coming"
+  ]
+},
+australianNationalUniversity: {
+  id: "australian-national-university",
+  name: "Australian National University",
+  title: "How to Get into Australian National University",
+  content: [
+    "Content coming"
+  ]
+},
+ballStateUniversity: {
+  id: "ball-state-university",
+  name: "Ball State University",
+  title: "How to Get into Ball State University",
+  content: [
+    "Content coming"
+  ]
+},
+barnardCollege: {
+  id: "barnard-college",
+  name: "Barnard College",
+  title: "How to Get into Barnard College",
+  content: [
+    "Content coming"
+  ]
+},
+batesCollege: {
+  id: "bates-college",
+  name: "Bates College",
+  title: "How to Get into Bates College",
+  content: [
+    "Content coming"
+  ]
+},
+bentleyUniversity: {
+  id: "bentley-university",
+  name: "Bentley University",
+  title: "How to Get into Bentley University",
+  content: [
+    "Content coming"
+  ]
+},
+beloitCollege: {
+  id: "beloit-college",
+  name: "Beloit College",
+  title: "How to Get into Beloit College",
+  content: [
+    "Content coming"
+  ]
+},
+boiseStateUniversity: {
+  id: "boise-state-university",
+  name: "Boise State University",
+  title: "How to Get into Boise State University",
+  content: [
+    "Content coming"
+  ]
+},
+bostonCollege: {
+  id: "boston-college",
+  name: "Boston College",
+  title: "How to Get into Boston College",
+  content: [
+    "Content coming"
+  ]
+}
+
   yale: {
     id: "yale",
     name: "Yale University",
