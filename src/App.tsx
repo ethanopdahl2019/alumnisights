@@ -20,12 +20,20 @@ import AlumniProfilePage from "./pages/AlumniProfilePage";
 import SchoolMajorLanding from "./pages/SchoolMajorLanding";
 import SchoolActivityLanding from "./pages/SchoolActivityLanding";
 
-// Import the new Insights pages
+// Import the Insights pages
 import UndergraduateAdmissions from "./pages/insights/UndergraduateAdmissions";
 import GraduateAdmissions from "./pages/insights/GraduateAdmissions";
 import IndustryInsights from "./pages/insights/IndustryInsights";
 import ClubsAndGreekLife from "./pages/insights/ClubsAndGreekLife";
 import UniversityAdmissions from "./pages/insights/UniversityAdmissions";
+
+// Import the new UniversityPage component for dynamic university pages
+import UniversityPage from "./pages/insights/universities/UniversityPage";
+
+// Import specific university pages
+import HarvardUniversity from "./pages/insights/universities/harvard-university";
+import StanfordUniversity from "./pages/insights/universities/stanford-university";
+import MITUniversity from "./pages/insights/universities/mit";
 
 const queryClient = new QueryClient();
 
@@ -59,8 +67,13 @@ const App = () => (
               <Route path="/insights/industry" element={<IndustryInsights />} />
               <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
               
-              {/* Add the new route for university admissions pages */}
-              <Route path="/insights/undergraduate-admissions/:id" element={<UniversityAdmissions />} />
+              {/* University Admissions routes */}
+              <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
+              
+              {/* Specific university routes */}
+              <Route path="/insights/undergraduate-admissions/harvard-university" element={<HarvardUniversity />} />
+              <Route path="/insights/undergraduate-admissions/stanford-university" element={<StanfordUniversity />} />
+              <Route path="/insights/undergraduate-admissions/massachusetts-institute-of-technology-mit" element={<MITUniversity />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
