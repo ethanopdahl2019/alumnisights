@@ -132,7 +132,7 @@ export const universities: University[] = [
   { id: "smith-college", name: "Smith College", logo: "/logos/default-university.png" },
   { id: "spelman-college", name: "Spelman College", logo: "/logos/default-university.png" },
   { id: "st-olaf-college", name: "St. Olaf College", logo: "/logos/default-university.png" },
-  { id: "stanford-university", name: "Stanford University", logo: "/lovable-uploads/05100078-b238-4e77-b931-fc9455a696a9.png" },
+  { id: "stanford", name: "Stanford University", logo: "/lovable-uploads/05100078-b238-4e77-b931-fc9455a696a9.png" },
   { id: "stevens-institute-of-technology", name: "Stevens Institute of Technology", logo: "/logos/default-university.png" },
   { id: "stetson-university", name: "Stetson University", logo: "/logos/default-university.png" },
   { id: "suny-binghamton", name: "SUNY Binghamton", logo: "/logos/default-university.png" },
