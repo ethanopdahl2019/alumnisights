@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const NavbarUserSection = () => {
@@ -76,6 +76,10 @@ export const NavbarUserSection = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate('/account')}>
+          <User className="mr-2 h-4 w-4" />
+          View Account
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={goToDashboard}>
           Dashboard
         </DropdownMenuItem>

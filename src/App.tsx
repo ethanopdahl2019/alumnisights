@@ -20,6 +20,7 @@ import AlumniProfilePage from "./pages/AlumniProfilePage";
 import BookingPage from "./pages/BookingPage";
 import SchoolMajorLanding from "./pages/SchoolMajorLanding";
 import SchoolActivityLanding from "./pages/SchoolActivityLanding";
+import MyAccount from "./pages/MyAccount";
 
 // Import the Insights pages
 import UndergraduateAdmissions from "./pages/insights/UndergraduateAdmissions";
@@ -67,7 +68,8 @@ const App = () => (
               <Route path="/profile/complete" element={<ProfileComplete />} />
               <Route path="/schools" element={<Schools />} />
               <Route path="/schools/:id" element={<SchoolDetail />} />
-              {/* Dashboards and alumni profiles */}
+              {/* Account and dashboards */}
+              <Route path="/account" element={<MyAccount />} />
               <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
               <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
               <Route path="/alumni/:id" element={<AlumniProfilePage />} />
