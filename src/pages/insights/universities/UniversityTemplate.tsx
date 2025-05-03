@@ -13,7 +13,8 @@ const UniversityTemplate: React.FC<{
   name: string;
   logo?: string;
   content?: React.ReactNode;
-}> = ({ name, logo, content }) => {
+  showEditButton?: boolean;
+}> = ({ name, logo, content, showEditButton = false }) => {
   const { id } = useParams<{ id: string }>();
   
   return (
@@ -49,7 +50,7 @@ const UniversityTemplate: React.FC<{
               <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
             </div>
             
-            {id && (
+            {id && showEditButton && (
               <div className="flex-shrink-0">
                 <Link to={`/insights/university-content-editor/${id}`}>
                   <Button variant="outline" size="sm" className="whitespace-nowrap">

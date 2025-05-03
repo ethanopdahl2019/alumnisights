@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -14,6 +14,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
+import { useAuth } from "@/components/AuthProvider";
+import { ShieldAlert } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define form schema for university content
 const formSchema = z.object({
@@ -28,6 +31,47 @@ const UniversityContentEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { user, loading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_metadata')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return;
+        }
+        
+        const isUserAdmin = data?.user_metadata?.role === 'admin';
+        setIsAdmin(isUserAdmin);
+        
+        if (!isUserAdmin) {
+          toast.error("You don't have permission to access this page");
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+    
+    if (!loading) {
+      if (!user) {
+        toast.error("Please sign in to access this page");
+        navigate('/auth');
+        return;
+      }
+      
+      checkAdminStatus();
+    }
+  }, [user, loading, navigate]);
 
   // Find university if editing existing one
   const university = id ? universities.find(uni => uni.id === id) : null;
@@ -63,6 +107,36 @@ const UniversityContentEditor: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div>
+          <p className="mt-4 text-navy">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main className="container-custom py-12">
+          <div className="max-w-6xl mx-auto text-center">
+            <ShieldAlert className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-navy mb-4">Access Denied</h1>
+            <p className="mb-6">You need to be signed in as an administrator to access this page.</p>
+            <Button onClick={() => navigate("/auth")}>
+              Go to Sign In
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
