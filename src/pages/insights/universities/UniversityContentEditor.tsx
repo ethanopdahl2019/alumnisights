@@ -11,16 +11,19 @@ import { universities } from "./universities-data";
 import UniversityContentLoading from "./components/UniversityContentLoading";
 import AccessDenied from "./components/AccessDenied";
 import UniversityContentForm from "./components/UniversityContentForm";
-import { useUniversityContentForm } from "./hooks/useUniversityContentForm";
 
 const UniversityContentEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const { isLoadingContent } = useUniversityContentForm({ id });
+  const [isLoadingContent, setIsLoadingContent] = useState<boolean>(true);
 
   // Find university if editing existing one
   const universityData = id ? universities.find(uni => uni.id === id) : null;
+
+  useEffect(() => {
+    setIsLoadingContent(false);
+  }, [id]);
 
   useEffect(() => {
     const checkAdminStatus = async () => {

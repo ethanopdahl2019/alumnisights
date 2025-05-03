@@ -132,15 +132,15 @@ export async function getContentBlocks(schoolId?: string, majorId?: string): Pro
 
 // Updated functions for university content management
 export async function getUniversityContent(id: string): Promise<UniversityContent | null> {
-  // Using any to bypass TypeScript error with table not being in generated types
   const { data, error } = await supabase
-    .from('universities_content' as any)
+    .from('universities_content')
     .select('*')
     .eq('id', id)
     .single();
   
   if (error) {
     if (error.code === 'PGRST116') return null; // Record not found
+    console.error("Error fetching university content:", error);
     throw error;
   }
   
@@ -155,9 +155,8 @@ export async function saveUniversityContent(id: string, content: {
   alumniInsights?: string;
   image?: string | null;
 }): Promise<UniversityContent> {
-  // Using any to bypass TypeScript error with table not being in generated types
   const { data, error } = await supabase
-    .from('universities_content' as any)
+    .from('universities_content')
     .upsert({
       id,
       name: content.name,
@@ -170,6 +169,9 @@ export async function saveUniversityContent(id: string, content: {
     .select()
     .single();
   
-  if (error) throw error;
+  if (error) {
+    console.error("Error saving university content:", error);
+    throw error;
+  }
   return data as unknown as UniversityContent;
 }

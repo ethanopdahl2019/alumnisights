@@ -835,6 +835,42 @@ export type Database = {
         }
         Relationships: []
       }
+      universities_content: {
+        Row: {
+          admission_stats: string | null
+          alumni_insights: string | null
+          application_requirements: string | null
+          created_at: string
+          id: string
+          image: string | null
+          name: string
+          overview: string | null
+          updated_at: string
+        }
+        Insert: {
+          admission_stats?: string | null
+          alumni_insights?: string | null
+          application_requirements?: string | null
+          created_at?: string
+          id: string
+          image?: string | null
+          name: string
+          overview?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admission_stats?: string | null
+          alumni_insights?: string | null
+          application_requirements?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          name?: string
+          overview?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_tags: {
         Row: {
           created_at: string

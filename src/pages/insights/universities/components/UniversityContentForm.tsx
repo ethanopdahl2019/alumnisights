@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import UniversityImageUpload from "./UniversityImageUpload";
-import { useUniversityContentForm, UniversityFormValues } from "../hooks/useUniversityContentForm";
+import { useUniversityContentForm } from "../hooks/useUniversityContentForm";
 
 interface UniversityContentFormProps {
   id?: string;

@@ -28,7 +28,7 @@ interface UseUniversityContentFormProps {
 export const useUniversityContentForm = ({ id, universityName }: UseUniversityContentFormProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingContent, setIsLoadingContent] = useState(true);
+  const [isLoadingContent, setIsLoadingContent] = useState(!!id);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -101,7 +101,7 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
 
     try {
       const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${id}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const fileName = `${id || 'new'}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `university-images/${fileName}`;
 
       // Upload the file
@@ -127,7 +127,10 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
   };
 
   const onSubmit = async (values: UniversityFormValues) => {
-    if (!id) return;
+    if (!id) {
+      toast.error("University ID is required for saving content");
+      return;
+    }
     
     setIsLoading(true);
     
