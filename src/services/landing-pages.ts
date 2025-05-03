@@ -130,3 +130,44 @@ export async function getContentBlocks(schoolId?: string, majorId?: string): Pro
   return data;
 }
 
+// New functions for university content management
+export async function getUniversityContent(id: string) {
+  const { data, error } = await supabase
+    .from('universities_content')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    if (error.code === 'PGRST116') return null; // Record not found
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function saveUniversityContent(id: string, content: {
+  name: string;
+  overview: string;
+  admissionStats: string;
+  applicationRequirements: string;
+  alumniInsights?: string;
+  image?: string;
+}) {
+  const { data, error } = await supabase
+    .from('universities_content')
+    .upsert({
+      id,
+      name: content.name,
+      overview: content.overview,
+      admission_stats: content.admissionStats,
+      application_requirements: content.applicationRequirements,
+      alumni_insights: content.alumniInsights || '',
+      image: content.image
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
