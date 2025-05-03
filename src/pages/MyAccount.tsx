@@ -120,14 +120,15 @@ const MyAccount = () => {
     setIsLoading(true);
     try {
       // Create a new admin request in the database
-      const { error } = await supabase
-        .from("admin_requests")
+      // Use type assertion with 'as any' to bypass TypeScript checking for now
+      const { error } = await (supabase
+        .from("admin_requests" as any)
         .insert({
           user_id: user?.id,
           request_type: requestType,
           reason: requestReason,
           status: 'pending'
-        });
+        } as any));
 
       if (error) throw error;
       

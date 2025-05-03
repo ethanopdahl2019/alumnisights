@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +11,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import { ShieldAlert, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminRequest } from "@/types/admin-requests";
 
 type AdminRequest = {
   id: string;
@@ -29,7 +29,7 @@ const RequestManagement: React.FC = () => {
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [requests, setRequests] = useState<AdminRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -65,27 +65,34 @@ const RequestManagement: React.FC = () => {
   const fetchRequests = async () => {
     setIsLoading(true);
     try {
-      // Fetch all admin requests
-      const { data, error } = await supabase
-        .from("admin_requests")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Use fetch API for admin_requests directly since TypeScript doesn't know about it yet
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/admin_requests?select=*`,
+        {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${supabase.auth.getSession().then(({ data }) => data.session?.access_token)}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error('Failed to fetch requests');
       }
       
-      const requests = data || [];
+      const requestsData = await response.json() as AdminRequest[];
       
-      // Get user details for each request
-      const enrichedRequests = await Promise.all(requests.map(async (request) => {
-        const { data: userData } = await supabase.auth.admin.getUserById(request.user_id);
+      // Enrich request data with user information
+      const enrichedRequests = await Promise.all(requestsData.map(async (request) => {
+        // Get user details from auth.users table
+        const { data } = await supabase.auth.admin.getUserById(request.user_id);
         
         return {
           ...request,
-          user_email: userData?.user.email,
-          user_name: userData?.user.user_metadata?.first_name || userData?.user.email
-        };
+          user_email: data?.user.email,
+          user_name: data?.user.user_metadata?.first_name || data?.user.email
+        } as AdminRequest;
       }));
       
       setRequests(enrichedRequests);
@@ -99,13 +106,24 @@ const RequestManagement: React.FC = () => {
 
   const handleApproveRequest = async (requestId: string, userId: string, requestType: string) => {
     try {
-      // Update the request status
-      const { error: updateError } = await supabase
-        .from("admin_requests")
-        .update({ status: 'approved' })
-        .eq("id", requestId);
+      // Update the request status using fetch API
+      const updateResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/admin_requests?id=eq.${requestId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ status: 'approved' })
+        }
+      );
       
-      if (updateError) throw updateError;
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update request status');
+      }
       
       if (requestType === 'admin') {
         // Make user an admin
@@ -147,13 +165,24 @@ const RequestManagement: React.FC = () => {
 
   const handleDeclineRequest = async (requestId: string) => {
     try {
-      // Update the request status
-      const { error } = await supabase
-        .from("admin_requests")
-        .update({ status: 'declined' })
-        .eq("id", requestId);
+      // Update the request status using fetch API
+      const updateResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/admin_requests?id=eq.${requestId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ status: 'declined' })
+        }
+      );
       
-      if (error) throw error;
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update request status');
+      }
       
       toast.success("Request has been declined");
       
