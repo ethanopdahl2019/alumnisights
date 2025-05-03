@@ -132,9 +132,9 @@ export async function getContentBlocks(schoolId?: string, majorId?: string): Pro
 
 // Updated functions for university content management
 export async function getUniversityContent(id: string): Promise<UniversityContent | null> {
-  // Using type assertion to handle the TypeScript error
+  // Using any to bypass TypeScript error with table not being in generated types
   const { data, error } = await supabase
-    .from('universities_content')
+    .from('universities_content' as any)
     .select('*')
     .eq('id', id)
     .single();
@@ -144,7 +144,7 @@ export async function getUniversityContent(id: string): Promise<UniversityConten
     throw error;
   }
   
-  return data as UniversityContent;
+  return data as unknown as UniversityContent;
 }
 
 export async function saveUniversityContent(id: string, content: {
@@ -155,9 +155,9 @@ export async function saveUniversityContent(id: string, content: {
   alumniInsights?: string;
   image?: string | null;
 }): Promise<UniversityContent> {
-  // Using type assertion to handle the TypeScript error
+  // Using any to bypass TypeScript error with table not being in generated types
   const { data, error } = await supabase
-    .from('universities_content')
+    .from('universities_content' as any)
     .upsert({
       id,
       name: content.name,
@@ -171,5 +171,5 @@ export async function saveUniversityContent(id: string, content: {
     .single();
   
   if (error) throw error;
-  return data as UniversityContent;
+  return data as unknown as UniversityContent;
 }

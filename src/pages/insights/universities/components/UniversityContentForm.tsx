@@ -1,0 +1,138 @@
+
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import UniversityImageUpload from "./UniversityImageUpload";
+import { useUniversityContentForm, UniversityFormValues } from "../hooks/useUniversityContentForm";
+
+interface UniversityContentFormProps {
+  id?: string;
+  universityName?: string;
+}
+
+const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, universityName }) => {
+  const navigate = useNavigate();
+  const {
+    form,
+    isLoading,
+    imagePreview,
+    handleImageChange,
+    onSubmit,
+    resetImage
+  } = useUniversityContentForm({ id, universityName });
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>University Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Harvard University" {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="overview"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Overview</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Provide an overview of the university..."
+                    className="min-h-[150px]"
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="admissionStats"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Admission Statistics</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Enter acceptance rate, GPA range, test scores..."
+                    className="min-h-[150px]"
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="space-y-6">
+          <UniversityImageUpload 
+            imagePreview={imagePreview}
+            onImageChange={handleImageChange}
+            onImageRemove={resetImage}
+          />
+
+          <FormField
+            control={form.control}
+            name="applicationRequirements"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Application Requirements</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="List required materials, deadlines, essays..."
+                    className="min-h-[150px]" 
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="alumniInsights"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Alumni Insights (optional)</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Add any quotes or insights from alumni..."
+                    className="min-h-[100px]" 
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-4 justify-end">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={() => navigate("/insights/university-content-manager")}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : (id ? "Update" : "Create")}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+export default UniversityContentForm;
