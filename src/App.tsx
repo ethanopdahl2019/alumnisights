@@ -39,6 +39,7 @@ import UniversityContentEditor from "./pages/insights/universities/UniversityCon
 // Import Admin dashboard pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
+import RequestManagement from "./pages/admin/RequestManagement";
 import Analytics from "./pages/admin/Analytics";
 
 // Import specific university pages
@@ -93,6 +94,7 @@ const App = () => (
               {/* Admin dashboard routes */}
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/requests" element={<RequestManagement />} />
               <Route path="/admin/analytics" element={<Analytics />} />
               
               {/* University Admissions routes - dynamic route first */}

@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
-import { ShieldAlert, UserCheck, Edit, Info } from "lucide-react";
+import { ShieldAlert, UserCheck, Edit, Info, BadgeCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -39,6 +41,27 @@ const AdminDashboard: React.FC = () => {
       checkAdminStatus();
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchPendingRequests();
+    }
+  }, [isAdmin]);
+
+  const fetchPendingRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("admin_requests")
+        .select("count", { count: "exact", head: true })
+        .eq("status", "pending");
+      
+      if (error) throw error;
+      
+      setPendingRequestsCount(data || 0);
+    } catch (error) {
+      console.error("Error fetching pending requests:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -146,7 +169,38 @@ const AdminDashboard: React.FC = () => {
             <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Info className="h-5 w-5 mr-2 text-purple-600" />
+                  <BadgeCheck className="h-5 w-5 mr-2 text-purple-600" />
+                  User Requests
+                  {pendingRequestsCount > 0 && (
+                    <span className="ml-2 text-sm bg-red-600 text-white py-1 px-2 rounded-full">
+                      {pendingRequestsCount}
+                    </span>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  Manage verification and admin requests
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">
+                  Review and approve requests from users for verification or admin privileges.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => navigate("/admin/requests")}
+                >
+                  View Requests
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Info className="h-5 w-5 mr-2 text-orange-600" />
                   Analytics
                 </CardTitle>
                 <CardDescription>

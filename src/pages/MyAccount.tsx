@@ -10,8 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { User, Calendar, BadgeCheck, ShieldCheck } from "lucide-react";
+import { User, Calendar, BadgeCheck, ShieldCheck, Key } from "lucide-react";
 
 const MyAccount = () => {
   const navigate = useNavigate();
@@ -20,6 +25,11 @@ const MyAccount = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [badges, setBadges] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [accessCode, setAccessCode] = useState("");
+  const [requestType, setRequestType] = useState("admin");
+  const [requestReason, setRequestReason] = useState("");
+  const [accessDialogOpen, setAccessDialogOpen] = useState(false);
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const isAdmin = user?.user_metadata?.role === 'admin';
 
   useEffect(() => {
@@ -77,6 +87,60 @@ const MyAccount = () => {
       fetchUserData();
     }
   }, [user, loading, navigate]);
+
+  const handleAccessCodeSubmit = async () => {
+    setIsLoading(true);
+    try {
+      // Check if the access code matches (hardcoded for now: "password")
+      if (accessCode === "password") {
+        // Update user metadata to make them an admin
+        const { data, error } = await supabase.auth.updateUser({
+          data: { role: 'admin' }
+        });
+
+        if (error) throw error;
+        
+        toast.success("Admin access granted!");
+        
+        // Reload the page to reflect the changes
+        window.location.reload();
+      } else {
+        toast.error("Invalid access code");
+      }
+    } catch (error) {
+      console.error("Error granting admin access:", error);
+      toast.error("Failed to process access code");
+    } finally {
+      setIsLoading(false);
+      setAccessDialogOpen(false);
+    }
+  };
+
+  const handleRequestSubmit = async () => {
+    setIsLoading(true);
+    try {
+      // Create a new admin request in the database
+      const { error } = await supabase
+        .from("admin_requests")
+        .insert({
+          user_id: user?.id,
+          request_type: requestType,
+          reason: requestReason,
+          status: 'pending'
+        });
+
+      if (error) throw error;
+      
+      toast.success(`Your request for ${requestType} status has been submitted!`);
+    } catch (error) {
+      console.error("Error submitting request:", error);
+      toast.error("Failed to submit request");
+    } finally {
+      setIsLoading(false);
+      setRequestDialogOpen(false);
+      setRequestReason("");
+    }
+  };
 
   if (loading || isLoading) {
     return (
@@ -342,6 +406,89 @@ const MyAccount = () => {
                         </p>
                       </div>
                     )}
+                    
+                    <div className="pt-4 space-y-3">
+                      <Dialog open={accessDialogOpen} onOpenChange={setAccessDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="w-full flex items-center">
+                            <Key className="mr-2 h-4 w-4" />
+                            Enter Access Code
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Enter Admin Access Code</DialogTitle>
+                            <DialogDescription>
+                              Enter the admin access code to gain administrator privileges.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <Input
+                              type="password"
+                              placeholder="Access Code"
+                              value={accessCode}
+                              onChange={(e) => setAccessCode(e.target.value)}
+                              className="mb-2"
+                            />
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setAccessDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button onClick={handleAccessCodeSubmit}>
+                              Submit
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+
+                      <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="w-full">
+                            Request Special Status
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Request Special Status</DialogTitle>
+                            <DialogDescription>
+                              Submit a request for verified status or admin privileges.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4 space-y-4">
+                            <RadioGroup value={requestType} onValueChange={setRequestType}>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="admin" id="admin" />
+                                <Label htmlFor="admin">Admin Status</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="verified" id="verified" />
+                                <Label htmlFor="verified">Verified Status</Label>
+                              </div>
+                            </RadioGroup>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="reason">Reason for Request</Label>
+                              <textarea
+                                id="reason"
+                                placeholder="Please explain why you are requesting this status..."
+                                value={requestReason}
+                                onChange={(e) => setRequestReason(e.target.value)}
+                                className="w-full min-h-[100px] p-2 border rounded-md"
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setRequestDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button onClick={handleRequestSubmit} disabled={!requestReason.trim()}>
+                              Submit Request
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
