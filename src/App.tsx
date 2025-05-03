@@ -27,10 +27,15 @@ import IndustryInsights from "./pages/insights/IndustryInsights";
 import ClubsAndGreekLife from "./pages/insights/ClubsAndGreekLife";
 import UniversityAdmissions from "./pages/insights/UniversityAdmissions";
 
-// Import the new UniversityPage component for dynamic university pages
+// Import the dynamic UniversityPage component
 import UniversityPage from "./pages/insights/universities/UniversityPage";
 
 // Import specific university pages
+import AlleghenyCollege from "./pages/insights/universities/allegheny-college";
+import AmericanUniversity from "./pages/insights/universities/american-university";
+import AmherstCollege from "./pages/insights/universities/amherst-college";
+import AppalachianStateUniversity from "./pages/insights/universities/appalachian-state-university";
+import AuburnUniversity from "./pages/insights/universities/auburn-university";
 import HarvardUniversity from "./pages/insights/universities/harvard-university";
 import StanfordUniversity from "./pages/insights/universities/stanford-university";
 import MITUniversity from "./pages/insights/universities/mit";
@@ -67,10 +72,15 @@ const App = () => (
               <Route path="/insights/industry" element={<IndustryInsights />} />
               <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
               
-              {/* University Admissions routes */}
+              {/* University Admissions routes - dynamic route first */}
               <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
               
-              {/* Specific university routes */}
+              {/* Specific university routes for direct access */}
+              <Route path="/insights/undergraduate-admissions/allegheny-college" element={<AlleghenyCollege />} />
+              <Route path="/insights/undergraduate-admissions/american-university" element={<AmericanUniversity />} />
+              <Route path="/insights/undergraduate-admissions/amherst-college" element={<AmherstCollege />} />
+              <Route path="/insights/undergraduate-admissions/appalachian-state-university" element={<AppalachianStateUniversity />} />
+              <Route path="/insights/undergraduate-admissions/auburn-university" element={<AuburnUniversity />} />
               <Route path="/insights/undergraduate-admissions/harvard-university" element={<HarvardUniversity />} />
               <Route path="/insights/undergraduate-admissions/stanford-university" element={<StanfordUniversity />} />
               <Route path="/insights/undergraduate-admissions/massachusetts-institute-of-technology-mit" element={<MITUniversity />} />
