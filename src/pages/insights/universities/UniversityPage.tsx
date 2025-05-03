@@ -18,23 +18,9 @@ const UniversityPage: React.FC = () => {
     const checkAdminStatus = async () => {
       if (!user) return;
       
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_metadata')
-          .eq('id', user.id)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching profile:', error);
-          return;
-        }
-        
-        const isUserAdmin = data?.user_metadata?.role === 'admin';
-        setIsAdmin(isUserAdmin);
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-      }
+      // Check if the user has admin role in their metadata
+      const isUserAdmin = user.user_metadata?.role === 'admin';
+      setIsAdmin(isUserAdmin);
     };
     
     if (user) {

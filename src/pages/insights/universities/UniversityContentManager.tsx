@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
@@ -11,7 +10,6 @@ import DefaultLogo from "./DefaultLogo";
 import { Edit, Plus, Trash2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
 
 const UniversityContentManager: React.FC = () => {
   const navigate = useNavigate();
@@ -22,28 +20,13 @@ const UniversityContentManager: React.FC = () => {
     const checkAdminStatus = async () => {
       if (!user) return;
       
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_metadata')
-          .eq('id', user.id)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching profile:', error);
-          return;
-        }
-        
-        // Check if the user has admin role in their metadata
-        const isUserAdmin = data?.user_metadata?.role === 'admin';
-        setIsAdmin(isUserAdmin);
-        
-        if (!isUserAdmin) {
-          toast.error("You don't have permission to access this page");
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
+      // Check if user has admin role in metadata
+      const isUserAdmin = user.user_metadata?.role === 'admin';
+      setIsAdmin(isUserAdmin);
+      
+      if (!isUserAdmin) {
+        toast.error("You don't have permission to access this page");
+        navigate('/');
       }
     };
     

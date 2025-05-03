@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
@@ -16,7 +15,6 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 import { ShieldAlert } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 // Define form schema for university content
 const formSchema = z.object({
@@ -38,27 +36,13 @@ const UniversityContentEditor: React.FC = () => {
     const checkAdminStatus = async () => {
       if (!user) return;
       
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_metadata')
-          .eq('id', user.id)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching profile:', error);
-          return;
-        }
-        
-        const isUserAdmin = data?.user_metadata?.role === 'admin';
-        setIsAdmin(isUserAdmin);
-        
-        if (!isUserAdmin) {
-          toast.error("You don't have permission to access this page");
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
+      // Check if the user has admin role in metadata
+      const isUserAdmin = user.user_metadata?.role === 'admin';
+      setIsAdmin(isUserAdmin);
+      
+      if (!isUserAdmin) {
+        toast.error("You don't have permission to access this page");
+        navigate('/');
       }
     };
     
