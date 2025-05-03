@@ -4,6 +4,9 @@ import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DefaultLogo from "./DefaultLogo";
+import { Button } from "@/components/ui/button";
+import { Edit } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 
 // This is a template for university pages
 const UniversityTemplate: React.FC<{
@@ -11,6 +14,8 @@ const UniversityTemplate: React.FC<{
   logo?: string;
   content?: React.ReactNode;
 }> = ({ name, logo, content }) => {
+  const { id } = useParams<{ id: string }>();
+  
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
@@ -34,7 +39,7 @@ const UniversityTemplate: React.FC<{
                 <DefaultLogo name={name} className="h-24 w-24" />
               )}
             </div>
-            <div>
+            <div className="flex-grow">
               <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4">
                 {name}
               </h1>
@@ -43,6 +48,16 @@ const UniversityTemplate: React.FC<{
               </p>
               <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
             </div>
+            
+            {id && (
+              <div className="flex-shrink-0">
+                <Link to={`/insights/university-content-editor/${id}`}>
+                  <Button variant="outline" size="sm" className="whitespace-nowrap">
+                    <Edit className="h-4 w-4 mr-2" /> Edit
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="prose max-w-none">

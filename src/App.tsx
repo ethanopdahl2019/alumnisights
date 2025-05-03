@@ -31,6 +31,10 @@ import UniversityAdmissions from "./pages/insights/UniversityAdmissions";
 // Import the dynamic UniversityPage component
 import UniversityPage from "./pages/insights/universities/UniversityPage";
 
+// Import the university content management pages
+import UniversityContentManager from "./pages/insights/universities/UniversityContentManager";
+import UniversityContentEditor from "./pages/insights/universities/UniversityContentEditor";
+
 // Import specific university pages
 import AlleghenyCollege from "./pages/insights/universities/allegheny-college";
 import AmericanUniversity from "./pages/insights/universities/american-university";
@@ -73,6 +77,11 @@ const App = () => (
               <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
               <Route path="/insights/industry" element={<IndustryInsights />} />
               <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
+              
+              {/* University content management routes */}
+              <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
+              <Route path="/insights/university-content-editor" element={<UniversityContentEditor />} />
+              <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
               
               {/* University Admissions routes - dynamic route first */}
               <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
