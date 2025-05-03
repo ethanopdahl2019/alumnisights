@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -12,17 +13,6 @@ import { toast } from "sonner";
 import { ShieldAlert, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminRequest } from "@/types/admin-requests";
-
-type AdminRequest = {
-  id: string;
-  user_id: string;
-  request_type: string;
-  reason: string;
-  status: string;
-  created_at: string;
-  user_email?: string;
-  user_name?: string;
-};
 
 const RequestManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -71,7 +61,7 @@ const RequestManagement: React.FC = () => {
         {
           headers: {
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${supabase.auth.getSession().then(({ data }) => data.session?.access_token)}`,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -85,14 +75,23 @@ const RequestManagement: React.FC = () => {
       
       // Enrich request data with user information
       const enrichedRequests = await Promise.all(requestsData.map(async (request) => {
-        // Get user details from auth.users table
-        const { data } = await supabase.auth.admin.getUserById(request.user_id);
-        
-        return {
-          ...request,
-          user_email: data?.user.email,
-          user_name: data?.user.user_metadata?.first_name || data?.user.email
-        } as AdminRequest;
+        // Get user details from auth.users table using admin functions
+        try {
+          const { data } = await supabase.auth.admin.getUserById(request.user_id);
+          
+          return {
+            ...request,
+            user_email: data?.user.email,
+            user_name: data?.user.user_metadata?.first_name || data?.user.email
+          } as AdminRequest;
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+          return {
+            ...request,
+            user_email: 'Unknown user',
+            user_name: 'Unknown user'
+          } as AdminRequest;
+        }
       }));
       
       setRequests(enrichedRequests);
@@ -206,7 +205,10 @@ const RequestManagement: React.FC = () => {
       // Tag doesn't exist, create it
       const { data: newTag, error: createError } = await supabase
         .from("tags")
-        .insert({ name: "Verified Alumni", type: "badge" })
+        .insert({ 
+          name: "Verified Alumni", 
+          type: "interest" // Changed from "badge" to "interest" which is an allowed enum value
+        })
         .select("id")
         .single();
       
