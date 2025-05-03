@@ -35,6 +35,11 @@ import UniversityPage from "./pages/insights/universities/UniversityPage";
 import UniversityContentManager from "./pages/insights/universities/UniversityContentManager";
 import UniversityContentEditor from "./pages/insights/universities/UniversityContentEditor";
 
+// Import Admin dashboard pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import Analytics from "./pages/admin/Analytics";
+
 // Import specific university pages
 import AlleghenyCollege from "./pages/insights/universities/allegheny-college";
 import AmericanUniversity from "./pages/insights/universities/american-university";
@@ -82,6 +87,11 @@ const App = () => (
               <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
               <Route path="/insights/university-content-editor" element={<UniversityContentEditor />} />
               <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
+              
+              {/* Admin dashboard routes */}
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/analytics" element={<Analytics />} />
               
               {/* University Admissions routes - dynamic route first */}
               <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
