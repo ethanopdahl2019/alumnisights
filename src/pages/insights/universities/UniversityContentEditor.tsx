@@ -5,7 +5,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 import { universities } from "./universities-data";
@@ -70,12 +69,10 @@ const UniversityContentEditor: React.FC = () => {
 
           <Card>
             <CardContent className="pt-6">
-              <Form>
-                <UniversityContentForm 
-                  id={id} 
-                  universityName={universityData?.name} 
-                />
-              </Form>
+              <UniversityContentForm 
+                id={id} 
+                universityName={universityData?.name} 
+              />
             </CardContent>
           </Card>
         </div>
