@@ -98,9 +98,9 @@ const AlumniProfilePage = () => {
   }
 
   // Parse social_links if it's a string
-  const socialLinks = typeof profile.social_links === 'string' && profile.social_links
+  const socialLinks = typeof profile?.social_links === 'string' && profile.social_links
     ? JSON.parse(profile.social_links)
-    : profile.social_links || {};
+    : profile?.social_links || {};
 
   // Calculate average rating
   const averageRating = reviews?.length ? 
@@ -293,7 +293,7 @@ const AlumniProfilePage = () => {
               <Card className="p-6 bg-white border shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Book a Session</h2>
                 <p className="text-gray-600 mb-6">
-                  Get personalized insights about {profile.school.name} from someone who's been there.
+                  Get personalized insights about {profile?.school?.name} from someone who's been there.
                 </p>
                 
                 <div className="space-y-4">
@@ -302,13 +302,15 @@ const AlumniProfilePage = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                   >
-                    {profile.price_15_min && (
+                    {profile?.price_15_min && (
                       <ProductCard
                         title="Quick Chat"
                         price={profile.price_15_min}
                         duration="15 minutes"
                         description="Perfect for specific questions about the application process"
-                        onBook={() => {/* Add booking logic */}}
+                        onBook={() => {/* Fallback for old functionality */}}
+                        profileId={id}
+                        productId="quick-chat"
                       />
                     )}
                   </motion.div>
@@ -318,13 +320,15 @@ const AlumniProfilePage = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                   >
-                    {profile.price_30_min && (
+                    {profile?.price_30_min && (
                       <ProductCard
                         title="Deep Dive"
                         price={profile.price_30_min}
                         duration="30 minutes"
                         description="Ideal for in-depth discussion about academics and campus life"
-                        onBook={() => {/* Add booking logic */}}
+                        onBook={() => {/* Fallback for old functionality */}}
+                        profileId={id}
+                        productId="deep-dive"
                       />
                     )}
                   </motion.div>
@@ -334,13 +338,15 @@ const AlumniProfilePage = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.4 }}
                   >
-                    {profile.price_60_min && (
+                    {profile?.price_60_min && (
                       <ProductCard
                         title="Comprehensive Session"
                         price={profile.price_60_min}
                         duration="60 minutes"
                         description="Full consultation covering all aspects of your application"
-                        onBook={() => {/* Add booking logic */}}
+                        onBook={() => {/* Fallback for old functionality */}}
+                        profileId={id}
+                        productId="comprehensive"
                       />
                     )}
                   </motion.div>

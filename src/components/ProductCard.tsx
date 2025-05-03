@@ -1,7 +1,7 @@
-
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Clock, DollarSign } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ProductCardProps {
   title: string;
@@ -9,9 +9,23 @@ interface ProductCardProps {
   duration: string;
   description?: string;
   onBook: () => void;
+  profileId?: string;
+  productId?: string;
 }
 
-const ProductCard = ({ title, price, duration, description, onBook }: ProductCardProps) => {
+const ProductCard = ({ title, price, duration, description, onBook, profileId, productId }: ProductCardProps) => {
+  const navigate = useNavigate();
+  
+  const handleBooking = () => {
+    if (profileId && productId) {
+      // Navigate to the booking page if profile and product IDs are provided
+      navigate(`/booking/${profileId}/${productId}`);
+    } else {
+      // Otherwise, use the provided onBook callback
+      onBook();
+    }
+  };
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
@@ -29,7 +43,7 @@ const ProductCard = ({ title, price, duration, description, onBook }: ProductCar
         {description && <p className="text-sm text-gray-600">{description}</p>}
       </CardContent>
       <CardFooter>
-        <Button onClick={onBook} className="w-full">Book Now</Button>
+        <Button onClick={handleBooking} className="w-full">Book Now</Button>
       </CardFooter>
     </Card>
   );

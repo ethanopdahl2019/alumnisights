@@ -17,6 +17,7 @@ import SchoolDetail from "./pages/SchoolDetail";
 import AlumniDashboard from "./pages/AlumniDashboard";
 import ApplicantDashboard from "./pages/ApplicantDashboard";
 import AlumniProfilePage from "./pages/AlumniProfilePage";
+import BookingPage from "./pages/BookingPage";
 import SchoolMajorLanding from "./pages/SchoolMajorLanding";
 import SchoolActivityLanding from "./pages/SchoolActivityLanding";
 
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
               <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
               <Route path="/alumni/:id" element={<AlumniProfilePage />} />
+              <Route path="/booking/:id/:productId" element={<BookingPage />} />
               <Route path="/p/:slug" element={<LandingPage />} />
               {/* School x Major/Activity landing pages */}
               <Route path="/schools/:schoolId/majors/:majorId" element={<SchoolMajorLanding />} />
