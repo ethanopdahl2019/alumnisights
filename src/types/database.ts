@@ -161,3 +161,16 @@ export interface LandingPage {
   major?: Major | null;
   content_blocks?: ContentBlock[];
 }
+
+// Add new interface for UniversityContent
+export interface UniversityContent {
+  id: string;
+  name: string;
+  overview: string;
+  admission_stats: string;
+  application_requirements: string;
+  alumni_insights?: string | null;
+  image?: string | null;
+  created_at: string;
+  updated_at: string;
+}

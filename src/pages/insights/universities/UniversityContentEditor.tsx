@@ -18,6 +18,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { ShieldAlert, Upload, Image } from "lucide-react";
 import { getUniversityContent, saveUniversityContent } from "@/services/landing-pages";
 import { supabase } from "@/integrations/supabase/client";
+import { UniversityContent } from "@/types/database";
 
 // Define form schema for university content
 const formSchema = z.object({
@@ -114,7 +115,7 @@ const UniversityContentEditor: React.FC = () => {
     } else {
       setIsLoadingContent(false);
     }
-  }, [id, isAdmin, form]);
+  }, [id, isAdmin, form, universityData]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -161,6 +162,8 @@ const UniversityContentEditor: React.FC = () => {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!id) return;
+    
     setIsLoading(true);
     
     try {
@@ -168,8 +171,12 @@ const UniversityContentEditor: React.FC = () => {
       const uploadedImageUrl = await uploadImage();
       
       // Save university content
-      await saveUniversityContent(id!, {
-        ...values,
+      await saveUniversityContent(id, {
+        name: values.name,
+        overview: values.overview,
+        admissionStats: values.admissionStats,
+        applicationRequirements: values.applicationRequirements,
+        alumniInsights: values.alumniInsights,
         image: uploadedImageUrl || imageUrl,
       });
 

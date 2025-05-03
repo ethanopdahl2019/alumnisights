@@ -5,15 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import UniversityTemplate from "./UniversityTemplate";
 import { universities } from "./universities-data";
 import { getUniversityContent } from "@/services/landing-pages";
-
-interface UniversityContent {
-  name: string;
-  overview: string;
-  admission_stats: string;
-  application_requirements: string;
-  alumni_insights?: string;
-  image?: string;
-}
+import { UniversityContent } from "@/types/database";
 
 const UniversityPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -102,10 +94,8 @@ const UniversityPage: React.FC = () => {
             </section>
           )}
         </>
-      ) : universityData?.content ? (
-        universityData.content.map((paragraph, index) => (
-          <p key={index} className="mb-4">{paragraph}</p>
-        ))
+      ) : universityData?.description ? (
+        <p className="mb-4">{universityData.description}</p>
       ) : null}
     </>
   );

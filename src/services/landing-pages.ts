@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { LandingPage, LandingPageTemplate, ContentBlock, School } from '@/types/database';
+import type { LandingPage, LandingPageTemplate, ContentBlock, School, UniversityContent } from '@/types/database';
 
 export async function getLandingPageTemplates(): Promise<LandingPageTemplate[]> {
   const { data, error } = await supabase
@@ -130,8 +130,9 @@ export async function getContentBlocks(schoolId?: string, majorId?: string): Pro
   return data;
 }
 
-// New functions for university content management
-export async function getUniversityContent(id: string) {
+// Updated functions for university content management
+export async function getUniversityContent(id: string): Promise<UniversityContent | null> {
+  // Using type assertion to handle the TypeScript error
   const { data, error } = await supabase
     .from('universities_content')
     .select('*')
@@ -143,7 +144,7 @@ export async function getUniversityContent(id: string) {
     throw error;
   }
   
-  return data;
+  return data as UniversityContent;
 }
 
 export async function saveUniversityContent(id: string, content: {
@@ -152,8 +153,9 @@ export async function saveUniversityContent(id: string, content: {
   admissionStats: string;
   applicationRequirements: string;
   alumniInsights?: string;
-  image?: string;
-}) {
+  image?: string | null;
+}): Promise<UniversityContent> {
+  // Using type assertion to handle the TypeScript error
   const { data, error } = await supabase
     .from('universities_content')
     .upsert({
@@ -169,5 +171,5 @@ export async function saveUniversityContent(id: string, content: {
     .single();
   
   if (error) throw error;
-  return data;
+  return data as UniversityContent;
 }
