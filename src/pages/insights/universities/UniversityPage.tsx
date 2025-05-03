@@ -15,7 +15,10 @@ const UniversityPage: React.FC = () => {
     return <Navigate to="/insights/undergraduate-admissions" replace />;
   }
 
-  return <UniversityTemplate name={university.name} />;
+  return <UniversityTemplate 
+    name={university.name}
+    logo={university.logo}
+  />;
 };
 
 export default UniversityPage;

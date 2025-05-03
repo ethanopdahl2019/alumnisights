@@ -1,15 +1,16 @@
 
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DefaultLogo from "./DefaultLogo";
 
 // This is a template for university pages
 const UniversityTemplate: React.FC<{
   name: string;
+  logo?: string;
   content?: React.ReactNode;
-}> = ({ name, content }) => {
+}> = ({ name, logo, content }) => {
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
@@ -21,14 +22,27 @@ const UniversityTemplate: React.FC<{
 
       <main className="container-custom py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4">
-              {name}
-            </h1>
-            <p className="text-lg text-gray-600 mb-6">
-              Undergraduate Admissions Insights
-            </p>
-            <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
+          <div className="mb-10 flex items-center">
+            <div className="mr-6">
+              {logo && logo.startsWith("/lovable-uploads") ? (
+                <img 
+                  src={logo} 
+                  alt={`${name} logo`}
+                  className="h-24 w-24 object-contain"
+                />
+              ) : (
+                <DefaultLogo name={name} className="h-24 w-24" />
+              )}
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+                {name}
+              </h1>
+              <p className="text-lg text-gray-600 mb-6">
+                Undergraduate Admissions Insights
+              </p>
+              <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
+            </div>
           </div>
 
           <div className="prose max-w-none">
