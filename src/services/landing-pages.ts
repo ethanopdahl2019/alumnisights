@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { LandingPage, LandingPageTemplate, ContentBlock, School, UniversityContent } from '@/types/database';
 
@@ -132,19 +131,26 @@ export async function getContentBlocks(schoolId?: string, majorId?: string): Pro
 
 // Updated functions for university content management
 export async function getUniversityContent(id: string): Promise<UniversityContent | null> {
-  const { data, error } = await supabase
-    .from('universities_content')
-    .select('*')
-    .eq('id', id)
-    .single();
+  console.log("Fetching university content for ID:", id);
   
-  if (error) {
-    if (error.code === 'PGRST116') return null; // Record not found
-    console.error("Error fetching university content:", error);
+  try {
+    const { data, error } = await supabase
+      .from('universities_content')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error fetching university content:", error);
+      throw error;
+    }
+    
+    console.log("Retrieved university content:", data);
+    return data as unknown as UniversityContent;
+  } catch (error) {
+    console.error("Exception fetching university content:", error);
     throw error;
   }
-  
-  return data as unknown as UniversityContent;
 }
 
 export async function saveUniversityContent(id: string, content: {
@@ -155,23 +161,32 @@ export async function saveUniversityContent(id: string, content: {
   alumniInsights?: string;
   image?: string | null;
 }): Promise<UniversityContent> {
-  const { data, error } = await supabase
-    .from('universities_content')
-    .upsert({
-      id,
-      name: content.name,
-      overview: content.overview,
-      admission_stats: content.admissionStats,
-      application_requirements: content.applicationRequirements,
-      alumni_insights: content.alumniInsights || '',
-      image: content.image
-    })
-    .select()
-    .single();
+  console.log("Saving university content for ID:", id, "Content:", content);
   
-  if (error) {
-    console.error("Error saving university content:", error);
+  try {
+    const { data, error } = await supabase
+      .from('universities_content')
+      .upsert({
+        id,
+        name: content.name,
+        overview: content.overview,
+        admission_stats: content.admissionStats,
+        application_requirements: content.applicationRequirements,
+        alumni_insights: content.alumniInsights || '',
+        image: content.image
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error saving university content:", error);
+      throw error;
+    }
+    
+    console.log("University content saved successfully:", data);
+    return data as unknown as UniversityContent;
+  } catch (error) {
+    console.error("Exception saving university content:", error);
     throw error;
   }
-  return data as unknown as UniversityContent;
 }

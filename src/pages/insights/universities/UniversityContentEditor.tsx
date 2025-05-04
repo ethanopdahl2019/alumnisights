@@ -11,19 +11,39 @@ import { universities } from "./universities-data";
 import UniversityContentLoading from "./components/UniversityContentLoading";
 import AccessDenied from "./components/AccessDenied";
 import UniversityContentForm from "./components/UniversityContentForm";
+import { getUniversityContent } from "@/services/landing-pages";
 
 const UniversityContentEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isLoadingContent, setIsLoadingContent] = useState<boolean>(true);
+  const [universityData, setUniversityData] = useState<any>(null);
 
-  // Find university if editing existing one
-  const universityData = id ? universities.find(uni => uni.id === id) : null;
-
+  // Check if the university exists in our static data
+  const universityInfo = id ? universities.find(uni => uni.id === id) : null;
+  
   useEffect(() => {
-    setIsLoadingContent(false);
-  }, [id]);
+    // Load university content from database
+    const loadContent = async () => {
+      if (!id) {
+        setIsLoadingContent(false);
+        return;
+      }
+
+      try {
+        const content = await getUniversityContent(id);
+        setUniversityData(content || universityInfo);
+      } catch (error) {
+        console.error("Failed to load university content:", error);
+      } finally {
+        setIsLoadingContent(false);
+      }
+    };
+
+    loadContent();
+  }, [id, universityInfo]);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -35,17 +55,19 @@ const UniversityContentEditor: React.FC = () => {
       
       if (!isUserAdmin) {
         toast.error("You don't have permission to access this page");
+        navigate("/insights/universities");
       }
     };
     
     if (!loading) {
       if (!user) {
         toast.error("Please sign in to access this page");
+        navigate("/auth?redirect=/insights/university-content-editor/" + id);
       } else {
         checkAdminStatus();
       }
     }
-  }, [user, loading]);
+  }, [user, loading, id, navigate]);
 
   if (loading || isLoadingContent) {
     return <UniversityContentLoading />;
@@ -55,10 +77,16 @@ const UniversityContentEditor: React.FC = () => {
     return <AccessDenied />;
   }
 
+  const universityName = universityData?.name || universityInfo?.name;
+
+  if (!id || !universityName) {
+    return <AccessDenied message="University not found" />;
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
-        <title>{universityData ? `Edit ${universityData.name}` : "Add New University"} | AlumniSights</title>
+        <title>{universityData ? `Edit ${universityName}` : "Add New University"} | AlumniSights</title>
         <meta name="description" content="Manage university content for undergraduate admissions" />
       </Helmet>
 
@@ -67,14 +95,14 @@ const UniversityContentEditor: React.FC = () => {
       <main className="container-custom py-12">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold text-navy mb-8">
-            {universityData ? `Edit ${universityData.name}` : "Add New University"}
+            {universityData ? `Edit ${universityName}` : "Add New University"}
           </h1>
 
           <Card>
             <CardContent className="pt-6">
               <UniversityContentForm 
                 id={id} 
-                universityName={universityData?.name} 
+                universityName={universityName} 
               />
             </CardContent>
           </Card>

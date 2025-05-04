@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { getUniversityContent, saveUniversityContent } from "@/services/landing-pages";
 import { supabase } from "@/integrations/supabase/client";
-import { UniversityContent } from "@/types/database";
+import type { UniversityContent } from "@/types/database";
 
 // Define form schema for university content
 const formSchema = z.object({
@@ -105,20 +105,23 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
       const filePath = `university-images/${fileName}`;
 
       // Upload the file
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from('university-content')
-        .upload(filePath, imageFile);
+        .upload(filePath, imageFile, {
+          upsert: true
+        });
 
       if (uploadError) {
+        console.error("Upload error:", uploadError);
         throw uploadError;
       }
 
       // Get the public URL
-      const { data } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('university-content')
         .getPublicUrl(filePath);
 
-      return data.publicUrl;
+      return urlData.publicUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
       toast.error("Failed to upload image");
@@ -136,7 +139,13 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
     
     try {
       // First upload image if there's a new one
-      const uploadedImageUrl = await uploadImage();
+      let finalImageUrl = imageUrl;
+      
+      if (imageFile) {
+        finalImageUrl = await uploadImage();
+      }
+      
+      console.log("Saving university content with image URL:", finalImageUrl);
       
       // Save university content
       await saveUniversityContent(id, {
@@ -144,15 +153,15 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
         overview: values.overview,
         admissionStats: values.admissionStats,
         applicationRequirements: values.applicationRequirements,
-        alumniInsights: values.alumniInsights,
-        image: uploadedImageUrl || imageUrl,
+        alumniInsights: values.alumniInsights || "",
+        image: finalImageUrl,
       });
 
       toast.success("University content updated successfully");
       navigate(`/insights/universities/${id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving university content:", error);
-      toast.error("Failed to save university content");
+      toast.error(error?.message || "Failed to save university content");
     } finally {
       setIsLoading(false);
     }
