@@ -165,10 +165,19 @@ export async function saveUniversityContent(id: string, content: {
   console.log("Saving university content for ID:", id, "Content:", content);
   
   try {
-    // First check if current user has admin role from metadata
-    const { data: { user } } = await supabase.auth.getUser();
+    // Check if current user session exists and has admin role
+    const { data: { session } } = await supabase.auth.getSession();
     
-    if (!user || user.user_metadata?.role !== 'admin') {
+    if (!session) {
+      console.error("No active session found");
+      throw new Error("Authentication required");
+    }
+    
+    // Get role directly from user metadata in the session
+    const userRole = session.user.user_metadata?.role;
+    console.log("User role from metadata:", userRole);
+    
+    if (userRole !== 'admin') {
       console.error("User doesn't have admin role");
       throw new Error("Permission denied: Admin role required");
     }

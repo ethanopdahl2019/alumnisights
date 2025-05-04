@@ -33,8 +33,11 @@ const UniversityContentEditor: React.FC = () => {
         return;
       }
       
-      // Check if user has admin role in user_metadata
+      // Get role directly from user metadata
       const isUserAdmin = user.user_metadata?.role === 'admin';
+      console.log("User metadata:", user.user_metadata);
+      console.log("Is admin from metadata:", isUserAdmin);
+      
       setIsAdmin(isUserAdmin);
       setAuthChecked(true);
       
