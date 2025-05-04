@@ -20,12 +20,44 @@ const UniversityContentEditor: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isLoadingContent, setIsLoadingContent] = useState<boolean>(true);
   const [universityData, setUniversityData] = useState<any>(null);
+  const [authChecked, setAuthChecked] = useState<boolean>(false);
 
   // Check if the university exists in our static data
   const universityInfo = id ? universities.find(uni => uni.id === id) : null;
   
+  // Check admin status
   useEffect(() => {
-    // Load university content from database
+    const checkAdminStatus = async () => {
+      if (!user) {
+        setAuthChecked(true);
+        return;
+      }
+      
+      // Check if user has admin role in user_metadata
+      const isUserAdmin = user.user_metadata?.role === 'admin';
+      setIsAdmin(isUserAdmin);
+      setAuthChecked(true);
+      
+      if (!isUserAdmin) {
+        toast.error("You don't have permission to access this page");
+      }
+    };
+    
+    if (!loading) {
+      checkAdminStatus();
+    }
+  }, [user, loading]);
+  
+  // Handle authentication redirects
+  useEffect(() => {
+    if (!loading && !user && authChecked) {
+      toast.error("Please sign in to access this page");
+      navigate(`/auth?redirect=/insights/university-content-editor/${id || ''}`);
+    }
+  }, [user, loading, authChecked, id, navigate]);
+
+  // Load university content
+  useEffect(() => {
     const loadContent = async () => {
       if (!id) {
         setIsLoadingContent(false);
@@ -37,44 +69,25 @@ const UniversityContentEditor: React.FC = () => {
         setUniversityData(content || universityInfo);
       } catch (error) {
         console.error("Failed to load university content:", error);
+        toast.error("Failed to load university content");
       } finally {
         setIsLoadingContent(false);
       }
     };
 
-    loadContent();
-  }, [id, universityInfo]);
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      // Check if the user has admin role in metadata
-      const isUserAdmin = user.user_metadata?.role === 'admin';
-      setIsAdmin(isUserAdmin);
-      
-      if (!isUserAdmin) {
-        toast.error("You don't have permission to access this page");
-        navigate("/insights/universities");
-      }
-    };
-    
-    if (!loading) {
-      if (!user) {
-        toast.error("Please sign in to access this page");
-        navigate("/auth?redirect=/insights/university-content-editor/" + id);
-      } else {
-        checkAdminStatus();
-      }
+    if (authChecked && isAdmin) {
+      loadContent();
+    } else if (authChecked) {
+      setIsLoadingContent(false);
     }
-  }, [user, loading, id, navigate]);
+  }, [id, universityInfo, authChecked, isAdmin]);
 
-  if (loading || isLoadingContent) {
+  if (loading || (isLoadingContent && authChecked && isAdmin)) {
     return <UniversityContentLoading />;
   }
 
-  if (!user || !isAdmin) {
-    return <AccessDenied />;
+  if (authChecked && (!user || !isAdmin)) {
+    return <AccessDenied message="You need admin privileges to access this page" />;
   }
 
   const universityName = universityData?.name || universityInfo?.name;

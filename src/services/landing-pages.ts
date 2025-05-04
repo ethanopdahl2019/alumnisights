@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { LandingPage, LandingPageTemplate, ContentBlock, School, UniversityContent } from '@/types/database';
 
@@ -164,6 +165,15 @@ export async function saveUniversityContent(id: string, content: {
   console.log("Saving university content for ID:", id, "Content:", content);
   
   try {
+    // First check if current user has admin role from metadata
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user || user.user_metadata?.role !== 'admin') {
+      console.error("User doesn't have admin role");
+      throw new Error("Permission denied: Admin role required");
+    }
+    
+    // Then proceed with the update
     const { data, error } = await supabase
       .from('universities_content')
       .upsert({

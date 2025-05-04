@@ -161,7 +161,16 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
       navigate(`/insights/universities/${id}`);
     } catch (error: any) {
       console.error("Error saving university content:", error);
-      toast.error(error?.message || "Failed to save university content");
+      
+      let errorMessage = "Failed to save university content";
+      
+      if (error?.message?.includes("Admin role")) {
+        errorMessage = "You don't have permission to update content. Admin role is required.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
