@@ -25,7 +25,7 @@ const UniversityContentEditor: React.FC = () => {
   // Check if the university exists in our static data
   const universityInfo = id ? universities.find(uni => uni.id === id) : null;
   
-  // Check admin status
+  // Check admin status (just for UI display)
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) {
@@ -33,7 +33,7 @@ const UniversityContentEditor: React.FC = () => {
         return;
       }
       
-      // Get role directly from user metadata
+      // Get role from user metadata
       const isUserAdmin = user.user_metadata?.role === 'admin';
       console.log("User metadata:", user.user_metadata);
       console.log("Is admin from metadata:", isUserAdmin);
@@ -42,7 +42,10 @@ const UniversityContentEditor: React.FC = () => {
       setAuthChecked(true);
       
       if (!isUserAdmin) {
-        toast.error("You don't have permission to access this page");
+        // Just display a warning, but don't block access
+        toast("Note: You're not logged in as an admin", {
+          description: "Changes will still be saved"
+        });
       }
     };
     
@@ -78,19 +81,19 @@ const UniversityContentEditor: React.FC = () => {
       }
     };
 
-    if (authChecked && isAdmin) {
+    if (authChecked && user) {
       loadContent();
     } else if (authChecked) {
       setIsLoadingContent(false);
     }
-  }, [id, universityInfo, authChecked, isAdmin]);
+  }, [id, universityInfo, authChecked, user]);
 
-  if (loading || (isLoadingContent && authChecked && isAdmin)) {
+  if (loading || (isLoadingContent && authChecked && user)) {
     return <UniversityContentLoading />;
   }
 
-  if (authChecked && (!user || !isAdmin)) {
-    return <AccessDenied message="You need admin privileges to access this page" />;
+  if (authChecked && !user) {
+    return <AccessDenied message="You need to be logged in to access this page" />;
   }
 
   const universityName = universityData?.name || universityInfo?.name;

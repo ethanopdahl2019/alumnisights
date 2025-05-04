@@ -19,7 +19,7 @@ const UniversityPage: React.FC = () => {
   const universityData = id ? universities.find(uni => uni.id === id) : null;
   
   useEffect(() => {
-    // Check if current user is admin
+    // Check if current user is admin - this is just for UI display purposes
     if (user) {
       setIsAdmin(user.user_metadata?.role === 'admin');
     }
@@ -106,7 +106,7 @@ const UniversityPage: React.FC = () => {
       name={universityName}
       logo={universityLogo}
       content={contentSections}
-      showEditButton={isAdmin} 
+      showEditButton={isAdmin} // Still only show edit button for admins
     />
   );
 };

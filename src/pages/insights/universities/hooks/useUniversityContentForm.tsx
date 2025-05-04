@@ -1,86 +1,78 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { getUniversityContent, saveUniversityContent } from "@/services/landing-page";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { UniversityContent } from "@/types/database";
+import { saveUniversityContent, getUniversityContent } from "@/services/landing-page";
+import { useEffect } from "react";
 
-// Define form schema for university content
-const formSchema = z.object({
-  name: z.string().min(1, "University name is required"),
-  overview: z.string().min(1, "Overview is required"),
-  admissionStats: z.string().min(1, "Admission statistics are required"),
-  applicationRequirements: z.string().min(1, "Application requirements are required"),
-  alumniInsights: z.string().optional(),
-});
-
-export type UniversityFormValues = z.infer<typeof formSchema>;
+interface UniversityContentFormValues {
+  name: string;
+  overview: string;
+  admissionStats: string;
+  applicationRequirements: string;
+  alumniInsights: string;
+}
 
 interface UseUniversityContentFormProps {
   id?: string;
   universityName?: string;
 }
 
-export const useUniversityContentForm = ({ id, universityName }: UseUniversityContentFormProps) => {
-  const navigate = useNavigate();
+export function useUniversityContentForm({ id, universityName }: UseUniversityContentFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingContent, setIsLoadingContent] = useState(!!id);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const form = useForm<UniversityFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<UniversityContentFormValues>({
     defaultValues: {
-      name: universityName || "",
-      overview: "",
-      admissionStats: "",
-      applicationRequirements: "",
-      alumniInsights: "",
-    },
+      name: universityName || '',
+      overview: '',
+      admissionStats: '',
+      applicationRequirements: '',
+      alumniInsights: '',
+    }
   });
 
-  // Load existing university content
+  // Load existing content if editing
   useEffect(() => {
-    if (id) {
-      const loadUniversityContent = async () => {
-        setIsLoadingContent(true);
-        try {
-          const content = await getUniversityContent(id);
-          
-          if (content) {
-            // Populate the form with existing data
-            form.reset({
-              name: content.name || universityName || "",
-              overview: content.overview || "",
-              admissionStats: content.admission_stats || "",
-              applicationRequirements: content.application_requirements || "",
-              alumniInsights: content.alumni_insights || "",
-            });
-            
-            // Set the image URL if it exists
-            if (content.image) {
-              setImageUrl(content.image);
-              setImagePreview(content.image);
-            }
-          }
-        } catch (error) {
-          console.error("Error loading university content:", error);
-          toast.error("Failed to load university content");
-        } finally {
-          setIsLoadingContent(false);
-        }
-      };
+    const loadContent = async () => {
+      if (!id) return;
       
-      loadUniversityContent();
-    } else {
-      setIsLoadingContent(false);
-    }
-  }, [id, form, universityName]);
+      try {
+        const content = await getUniversityContent(id);
+        if (content) {
+          form.reset({
+            name: content.name,
+            overview: content.overview || '',
+            admissionStats: content.admission_stats || '',
+            applicationRequirements: content.application_requirements || '',
+            alumniInsights: content.alumni_insights || ''
+          });
+          
+          if (content.image) {
+            setImagePreview(content.image);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading university content:", error);
+        toast.error("Failed to load university content");
+      }
+    };
+    
+    loadContent();
+  }, [id, form]);
+  
+  const resetImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    
+    // Clear file input if it exists
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -101,27 +93,21 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
       reader.readAsDataURL(file);
     }
   };
-
+  
+  // Function to upload image to Supabase storage
   const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return imageUrl; // Return existing URL if no new file
+    if (!imageFile) {
+      return null;
+    }
 
     try {
       console.log("Starting image upload...");
       
-      // Get session to verify user is authenticated
+      // Check if user is authenticated
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         console.error("No active session found");
         throw new Error("Authentication required for file upload");
-      }
-      
-      // Verify user has admin role
-      const userRole = session.user.user_metadata?.role;
-      console.log("User role from metadata:", userRole);
-      
-      if (userRole !== 'admin') {
-        console.error("User doesn't have admin role");
-        throw new Error("Permission denied: Admin role required for file upload");
       }
       
       const fileExt = imageFile.name.split('.').pop();
@@ -134,22 +120,22 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
       const { error: uploadError, data } = await supabase.storage
         .from('university-content')
         .upload(filePath, imageFile, {
-          upsert: true,
-          contentType: imageFile.type
+          cacheControl: '3600',
+          upsert: true
         });
-
+      
       if (uploadError) {
         console.error("Upload error:", uploadError);
         throw uploadError;
       }
-
-      console.log("Upload successful, generating public URL");
       
-      // Get the public URL
+      console.log("Upload successful:", data);
+      
+      // Get the public URL for the uploaded file
       const { data: urlData } = supabase.storage
         .from('university-content')
         .getPublicUrl(filePath);
-
+      
       console.log("Public URL generated:", urlData.publicUrl);
       
       return urlData.publicUrl;
@@ -165,18 +151,18 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
       return null;
     }
   };
-
-  const onSubmit = async (values: UniversityFormValues) => {
+  
+  const onSubmit = async (values: UniversityContentFormValues) => {
     if (!id) {
-      toast.error("University ID is required for saving content");
+      toast.error("University ID is required");
       return;
     }
     
-    setIsLoading(true);
-    
     try {
-      // First upload image if there's a new one
-      let finalImageUrl = imageUrl;
+      setIsLoading(true);
+      
+      // Upload image if provided
+      let finalImageUrl = imagePreview;
       
       if (imageFile) {
         finalImageUrl = await uploadImage();
@@ -185,50 +171,33 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
         }
       }
       
-      console.log("Saving university content with image URL:", finalImageUrl);
-      
       // Save university content
       await saveUniversityContent(id, {
         name: values.name,
         overview: values.overview,
         admissionStats: values.admissionStats,
         applicationRequirements: values.applicationRequirements,
-        alumniInsights: values.alumniInsights || "",
-        image: finalImageUrl,
+        alumniInsights: values.alumniInsights,
+        image: finalImageUrl
       });
-
-      toast.success("University content updated successfully");
+      
+      toast.success("University content saved successfully");
       navigate(`/insights/universities/${id}`);
-    } catch (error: any) {
+      
+    } catch (error) {
       console.error("Error saving university content:", error);
-      
-      let errorMessage = "Failed to save university content";
-      
-      if (error?.message?.includes("Admin role")) {
-        errorMessage = "You don't have permission to update content. Admin role is required.";
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      toast.error("Failed to save university content");
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  const resetImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setImageUrl(null);
   };
 
   return {
     form,
     isLoading,
-    isLoadingContent,
     imagePreview,
     handleImageChange,
     onSubmit,
     resetImage
   };
-};
+}
