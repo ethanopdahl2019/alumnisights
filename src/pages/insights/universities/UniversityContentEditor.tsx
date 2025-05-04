@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
@@ -11,7 +10,7 @@ import { universities } from "./universities-data";
 import UniversityContentLoading from "./components/UniversityContentLoading";
 import AccessDenied from "./components/AccessDenied";
 import UniversityContentForm from "./components/UniversityContentForm";
-import { getUniversityContent } from "@/services/landing-pages";
+import { getUniversityContent } from "@/services/landing-page";
 
 const UniversityContentEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();

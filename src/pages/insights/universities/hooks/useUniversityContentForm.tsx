@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { getUniversityContent, saveUniversityContent } from "@/services/landing-pages";
+import { getUniversityContent, saveUniversityContent } from "@/services/landing-page";
 import { supabase } from "@/integrations/supabase/client";
 import type { UniversityContent } from "@/types/database";
 
