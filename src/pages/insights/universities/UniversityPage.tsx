@@ -1,10 +1,10 @@
-
-import React, { useEffect, useState } from "react";
+import React from 'react';
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import UniversityTemplate from "./UniversityTemplate";
 import { universities } from "./universities-data";
-import { getUniversityContent } from "@/services/landing-pages";
+import { getUniversityContent } from "@/services/landing-page";
 import { UniversityContent } from "@/types/database";
 
 const UniversityPage: React.FC = () => {

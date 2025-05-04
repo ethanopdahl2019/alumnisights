@@ -100,15 +100,27 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
     if (!imageFile) return imageUrl; // Return existing URL if no new file
 
     try {
+      console.log("Starting image upload...");
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${id || 'new'}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `university-images/${fileName}`;
+
+      console.log("Uploading to path:", filePath);
+      
+      // Get session to verify user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Authentication required for file upload");
+      }
+      
+      console.log("User authenticated, proceeding with upload");
 
       // Upload the file
       const { error: uploadError, data } = await supabase.storage
         .from('university-content')
         .upload(filePath, imageFile, {
-          upsert: true
+          upsert: true,
+          contentType: imageFile.type
         });
 
       if (uploadError) {
@@ -116,11 +128,15 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
         throw uploadError;
       }
 
+      console.log("Upload successful, generating public URL");
+      
       // Get the public URL
       const { data: urlData } = supabase.storage
         .from('university-content')
         .getPublicUrl(filePath);
 
+      console.log("Public URL generated:", urlData.publicUrl);
+      
       return urlData.publicUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -143,6 +159,9 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
       
       if (imageFile) {
         finalImageUrl = await uploadImage();
+        if (!finalImageUrl) {
+          toast.error("Failed to upload image, but continuing with content save");
+        }
       }
       
       console.log("Saving university content with image URL:", finalImageUrl);

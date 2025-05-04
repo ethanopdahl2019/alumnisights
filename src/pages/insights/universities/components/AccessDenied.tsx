@@ -1,18 +1,18 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ShieldAlert } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 interface AccessDeniedProps {
-  message?: string;
+  message: string;
 }
 
 const AccessDenied: React.FC<AccessDeniedProps> = ({ message }) => {
   const navigate = useNavigate();
-  
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -20,7 +20,7 @@ const AccessDenied: React.FC<AccessDeniedProps> = ({ message }) => {
         <div className="max-w-6xl mx-auto text-center">
           <ShieldAlert className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-navy mb-4">Access Denied</h1>
-          <p className="mb-6">{message || "You need to be signed in as an administrator to access this page."}</p>
+          <p className="mb-6">{message}</p>
           <Button onClick={() => navigate("/auth")}>
             Go to Sign In
           </Button>

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +9,7 @@ import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileCard from '@/components/ProfileCard';
-import { getLandingPageBySchool } from '@/services/landing-pages';
+import { getLandingPageBySchool } from '@/services/landing-page';
 import { ArrowRight, Book, Award, GraduationCap, Briefcase, Activity, Globe, Users, MapPin, CalendarIcon, School as SchoolIcon, Info } from 'lucide-react';
 import type { ProfileWithDetails } from '@/types/database';
 
