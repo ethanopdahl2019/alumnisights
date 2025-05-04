@@ -36,7 +36,7 @@ export async function saveUniversityContent(id: string, content: {
   console.log("Saving university content for ID:", id, "Content:", content);
   
   try {
-    // Check if current user session exists and has admin role
+    // Check if current user session exists
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -53,7 +53,7 @@ export async function saveUniversityContent(id: string, content: {
       throw new Error("Permission denied: Admin role required");
     }
     
-    // Then proceed with the update
+    // Proceed with the update
     const { data, error } = await supabase
       .from('universities_content')
       .upsert({

@@ -85,6 +85,12 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Verify file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+      
       setImageFile(file);
       
       // Create preview
@@ -101,19 +107,28 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
 
     try {
       console.log("Starting image upload...");
+      
+      // Get session to verify user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("No active session found");
+        throw new Error("Authentication required for file upload");
+      }
+      
+      // Verify user has admin role
+      const userRole = session.user.user_metadata?.role;
+      console.log("User role from metadata:", userRole);
+      
+      if (userRole !== 'admin') {
+        console.error("User doesn't have admin role");
+        throw new Error("Permission denied: Admin role required for file upload");
+      }
+      
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${id || 'new'}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `university-images/${fileName}`;
 
       console.log("Uploading to path:", filePath);
-      
-      // Get session to verify user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("Authentication required for file upload");
-      }
-      
-      console.log("User authenticated, proceeding with upload");
 
       // Upload the file
       const { error: uploadError, data } = await supabase.storage
@@ -138,9 +153,15 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
       console.log("Public URL generated:", urlData.publicUrl);
       
       return urlData.publicUrl;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading image:", error);
-      toast.error("Failed to upload image");
+      let message = "Failed to upload image";
+      
+      if (error.message) {
+        message += ": " + error.message;
+      }
+      
+      toast.error(message);
       return null;
     }
   };
@@ -160,7 +181,7 @@ export const useUniversityContentForm = ({ id, universityName }: UseUniversityCo
       if (imageFile) {
         finalImageUrl = await uploadImage();
         if (!finalImageUrl) {
-          toast.error("Failed to upload image, but continuing with content save");
+          toast.error("Failed to upload image, continuing with content save");
         }
       }
       
