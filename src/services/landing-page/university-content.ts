@@ -45,7 +45,7 @@ export async function saveUniversityContent(id: string, content: {
       throw new Error("Authentication required");
     }
     
-    // Proceed with the update without role check
+    // Proceed with the update
     const { data, error } = await supabase
       .from('universities_content')
       .upsert({

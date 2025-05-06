@@ -226,7 +226,7 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
       });
       
       toast.success("University content saved successfully");
-      // Redirect to undergraduate admissions page instead of university page
+      // Redirect to undergraduate admissions page
       navigate("/insights/undergraduate-admissions");
       
     } catch (error) {
