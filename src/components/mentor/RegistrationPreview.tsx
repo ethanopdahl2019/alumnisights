@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const RegistrationPreview = () => {
   return (
@@ -15,9 +17,10 @@ const RegistrationPreview = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsTrigger value="profile-complete">Profile Completion</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login" className="space-y-4">
@@ -78,6 +81,85 @@ const RegistrationPreview = () => {
               </div>
               
               <Button className="w-full">Create account</Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="profile-complete" className="space-y-4">
+            <div className="space-y-6">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-medium">Complete Your Profile</h3>
+                <p className="text-sm text-gray-500">Help others find you by completing your profile</p>
+                
+                <div className="mt-4">
+                  <Progress value={33} className="h-2 w-full" />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Profile completion: 33%
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <textarea 
+                    id="bio"
+                    className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Tell others about yourself, your experiences, and what you can offer..."
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="major">Major</Label>
+                  <select
+                    id="major"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Select your major</option>
+                    <option value="cs">Computer Science</option>
+                    <option value="business">Business Administration</option>
+                    <option value="engineering">Engineering</option>
+                    <option value="biology">Biology</option>
+                    <option value="psychology">Psychology</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-3">
+                  <Label className="text-base">Activities</Label>
+                  <p className="text-sm text-gray-500">Select the activities you're involved in</p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="sports" />
+                      <Label htmlFor="sports" className="text-sm font-normal">Sports</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="music" />
+                      <Label htmlFor="music" className="text-sm font-normal">Music</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="art" />
+                      <Label htmlFor="art" className="text-sm font-normal">Art</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="tech" />
+                      <Label htmlFor="tech" className="text-sm font-normal">Tech</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="volunteer" />
+                      <Label htmlFor="volunteer" className="text-sm font-normal">Volunteering</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="research" />
+                      <Label htmlFor="research" className="text-sm font-normal">Research</Label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-2">
+                  <Button variant="outline">Skip for now</Button>
+                  <Button>Complete Profile</Button>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
