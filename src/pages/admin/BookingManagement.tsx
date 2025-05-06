@@ -86,13 +86,13 @@ const BookingManagement = () => {
       try {
         // Check if the table has a zoom_link column
         const { data: tableInfo, error: tableInfoError } = await supabase
-          .rpc('get_column_information', { 
-            table_name: 'bookings' as unknown as Record<string, unknown>,
-            column_name: 'zoom_link' as unknown as Record<string, unknown>
+          .rpc('get_column_information', {
+            table_name: 'bookings',
+            column_name: 'zoom_link'
           });
         
         // Determine whether to include zoom_link in the select statement
-        const includeZoomLink = !tableInfoError && tableInfo && tableInfo.length > 0;
+        const includeZoomLink = !tableInfoError && tableInfo && Array.isArray(tableInfo) && tableInfo.length > 0;
         
         // Build select statement based on column existence
         const selectQuery = includeZoomLink ? 
