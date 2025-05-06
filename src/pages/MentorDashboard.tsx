@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
@@ -7,11 +7,17 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/AuthProvider";
 import { isMentor, isAdmin } from "@/services/auth";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
+import ReferAlumniDialog from "@/components/mentor/ReferAlumniDialog";
+import MyReferrals from "@/components/mentor/MyReferrals";
 
 const MentorDashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [referDialogOpen, setReferDialogOpen] = useState(false);
+  const [refreshReferrals, setRefreshReferrals] = useState(false);
 
   useEffect(() => {
     // Redirect if user is not logged in or not a mentor/admin
@@ -37,6 +43,10 @@ const MentorDashboard = () => {
     return null; // Will redirect via useEffect
   }
 
+  const handleReferralComplete = () => {
+    setRefreshReferrals(prev => !prev);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
@@ -45,7 +55,40 @@ const MentorDashboard = () => {
       <Navbar />
       
       <main className="flex-grow container-custom py-10">
-        <h1 className="text-3xl font-bold text-navy mb-6">Mentor Dashboard</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <h1 className="text-3xl font-bold text-navy">Mentor Dashboard</h1>
+          <Button 
+            className="mt-4 md:mt-0 flex items-center gap-2" 
+            onClick={() => setReferDialogOpen(true)}
+          >
+            <UserPlus className="h-4 w-4" />
+            Refer an Alumni
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600">
+                Update your mentor profile and expertise areas
+              </p>
+              <div className="mt-4">
+                <Button 
+                  variant="outline"
+                  className="text-blue-600 text-sm font-medium"
+                  onClick={() => navigate('/account')}
+                >
+                  Edit Profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <MyReferrals key={refreshReferrals ? 'refresh' : 'initial'} />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
@@ -77,22 +120,6 @@ const MentorDashboard = () => {
               </div>
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Profile</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">
-                Update your mentor profile and expertise areas
-              </p>
-              <div className="mt-4">
-                <button className="text-blue-600 text-sm font-medium">
-                  Edit Profile
-                </button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
         
         <div className="mt-10">
@@ -102,6 +129,12 @@ const MentorDashboard = () => {
           </div>
         </div>
       </main>
+      
+      <ReferAlumniDialog 
+        open={referDialogOpen}
+        onOpenChange={setReferDialogOpen}
+        onReferralComplete={handleReferralComplete}
+      />
       
       <Footer />
     </div>
