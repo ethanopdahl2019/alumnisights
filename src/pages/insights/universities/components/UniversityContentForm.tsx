@@ -25,9 +25,12 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
     form,
     isLoading,
     imagePreview,
+    logoPreview,
     handleImageChange,
+    handleLogoChange,
     onSubmit,
-    resetImage
+    resetImage,
+    resetLogo
   } = useUniversityContentForm({ id, universityName });
 
   return (
@@ -46,6 +49,15 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
                   </FormControl>
                 </FormItem>
               )}
+            />
+
+            <UniversityImageUpload 
+              imagePreview={logoPreview}
+              onImageChange={handleLogoChange}
+              onImageRemove={resetLogo}
+              id="logo-upload"
+              label="University Logo"
+              helpText="Upload the university logo (square format recommended)"
             />
 
             <FormField
@@ -88,6 +100,9 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
               imagePreview={imagePreview}
               onImageChange={handleImageChange}
               onImageRemove={resetImage}
+              id="image-upload"
+              label="University Image"
+              helpText="Upload a feature image for the university"
             />
 
             <FormField
@@ -130,7 +145,7 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => navigate("/insights/university-content-manager")}
+            onClick={() => navigate("/insights/undergraduate-admissions")}
           >
             Cancel
           </Button>

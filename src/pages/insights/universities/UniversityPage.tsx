@@ -53,7 +53,8 @@ const UniversityPage: React.FC = () => {
   }
   
   const universityName = content?.name || universityData?.name || "";
-  const universityLogo = content?.image || null;
+  const universityLogo = content?.logo || universityData?.logo || null;
+  const universityImage = content?.image || null;
   
   // Build content sections for display
   const contentSections = (
@@ -66,10 +67,10 @@ const UniversityPage: React.FC = () => {
               <div className="md:w-2/3 pr-6">
                 <p className="whitespace-pre-line">{content.overview}</p>
               </div>
-              {content.image && (
+              {universityImage && (
                 <div className="md:w-1/3 mt-4 md:mt-0">
                   <img 
-                    src={content.image} 
+                    src={universityImage} 
                     alt={content.name}
                     className="w-full rounded-lg shadow-md"
                   />

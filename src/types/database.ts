@@ -1,4 +1,3 @@
-
 export interface School {
   id: string;
   name: string;
@@ -171,6 +170,7 @@ export interface UniversityContent {
   application_requirements: string;
   alumni_insights?: string | null;
   image?: string | null;
+  logo?: string | null;
   created_at: string;
   updated_at: string;
 }

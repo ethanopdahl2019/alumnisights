@@ -23,7 +23,9 @@ interface UseUniversityContentFormProps {
 export function useUniversityContentForm({ id, universityName }: UseUniversityContentFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const form = useForm<UniversityContentFormValues>({
@@ -55,6 +57,10 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
           if (content.image) {
             setImagePreview(content.image);
           }
+          
+          if (content.logo) {
+            setLogoPreview(content.logo);
+          }
         }
       } catch (error) {
         console.error("Error loading university content:", error);
@@ -70,7 +76,16 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
     setImagePreview(null);
     
     // Clear file input if it exists
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"][id="image-upload"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  };
+  
+  const resetLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    
+    // Clear file input if it exists
+    const fileInput = document.querySelector('input[type="file"][id="logo-upload"]') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
 
@@ -94,14 +109,34 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
     }
   };
   
+  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Verify file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Logo size should be less than 5MB");
+        return;
+      }
+      
+      setLogoFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
   // Function to upload image to Supabase storage
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) {
+  const uploadFile = async (file: File | null, prefix: string): Promise<string | null> => {
+    if (!file) {
       return null;
     }
 
     try {
-      console.log("Starting image upload...");
+      console.log(`Starting ${prefix} upload...`);
       
       // Check if user is authenticated
       const { data: { session } } = await supabase.auth.getSession();
@@ -110,8 +145,8 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
         throw new Error("Authentication required for file upload");
       }
       
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${id || 'new'}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${id || 'new'}-${prefix}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `university-images/${fileName}`;
 
       console.log("Uploading to path:", filePath);
@@ -119,7 +154,7 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
       // Upload the file
       const { error: uploadError, data } = await supabase.storage
         .from('university-content')
-        .upload(filePath, imageFile, {
+        .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
         });
@@ -140,8 +175,8 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
       
       return urlData.publicUrl;
     } catch (error: any) {
-      console.error("Error uploading image:", error);
-      let message = "Failed to upload image";
+      console.error(`Error uploading ${prefix}:`, error);
+      let message = `Failed to upload ${prefix}`;
       
       if (error.message) {
         message += ": " + error.message;
@@ -161,13 +196,21 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
     try {
       setIsLoading(true);
       
-      // Upload image if provided
+      // Upload image and logo if provided
       let finalImageUrl = imagePreview;
+      let finalLogoUrl = logoPreview;
       
       if (imageFile) {
-        finalImageUrl = await uploadImage();
+        finalImageUrl = await uploadFile(imageFile, 'image');
         if (!finalImageUrl) {
           toast.error("Failed to upload image, continuing with content save");
+        }
+      }
+      
+      if (logoFile) {
+        finalLogoUrl = await uploadFile(logoFile, 'logo');
+        if (!finalLogoUrl) {
+          toast.error("Failed to upload logo, continuing with content save");
         }
       }
       
@@ -178,11 +221,13 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
         admissionStats: values.admissionStats,
         applicationRequirements: values.applicationRequirements,
         alumniInsights: values.alumniInsights,
-        image: finalImageUrl
+        image: finalImageUrl,
+        logo: finalLogoUrl
       });
       
       toast.success("University content saved successfully");
-      navigate(`/insights/universities/${id}`);
+      // Redirect to undergraduate admissions page instead of university page
+      navigate("/insights/undergraduate-admissions");
       
     } catch (error) {
       console.error("Error saving university content:", error);
@@ -196,8 +241,11 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
     form,
     isLoading,
     imagePreview,
+    logoPreview,
     handleImageChange,
+    handleLogoChange,
     onSubmit,
-    resetImage
+    resetImage,
+    resetLogo
   };
 }

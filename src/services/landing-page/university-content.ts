@@ -32,6 +32,7 @@ export async function saveUniversityContent(id: string, content: {
   applicationRequirements: string;
   alumniInsights?: string;
   image?: string | null;
+  logo?: string | null;
 }): Promise<UniversityContent> {
   console.log("Saving university content for ID:", id, "Content:", content);
   
@@ -54,7 +55,8 @@ export async function saveUniversityContent(id: string, content: {
         admission_stats: content.admissionStats,
         application_requirements: content.applicationRequirements,
         alumni_insights: content.alumniInsights || '',
-        image: content.image
+        image: content.image,
+        logo: content.logo
       })
       .select()
       .single();
