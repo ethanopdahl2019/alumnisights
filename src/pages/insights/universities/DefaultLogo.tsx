@@ -16,7 +16,7 @@ const DefaultLogo: React.FC<DefaultLogoProps> = ({ name, className = "" }) => {
     .join('');
 
   return (
-    <div className={`flex items-center justify-center bg-blue-50 rounded-full ${className}`}>
+    <div className={`flex items-center justify-center bg-blue-50 ${className}`}>
       <span className="font-semibold text-blue-600 text-lg">
         {initials.toUpperCase()}
       </span>

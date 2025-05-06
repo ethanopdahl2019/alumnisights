@@ -28,30 +28,30 @@ const UniversityTemplate: React.FC<{
 
       <main className="container-custom py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-10 flex items-center">
-            <div className="mr-6">
+          <div className="mb-10 flex flex-col items-center">
+            <div className="mb-6">
               {logo && logo.startsWith("/lovable-uploads") ? (
                 <img 
                   src={logo} 
                   alt={`${name} logo`}
-                  className="h-24 w-24 object-contain"
+                  className="h-32 w-32 object-contain"
                 />
               ) : (
-                <DefaultLogo name={name} className="h-24 w-24" />
+                <DefaultLogo name={name} className="h-32 w-32" />
               )}
             </div>
-            <div className="flex-grow">
+            <div className="flex-grow text-center">
               <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4">
                 {name}
               </h1>
               <p className="text-lg text-gray-600 mb-6">
                 Undergraduate Admissions Insights
               </p>
-              <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
+              <div className="w-20 h-1 bg-blue-600 rounded-full mx-auto"></div>
             </div>
             
             {id && showEditButton && (
-              <div className="flex-shrink-0">
+              <div className="mt-4">
                 <Link to={`/insights/university-content-editor/${id}`}>
                   <Button variant="outline" size="sm" className="whitespace-nowrap">
                     <Edit className="h-4 w-4 mr-2" /> Edit
