@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -127,7 +128,10 @@ const BookingManagement = () => {
                 .single();
               
               return {
-                ...booking,
+                id: booking.id,
+                scheduled_at: booking.scheduled_at,
+                status: booking.status,
+                zoom_link: booking.zoom_link,
                 student: studentData || { name: 'Unknown Student', id: '' },
                 mentor: mentorData || { name: 'Unknown Mentor', id: '' },
                 booking_option: booking.booking_options || { title: 'Unknown', duration: '30 min' }
@@ -135,7 +139,10 @@ const BookingManagement = () => {
             } catch (error) {
               console.error('Error fetching profiles:', error);
               return {
-                ...booking,
+                id: booking.id,
+                scheduled_at: booking.scheduled_at,
+                status: booking.status,
+                zoom_link: booking.zoom_link,
                 student: { name: 'Unknown Student', id: '' },
                 mentor: { name: 'Unknown Mentor', id: '' },
                 booking_option: booking.booking_options || { title: 'Unknown', duration: '30 min' }

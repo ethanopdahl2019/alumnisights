@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -97,6 +96,7 @@ const MentorDashboard = () => {
 
         if (!data) {
           setBookings([]);
+          setIsLoadingBookings(false);
           return;
         }
 
