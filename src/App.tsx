@@ -22,6 +22,10 @@ import SchoolMajorLanding from "./pages/SchoolMajorLanding";
 import SchoolActivityLanding from "./pages/SchoolActivityLanding";
 import MyAccount from "./pages/MyAccount";
 
+// Import the new dashboard pages
+import MentorDashboard from "./pages/MentorDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
+
 // Import the Insights pages
 import UndergraduateAdmissions from "./pages/insights/UndergraduateAdmissions";
 import GraduateAdmissions from "./pages/insights/GraduateAdmissions";
@@ -73,6 +77,8 @@ const App = () => (
               <Route path="/account" element={<MyAccount />} />
               <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
               <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
+              <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+              <Route path="/student-dashboard" element={<StudentDashboard />} />
               <Route path="/alumni/:id" element={<AlumniProfilePage />} />
               <Route path="/booking/:id/:productId" element={<BookingPage />} />
               <Route path="/p/:slug" element={<LandingPage />} />

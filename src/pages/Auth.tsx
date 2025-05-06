@@ -30,7 +30,7 @@ const registerBaseSchema = z.object({
   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
   firstName: z.string().min(1, { message: "First name is required" }),
   lastName: z.string().min(1, { message: "Last name is required" }),
-  userType: z.enum(["prospect", "alumni_student"], { 
+  userType: z.enum(["student", "mentor"], { 
     required_error: "Please select user type" 
   }),
 }).refine(data => data.password === data.confirmPassword, {
@@ -38,16 +38,16 @@ const registerBaseSchema = z.object({
   path: ["confirmPassword"],
 });
 
-const prospectSchema = registerBaseSchema;
+const studentSchema = registerBaseSchema;
 
-// Create a new schema for alumni/student instead of extending
-const alumniStudentSchema = z.object({
+// Create a new schema for mentor instead of extending
+const mentorSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
   firstName: z.string().min(1, { message: "First name is required" }),
   lastName: z.string().min(1, { message: "Last name is required" }),
-  userType: z.enum(["prospect", "alumni_student"], { 
+  userType: z.enum(["student", "mentor"], { 
     required_error: "Please select user type" 
   }),
   schoolId: z.string().min(1, { message: "Please select a school" }),
@@ -57,24 +57,24 @@ const alumniStudentSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof alumniStudentSchema>;
+type RegisterFormValues = z.infer<typeof mentorSchema>;
 
 const Auth = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [userType, setUserType] = useState<"prospect" | "alumni_student">("prospect");
+  const [userType, setUserType] = useState<"student" | "mentor">("student");
   const [schools, setSchools] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   // Redirect if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (session) {
       navigate('/');
     }
     
-    // Load schools for alumni/student registration
+    // Load schools for mentor registration
     const loadSchools = async () => {
       try {
         const schoolData = await getSchools();
@@ -104,7 +104,7 @@ const Auth = () => {
   // Register form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(
-      userType === 'prospect' ? prospectSchema : alumniStudentSchema
+      userType === 'student' ? studentSchema : mentorSchema
     ),
     defaultValues: {
       email: "",
@@ -112,7 +112,7 @@ const Auth = () => {
       confirmPassword: "",
       firstName: "",
       lastName: "",
-      userType: "prospect",
+      userType: "student",
     },
   });
 
@@ -121,12 +121,18 @@ const Auth = () => {
     setIsLoading(true);
     try {
       const { email, password } = values;
-      await signIn({ email, password });
+      const { user } = await signIn({ email, password });
       toast({
         title: "Success",
         description: "You have been logged in successfully.",
       });
-      navigate('/');
+      
+      // Redirect based on user role
+      if (user?.user_metadata?.role === "mentor" || user?.user_metadata?.role === "alumni") {
+        navigate('/mentor-dashboard');
+      } else {
+        navigate('/student-dashboard');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
@@ -145,6 +151,9 @@ const Auth = () => {
     try {
       const { email, password, firstName, lastName, userType, schoolId } = values;
 
+      // Map the userType to the correct role
+      const role = userType === 'mentor' ? 'mentor' : 'student';
+
       await signUp({ 
         email, 
         password, 
@@ -152,8 +161,8 @@ const Auth = () => {
         lastName,
         metadata: {
           user_type: userType,
-          school_id: userType === 'alumni_student' ? schoolId : null,
-          role: userType === 'alumni_student' ? 'alumni' : 'applicant'
+          role: role,
+          school_id: userType === 'mentor' ? schoolId : null
         }
       });
 
@@ -162,11 +171,13 @@ const Auth = () => {
         description: "Your account has been created. Please check your email to verify your account.",
       });
 
-      if (userType === 'alumni_student') {
-        await signIn({ email, password });
+      await signIn({ email, password });
+      
+      // Redirect based on user role
+      if (userType === "mentor") {
         navigate('/profile/complete');
       } else {
-        setActiveTab('login');
+        navigate('/student-dashboard');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -181,8 +192,8 @@ const Auth = () => {
   };
 
   // Update form validation schema when user type changes
-  React.useEffect(() => {
-    const currentUserType = registerForm.getValues().userType as "prospect" | "alumni_student";
+  useEffect(() => {
+    const currentUserType = registerForm.getValues().userType as "student" | "mentor";
     setUserType(currentUserType);
   }, [registerForm.watch("userType")]);
 
@@ -364,18 +375,18 @@ const Auth = () => {
                               >
                                 <FormItem className="flex items-center space-x-3 space-y-0">
                                   <FormControl>
-                                    <RadioGroupItem value="prospect" />
+                                    <RadioGroupItem value="student" />
                                   </FormControl>
                                   <FormLabel className="font-normal">
-                                    Prospective Student
+                                    Student
                                   </FormLabel>
                                 </FormItem>
                                 <FormItem className="flex items-center space-x-3 space-y-0">
                                   <FormControl>
-                                    <RadioGroupItem value="alumni_student" />
+                                    <RadioGroupItem value="mentor" />
                                   </FormControl>
                                   <FormLabel className="font-normal">
-                                    Current Student or Alumni
+                                    Mentor
                                   </FormLabel>
                                 </FormItem>
                               </RadioGroup>
@@ -385,9 +396,9 @@ const Auth = () => {
                         )}
                       />
                       
-                      {/* Conditionally show school selection for alumni/student */}
+                      {/* Conditionally show school selection for mentor */}
                       <Collapsible
-                        open={userType === 'alumni_student'}
+                        open={userType === 'mentor'}
                         onOpenChange={setIsOpen}
                         className="space-y-2"
                       >

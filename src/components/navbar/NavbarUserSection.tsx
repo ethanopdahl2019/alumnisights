@@ -12,33 +12,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ShieldAlert, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdmin, isMentor, isStudent } from "@/services/auth";
 
 export const NavbarUserSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isAdmin = user?.user_metadata?.role === 'admin';
-
-  const goToDashboard = async () => {
-    if (user) {
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("id, role")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (error || !data) {
-          navigate("/applicant-dashboard");
-          return;
-        }
-        if (data.role === "alumni") {
-          navigate("/alumni-dashboard");
-        } else {
-          navigate("/applicant-dashboard");
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-        navigate("/applicant-dashboard");
-      }
+  
+  const goToDashboard = () => {
+    if (!user) return;
+    
+    if (isMentor(user)) {
+      navigate('/mentor-dashboard');
+    } else if (isStudent(user)) {
+      navigate('/student-dashboard');
+    } else if (isAdmin(user)) {
+      navigate('/admin/dashboard');
+    } else {
+      // Default fallback
+      navigate('/account');
     }
   };
 
@@ -84,7 +75,7 @@ export const NavbarUserSection = () => {
           Dashboard
         </DropdownMenuItem>
         
-        {isAdmin && (
+        {isAdmin(user) && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center">

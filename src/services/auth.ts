@@ -3,6 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
 export async function signUp({ email, password, firstName, lastName, metadata = {} }: UserRegistration) {
+  // Set default role if not provided
+  if (!metadata.role) {
+    metadata.role = 'student';
+  }
+  
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -67,4 +72,21 @@ export async function getCurrentUser() {
 
 export function onAuthStateChange(callback: (event: string, session: any) => void) {
   return supabase.auth.onAuthStateChange(callback);
+}
+
+export function getUserRole(user: any) {
+  if (!user) return null;
+  return user.user_metadata?.role || null;
+}
+
+export function isStudent(user: any) {
+  return getUserRole(user) === 'student' || getUserRole(user) === 'applicant';
+}
+
+export function isMentor(user: any) {
+  return getUserRole(user) === 'mentor' || getUserRole(user) === 'alumni';
+}
+
+export function isAdmin(user: any) {
+  return getUserRole(user) === 'admin';
 }
