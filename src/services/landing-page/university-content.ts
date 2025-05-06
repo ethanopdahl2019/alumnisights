@@ -37,7 +37,7 @@ export async function saveUniversityContent(id: string, content: {
   console.log("Saving university content for ID:", id, "Content:", content);
   
   try {
-    // Remove authentication check - allow anyone to save content
+    // No authentication check - allow anyone to save content
     
     // Proceed with the update
     const { data, error } = await supabase

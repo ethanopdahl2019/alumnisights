@@ -138,8 +138,7 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
     try {
       console.log(`Starting ${prefix} upload...`);
       
-      // Remove authentication check for file upload
-      
+      // Generate a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `${id || 'new'}-${prefix}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `university-images/${fileName}`;
@@ -190,6 +189,7 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
     
     try {
       setIsLoading(true);
+      toast.info("Processing your request...");
       
       // Upload image and logo if provided
       let finalImageUrl = imagePreview;
@@ -198,14 +198,14 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
       if (imageFile) {
         finalImageUrl = await uploadFile(imageFile, 'image');
         if (!finalImageUrl) {
-          toast.error("Failed to upload image, continuing with content save");
+          toast.warning("Failed to upload image, continuing with content save");
         }
       }
       
       if (logoFile) {
         finalLogoUrl = await uploadFile(logoFile, 'logo');
         if (!finalLogoUrl) {
-          toast.error("Failed to upload logo, continuing with content save");
+          toast.warning("Failed to upload logo, continuing with content save");
         }
       }
       
@@ -224,9 +224,9 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
       // Redirect to undergraduate admissions page
       navigate("/insights/undergraduate-admissions");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving university content:", error);
-      toast.error("Failed to save university content");
+      toast.error(`Failed to save university content: ${error.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }

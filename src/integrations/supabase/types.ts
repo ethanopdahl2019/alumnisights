@@ -843,6 +843,7 @@ export type Database = {
           created_at: string
           id: string
           image: string | null
+          logo: string | null
           name: string
           overview: string | null
           updated_at: string
@@ -854,6 +855,7 @@ export type Database = {
           created_at?: string
           id: string
           image?: string | null
+          logo?: string | null
           name: string
           overview?: string | null
           updated_at?: string
@@ -865,6 +867,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          logo?: string | null
           name?: string
           overview?: string | null
           updated_at?: string
