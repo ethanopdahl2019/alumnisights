@@ -5,6 +5,9 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+/**
+ * Function that checks if a column exists in a database table
+ */
 serve(async (req) => {
   try {
     // Create a Supabase client with the service role key
@@ -13,7 +16,26 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
     
-    const { table_name, column_name } = await req.json();
+    // Get parameters from request
+    let params;
+    try {
+      params = await req.json();
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { table_name, column_name } = params;
+    
+    // Validate parameters
+    if (!table_name || !column_name || typeof table_name !== 'string' || typeof column_name !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Missing or invalid table_name or column_name parameters" }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     
     // Query the information_schema to check if the column exists
     const { data, error } = await supabaseClient
