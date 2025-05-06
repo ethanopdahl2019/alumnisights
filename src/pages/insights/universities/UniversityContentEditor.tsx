@@ -12,6 +12,7 @@ import UniversityContentLoading from "./components/UniversityContentLoading";
 import AccessDenied from "./components/AccessDenied";
 import UniversityContentForm from "./components/UniversityContentForm";
 import { getUniversityContent } from "@/services/landing-page";
+import { supabase } from "@/integrations/supabase/client";
 
 const UniversityContentEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,43 +26,36 @@ const UniversityContentEditor: React.FC = () => {
   // Check if the university exists in our static data
   const universityInfo = id ? universities.find(uni => uni.id === id) : null;
   
-  // Check admin status (just for UI display)
+  // Check that user is authenticated before rendering the page
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) {
-        setAuthChecked(true);
+    const checkAuth = async () => {
+      // Get session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Please sign in to access this page");
+        navigate(`/auth?redirect=/insights/university-content-editor/${id || ''}`);
         return;
       }
       
-      // Get role from user metadata
-      const isUserAdmin = user.user_metadata?.role === 'admin';
-      console.log("User metadata:", user.user_metadata);
-      console.log("Is admin from metadata:", isUserAdmin);
-      
-      setIsAdmin(isUserAdmin);
-      setAuthChecked(true);
-      
-      if (!isUserAdmin) {
-        // Just display a warning, but don't block access
-        toast("Note: You're not logged in as an admin", {
-          description: "Changes will still be saved"
-        });
+      // If there's a user and session, check if they're admin
+      if (user) {
+        // Get role from user metadata
+        const isUserAdmin = user.user_metadata?.role === 'admin';
+        console.log("User metadata:", user.user_metadata);
+        console.log("Is admin from metadata:", isUserAdmin);
+        
+        setIsAdmin(isUserAdmin);
       }
+      
+      setAuthChecked(true);
     };
     
     if (!loading) {
-      checkAdminStatus();
+      checkAuth();
     }
-  }, [user, loading]);
+  }, [user, loading, id, navigate]);
   
-  // Handle authentication redirects
-  useEffect(() => {
-    if (!loading && !user && authChecked) {
-      toast.error("Please sign in to access this page");
-      navigate(`/auth?redirect=/insights/university-content-editor/${id || ''}`);
-    }
-  }, [user, loading, authChecked, id, navigate]);
-
   // Load university content
   useEffect(() => {
     const loadContent = async () => {
@@ -81,14 +75,12 @@ const UniversityContentEditor: React.FC = () => {
       }
     };
 
-    if (authChecked && user) {
+    if (authChecked) {
       loadContent();
-    } else if (authChecked) {
-      setIsLoadingContent(false);
     }
-  }, [id, universityInfo, authChecked, user]);
+  }, [id, universityInfo, authChecked]);
 
-  if (loading || (isLoadingContent && authChecked && user)) {
+  if (loading || (isLoadingContent && authChecked)) {
     return <UniversityContentLoading />;
   }
 
