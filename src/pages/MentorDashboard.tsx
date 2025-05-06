@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -76,17 +77,21 @@ const MentorDashboard = () => {
           throw profileError;
         }
 
+        // Check if the table has a zoom_link column by getting the table information
+        const { data: tableInfo, error: tableInfoError } = await supabase
+          .rpc('get_column_information', { table_name: 'bookings', column_name: 'zoom_link' });
+        
+        // Determine whether to include zoom_link in the select statement
+        const includeZoomLink = !tableInfoError && tableInfo && tableInfo.length > 0;
+        
         // Fetch bookings with student profiles and booking options
+        const selectQuery = includeZoomLink ? 
+          `id, scheduled_at, status, zoom_link, booking_options(title, duration), user_id` :
+          `id, scheduled_at, status, booking_options(title, duration), user_id`;
+          
         const { data, error } = await supabase
           .from('bookings')
-          .select(`
-            id, 
-            scheduled_at, 
-            status, 
-            zoom_link, 
-            booking_options(title, duration),
-            user_id
-          `)
+          .select(selectQuery)
           .eq('profile_id', profileData.id)
           .order('scheduled_at', { ascending: true });
 
@@ -104,22 +109,26 @@ const MentorDashboard = () => {
         const studentDetails = await Promise.all(
           data.map(async (booking) => {
             try {
+              // TypeScript complains if we try to access properties like booking.user_id
+              // so we need to use a type assertion
+              const bookingData = booking as any;
+              
               const { data: userData, error: userError } = await supabase
                 .from('profiles')
                 .select('name')
-                .eq('user_id', booking.user_id)
+                .eq('user_id', bookingData.user_id)
                 .single();
 
               if (userError) throw userError;
 
               return {
-                id: booking.id,
+                id: bookingData.id,
                 name: userData?.name || 'Anonymous Student'
               };
             } catch (e) {
               console.error('Error fetching student details:', e);
               return {
-                id: booking.id,
+                id: (booking as any).id,
                 name: 'Anonymous Student'
               };
             }
@@ -128,14 +137,15 @@ const MentorDashboard = () => {
 
         // Combine the data
         const formattedBookings = data.map(booking => {
-          const student = studentDetails.find(s => s.id === booking.id);
+          const bookingData = booking as any;
+          const student = studentDetails.find(s => s.id === bookingData.id);
           return {
-            id: booking.id,
-            scheduled_at: booking.scheduled_at,
-            status: booking.status,
-            zoom_link: booking.zoom_link,
+            id: bookingData.id,
+            scheduled_at: bookingData.scheduled_at,
+            status: bookingData.status,
+            zoom_link: includeZoomLink ? bookingData.zoom_link : null,
             student: { name: student?.name || 'Anonymous Student' },
-            booking_option: booking.booking_options || { title: 'Session', duration: '30 min' }
+            booking_option: bookingData.booking_options || { title: 'Session', duration: '30 min' }
           };
         });
 

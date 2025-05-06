@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -85,20 +84,21 @@ const BookingManagement = () => {
       
       setIsLoading(true);
       try {
+        // Check if the table has a zoom_link column by getting the table information
+        const { data: tableInfo, error: tableInfoError } = await supabase
+          .rpc('get_column_information', { table_name: 'bookings', column_name: 'zoom_link' });
+        
+        // Determine whether to include zoom_link in the select statement
+        const includeZoomLink = !tableInfoError && tableInfo && tableInfo.length > 0;
+        
+        // Build select statement based on column existence
+        const selectQuery = includeZoomLink ? 
+          `id, scheduled_at, status, zoom_link, user_id, profile_id, booking_options(title, duration)` :
+          `id, scheduled_at, status, user_id, profile_id, booking_options(title, duration)`;
+          
         const { data, error } = await supabase
           .from('bookings')
-          .select(`
-            id,
-            scheduled_at,
-            status,
-            zoom_link,
-            user_id,
-            profile_id,
-            booking_options (
-              title,
-              duration
-            )
-          `)
+          .select(selectQuery)
           .order('scheduled_at', { ascending: false });
         
         if (error) throw error;
@@ -113,39 +113,42 @@ const BookingManagement = () => {
         const enrichedBookings = await Promise.all(
           data.map(async (booking) => {
             try {
+              const bookingData = booking as any;
+              
               // Get student profile
               const { data: studentData } = await supabase
                 .from('profiles')
                 .select('name, id')
-                .eq('user_id', booking.user_id)
+                .eq('user_id', bookingData.user_id)
                 .single();
               
               // Get mentor profile
               const { data: mentorData } = await supabase
                 .from('profiles')
                 .select('name, id')
-                .eq('id', booking.profile_id)
+                .eq('id', bookingData.profile_id)
                 .single();
               
               return {
-                id: booking.id,
-                scheduled_at: booking.scheduled_at,
-                status: booking.status,
-                zoom_link: booking.zoom_link,
+                id: bookingData.id,
+                scheduled_at: bookingData.scheduled_at,
+                status: bookingData.status,
+                zoom_link: includeZoomLink ? bookingData.zoom_link : null,
                 student: studentData || { name: 'Unknown Student', id: '' },
                 mentor: mentorData || { name: 'Unknown Mentor', id: '' },
-                booking_option: booking.booking_options || { title: 'Unknown', duration: '30 min' }
+                booking_option: bookingData.booking_options || { title: 'Unknown', duration: '30 min' }
               };
             } catch (error) {
               console.error('Error fetching profiles:', error);
+              const bookingData = booking as any;
               return {
-                id: booking.id,
-                scheduled_at: booking.scheduled_at,
-                status: booking.status,
-                zoom_link: booking.zoom_link,
+                id: bookingData.id,
+                scheduled_at: bookingData.scheduled_at,
+                status: bookingData.status,
+                zoom_link: includeZoomLink ? bookingData.zoom_link : null,
                 student: { name: 'Unknown Student', id: '' },
                 mentor: { name: 'Unknown Mentor', id: '' },
-                booking_option: booking.booking_options || { title: 'Unknown', duration: '30 min' }
+                booking_option: bookingData.booking_options || { title: 'Unknown', duration: '30 min' }
               };
             }
           })
