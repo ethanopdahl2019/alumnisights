@@ -12,6 +12,7 @@ const UniversityPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [content, setContent] = useState<UniversityContent | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { user } = useAuth(); // Use auth to check for admin status
   
   // Find university data from static data
   const universityData = id ? universities.find(uni => uni.id === id) : null;
@@ -46,6 +47,9 @@ const UniversityPage: React.FC = () => {
   const universityName = content?.name || universityData?.name || "";
   const universityLogo = content?.logo || universityData?.logo || null;
   const universityImage = content?.image || null;
+  
+  // Check if the user is an admin
+  const isAdmin = user?.user_metadata?.role === 'admin';
   
   // Build content sections for display
   const contentSections = (
@@ -98,7 +102,7 @@ const UniversityPage: React.FC = () => {
       name={universityName}
       logo={universityLogo}
       content={contentSections}
-      showEditButton={true} // Show edit button for everyone
+      showEditButton={isAdmin} // Only show edit button for admins
     />
   );
 };

@@ -37,7 +37,11 @@ export async function saveUniversityContent(id: string, content: {
   console.log("Saving university content for ID:", id, "Content:", content);
   
   try {
-    // No authentication check - allow anyone to save content
+    // Check if current user is an admin
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || user.user_metadata?.role !== 'admin') {
+      throw new Error("Unauthorized: Only admins can update university content");
+    }
     
     // Proceed with the update
     const { data, error } = await supabase
