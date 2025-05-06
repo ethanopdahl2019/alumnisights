@@ -30,7 +30,7 @@ const UniversityTemplate: React.FC<{
         <div className="max-w-4xl mx-auto">
           <div className="mb-10 flex flex-col items-center">
             <div className="mb-6">
-              {logo && logo.startsWith("/lovable-uploads") ? (
+              {logo ? (
                 <img 
                   src={logo} 
                   alt={`${name} logo`}
