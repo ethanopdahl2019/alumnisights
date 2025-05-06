@@ -21,6 +21,7 @@ import BookingPage from "./pages/BookingPage";
 import SchoolMajorLanding from "./pages/SchoolMajorLanding";
 import SchoolActivityLanding from "./pages/SchoolActivityLanding";
 import MyAccount from "./pages/MyAccount";
+import UndergraduateAdmissions from "./pages/UndergraduateAdmissions"; // Added this import
 
 // Import the new dashboard pages
 import MentorDashboard from "./pages/MentorDashboard";

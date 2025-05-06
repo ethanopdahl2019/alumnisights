@@ -4,6 +4,26 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
+// Define and export the insightsItems
+export const insightsItems = [
+  {
+    title: "Undergraduate Admissions",
+    href: "/schools/undergraduate-admissions",
+  },
+  {
+    title: "Graduate Admissions",
+    href: "/insights/graduate-admissions",
+  },
+  {
+    title: "Industry Insights",
+    href: "/insights/industry",
+  },
+  {
+    title: "Clubs & Greek Life",
+    href: "/insights/clubs-and-greek-life",
+  },
+];
+
 export const InsightsDropdown = () => {
   return (
     <DropdownMenu>
@@ -11,26 +31,13 @@ export const InsightsDropdown = () => {
         Insights <ChevronDown className="h-4 w-4 ml-1" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center">
-        <DropdownMenuItem asChild>
-          <Link to="/schools/undergraduate-admissions" className="cursor-pointer">
-            Undergraduate Admissions
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/insights/graduate-admissions" className="cursor-pointer">
-            Graduate Admissions
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/insights/industry" className="cursor-pointer">
-            Industry Insights
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/insights/clubs-and-greek-life" className="cursor-pointer">
-            Clubs & Greek Life
-          </Link>
-        </DropdownMenuItem>
+        {insightsItems.map((item) => (
+          <DropdownMenuItem key={item.href} asChild>
+            <Link to={item.href} className="cursor-pointer">
+              {item.title}
+            </Link>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
