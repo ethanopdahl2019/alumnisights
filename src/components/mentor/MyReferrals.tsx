@@ -23,14 +23,15 @@ const MyReferrals = () => {
       if (!user) return;
 
       try {
+        // Use type assertion to help TypeScript understand we know what we're doing
         const { data, error } = await supabase
-          .from("mentor_referrals")
+          .from("mentor_referrals" as any)
           .select("*")
           .eq("referrer_id", user.id)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-        setReferrals(data || []);
+        setReferrals(data as unknown as Referral[] || []);
       } catch (error) {
         console.error("Error fetching referrals:", error);
       } finally {

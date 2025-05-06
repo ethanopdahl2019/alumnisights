@@ -58,13 +58,15 @@ const ReferAlumniDialog: React.FC<ReferAlumniDialogProps> = ({
   const onSubmit = async (data: ReferralFormData) => {
     try {
       // First, store the referral in the database
-      const { error } = await supabase.from("mentor_referrals").insert({
-        referrer_id: user?.id,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        status: "pending",
-      });
+      const { error } = await supabase
+        .from("mentor_referrals" as any)
+        .insert({
+          referrer_id: user?.id,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          status: "pending",
+        } as any);
 
       if (error) throw error;
 

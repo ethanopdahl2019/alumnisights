@@ -465,6 +465,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_referrals: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          joined_at: string | null
+          last_name: string
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          joined_at?: string | null
+          last_name: string
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          joined_at?: string | null
+          last_name?: string
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachment_url: string | null
