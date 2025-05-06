@@ -82,6 +82,12 @@ export const NavbarUserSection = () => {
               <ShieldAlert className="mr-2 h-4 w-4" />
               Admin Dashboard
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/student-dashboard')}>
+              Student Dashboard
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')}>
+              Mentor Dashboard
+            </DropdownMenuItem>
           </>
         )}
         
