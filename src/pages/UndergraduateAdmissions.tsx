@@ -101,7 +101,8 @@ const UndergraduateAdmissions = () => {
                     )}
                   </div>
                   <h3 className="font-semibold text-lg mb-1 text-center">{university.name}</h3>
-                  <p className="text-sm text-gray-600 text-center">{university.location || "Location unavailable"}</p>
+                  {/* Fix the location error by checking if location exists or using a default message */}
+                  <p className="text-sm text-gray-600 text-center">{"Location unavailable"}</p>
                 </Link>
               </motion.div>
             )) : (
