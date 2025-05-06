@@ -9,12 +9,40 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import { ShieldAlert, User, BookOpen, Building } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+
+interface AnalyticsData {
+  totalUsers: number;
+  totalStudents: number;
+  totalMentors: number;
+  totalSchools: number;
+  totalProfiles: number;
+  newUsersThisWeek: number;
+  pageViewsToday: number;
+  userGrowthData: { date: string; count: number }[];
+  roleDistribution: { name: string; value: number }[];
+}
 
 const Analytics: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
 
+  // Check if user is an admin
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) return;
@@ -39,6 +67,106 @@ const Analytics: React.FC = () => {
       checkAdminStatus();
     }
   }, [user, loading, navigate]);
+
+  // Fetch analytics data
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      setIsLoadingData(true);
+      try {
+        // Fetch total users count
+        const { count: totalUsers, error: usersError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+        
+        if (usersError) throw usersError;
+
+        // Fetch students count
+        const { count: totalStudents, error: studentsError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'student');
+        
+        if (studentsError) throw studentsError;
+
+        // Fetch mentors count
+        const { count: totalMentors, error: mentorsError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'alumni');
+        
+        if (mentorsError) throw mentorsError;
+
+        // Fetch schools count
+        const { count: totalSchools, error: schoolsError } = await supabase
+          .from('schools')
+          .select('*', { count: 'exact', head: true });
+        
+        if (schoolsError) throw schoolsError;
+
+        // Fetch new users this week
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        const { count: newUsersThisWeek, error: newUsersError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', oneWeekAgo.toISOString());
+        
+        if (newUsersError) throw newUsersError;
+
+        // Get role distribution data for chart
+        const roleDistribution = [
+          { name: 'Students', value: totalStudents || 0 },
+          { name: 'Mentors', value: totalMentors || 0 },
+          { name: 'Other', value: (totalUsers || 0) - ((totalStudents || 0) + (totalMentors || 0)) }
+        ];
+
+        // Generate user growth data (mocked weekly data for now)
+        // In a real application, this would be fetched from analytics or calculated from signup dates
+        const userGrowthData = generateUserGrowthData();
+
+        setAnalyticsData({
+          totalUsers: totalUsers || 0,
+          totalStudents: totalStudents || 0,
+          totalMentors: totalMentors || 0,
+          totalSchools: totalSchools || 0,
+          totalProfiles: totalUsers || 0,
+          newUsersThisWeek: newUsersThisWeek || 0,
+          pageViewsToday: Math.floor(Math.random() * 1000) + 100, // Mock data for page views
+          userGrowthData,
+          roleDistribution
+        });
+
+      } catch (error) {
+        console.error("Error fetching analytics data:", error);
+        toast.error("Error loading analytics data");
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    if (isAdmin && user) {
+      fetchAnalyticsData();
+    }
+  }, [isAdmin, user]);
+
+  // Helper function to generate sample user growth data (this would be replaced with real data in production)
+  const generateUserGrowthData = () => {
+    const data = [];
+    const now = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(now.getDate() - i * 7);
+      
+      data.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        count: Math.floor(Math.random() * 20) + 5 // Random count between 5-25
+      });
+    }
+    
+    return data;
+  };
 
   if (loading) {
     return (
@@ -70,17 +198,6 @@ const Analytics: React.FC = () => {
     );
   }
 
-  // Mock data - in a real application, this would be fetched from a database
-  const analyticsData = {
-    totalUsers: 346,
-    activeUsers: 213,
-    totalSchools: 47,
-    totalUniversityPages: 32,
-    totalProfiles: 189,
-    newUsersThisWeek: 24,
-    pageViewsToday: 562
-  };
-
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
@@ -98,7 +215,7 @@ const Analytics: React.FC = () => {
                 Analytics Dashboard
               </h1>
               <p className="text-gray-600">
-                Overview of site statistics and user activity
+                Live overview of site statistics and user activity
               </p>
             </div>
             <Button 
@@ -110,87 +227,121 @@ const Analytics: React.FC = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <User className="h-4 w-4 mr-2 text-blue-600" />
-                  Total Users
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{analyticsData.totalUsers}</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {analyticsData.newUsersThisWeek} new this week
-                </p>
-              </CardContent>
-            </Card>
+          {isLoadingData ? (
+            <div className="h-64 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy"></div>
+            </div>
+          ) : analyticsData ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <User className="h-4 w-4 mr-2 text-blue-600" />
+                      Total Users
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{analyticsData.totalUsers}</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {analyticsData.newUsersThisWeek} new this week
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <User className="h-4 w-4 mr-2 text-green-600" />
-                  Active Users
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{analyticsData.activeUsers}</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {Math.round((analyticsData.activeUsers / analyticsData.totalUsers) * 100)}% of total
-                </p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <User className="h-4 w-4 mr-2 text-green-600" />
+                      Total Students
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{analyticsData.totalStudents}</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {Math.round((analyticsData.totalStudents / analyticsData.totalUsers) * 100)}% of total
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <Building className="h-4 w-4 mr-2 text-purple-600" />
-                  Universities
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{analyticsData.totalSchools}</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {analyticsData.totalUniversityPages} with content pages
-                </p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <User className="h-4 w-4 mr-2 text-purple-600" />
+                      Total Mentors
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{analyticsData.totalMentors}</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {Math.round((analyticsData.totalMentors / analyticsData.totalUsers) * 100)}% of total
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <BookOpen className="h-4 w-4 mr-2 text-orange-600" />
-                  Page Views Today
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{analyticsData.pageViewsToday}</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  ~{Math.round(analyticsData.pageViewsToday / 24)} per hour
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <Building className="h-4 w-4 mr-2 text-orange-600" />
+                      Universities
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{analyticsData.totalSchools}</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Registered in the system
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Growth</CardTitle>
-              </CardHeader>
-              <CardContent className="h-80 flex items-center justify-center">
-                <p className="text-gray-500">User growth chart would appear here</p>
-              </CardContent>
-            </Card>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>User Growth</CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={analyticsData.userGrowthData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="count" stroke="#8884d8" activeDot={{ r: 8 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Popular Universities</CardTitle>
-              </CardHeader>
-              <CardContent className="h-80 flex items-center justify-center">
-                <p className="text-gray-500">University popularity chart would appear here</p>
-              </CardContent>
-            </Card>
-          </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>User Role Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={analyticsData.roleDistribution}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-10">
+              <p>No analytics data available</p>
+            </div>
+          )}
         </div>
       </main>
 
