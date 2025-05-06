@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -68,6 +67,11 @@ const StudentDashboard = () => {
 
         if (error) {
           throw error;
+        }
+
+        if (!data) {
+          setBookings([]);
+          return;
         }
 
         // Transform data to match our expected format

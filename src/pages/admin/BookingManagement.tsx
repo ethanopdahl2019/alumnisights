@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -103,6 +102,12 @@ const BookingManagement = () => {
         
         if (error) throw error;
         
+        if (!data) {
+          setBookings([]);
+          setIsLoading(false);
+          return;
+        }
+
         // Get user profiles for both students and mentors
         const enrichedBookings = await Promise.all(
           data.map(async (booking) => {
@@ -124,20 +129,22 @@ const BookingManagement = () => {
               return {
                 ...booking,
                 student: studentData || { name: 'Unknown Student', id: '' },
-                mentor: mentorData || { name: 'Unknown Mentor', id: '' }
+                mentor: mentorData || { name: 'Unknown Mentor', id: '' },
+                booking_option: booking.booking_options || { title: 'Unknown', duration: '30 min' }
               };
             } catch (error) {
               console.error('Error fetching profiles:', error);
               return {
                 ...booking,
                 student: { name: 'Unknown Student', id: '' },
-                mentor: { name: 'Unknown Mentor', id: '' }
+                mentor: { name: 'Unknown Mentor', id: '' },
+                booking_option: booking.booking_options || { title: 'Unknown', duration: '30 min' }
               };
             }
           })
         );
         
-        setBookings(enrichedBookings);
+        setBookings(enrichedBookings as Booking[]);
       } catch (error) {
         console.error('Error fetching bookings:', error);
         toast.error('Failed to load bookings');

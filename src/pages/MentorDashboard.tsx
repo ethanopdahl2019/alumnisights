@@ -95,6 +95,11 @@ const MentorDashboard = () => {
           throw error;
         }
 
+        if (!data) {
+          setBookings([]);
+          return;
+        }
+
         // Get student names separately (since we need to join with auth.users)
         const studentDetails = await Promise.all(
           data.map(async (booking) => {
