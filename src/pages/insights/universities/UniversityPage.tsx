@@ -10,20 +10,11 @@ import { UniversityContent } from "@/types/database";
 
 const UniversityPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
   const [content, setContent] = useState<UniversityContent | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
   // Find university data from static data
   const universityData = id ? universities.find(uni => uni.id === id) : null;
-  
-  useEffect(() => {
-    // Check if current user is admin - this is just for UI display purposes
-    if (user) {
-      setIsAdmin(user.user_metadata?.role === 'admin');
-    }
-  }, [user]);
   
   useEffect(() => {
     const loadContent = async () => {
@@ -107,7 +98,7 @@ const UniversityPage: React.FC = () => {
       name={universityName}
       logo={universityLogo}
       content={contentSections}
-      showEditButton={isAdmin} // Still only show edit button for admins
+      showEditButton={true} // Show edit button for everyone
     />
   );
 };

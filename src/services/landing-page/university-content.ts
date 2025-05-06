@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { UniversityContent } from '@/types/database';
 
@@ -36,14 +37,8 @@ export async function saveUniversityContent(id: string, content: {
   console.log("Saving university content for ID:", id, "Content:", content);
   
   try {
-    // Since RLS is disabled on the universities_content table, we can proceed without checking session
-    // But let's keep minimal auth check to ensure some level of security in the app
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      console.error("No active session found");
-      throw new Error("Authentication required");
-    }
-
+    // Remove authentication check - allow anyone to save content
+    
     // Proceed with the update
     const { data, error } = await supabase
       .from('universities_content')

@@ -27,14 +27,11 @@ ON storage.objects
 FOR SELECT
 USING (bucket_id = 'university-content');
 
--- Storage policy for authenticated uploads
-CREATE POLICY "Authenticated Upload Access"
+-- Storage policy for public upload access (no authentication required)
+CREATE POLICY "Public Upload Access"
 ON storage.objects
 FOR INSERT
-WITH CHECK (
-  bucket_id = 'university-content' 
-  AND auth.role() = 'authenticated'
-);
+WITH CHECK (bucket_id = 'university-content');
 
 -- Create trigger function for updated_at column
 CREATE OR REPLACE FUNCTION public.update_updated_at()

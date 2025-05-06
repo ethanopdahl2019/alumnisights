@@ -138,12 +138,7 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
     try {
       console.log(`Starting ${prefix} upload...`);
       
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error("No active session found");
-        throw new Error("Authentication required for file upload");
-      }
+      // Remove authentication check for file upload
       
       const fileExt = file.name.split('.').pop();
       const fileName = `${id || 'new'}-${prefix}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
