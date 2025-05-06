@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
@@ -97,8 +96,8 @@ const UndergraduateAdmissions = () => {
                       >
                         <Card className="overflow-hidden border shadow hover:shadow-md h-full">
                           <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                            <div className="mb-3">
-                              {university.logo && university.logo.startsWith("/lovable-uploads") ? (
+                            <div className="mb-3 h-16 w-16 flex items-center justify-center">
+                              {university.logo ? (
                                 <img 
                                   src={university.logo} 
                                   alt={`${university.name} logo`}
