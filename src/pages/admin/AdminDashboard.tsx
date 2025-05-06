@@ -1,32 +1,52 @@
 
 import React, { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/AuthProvider";
+import { 
+  Users, 
+  MessageSquare, 
+  BarChart3, 
+  Settings, 
+  FileText,
+  CalendarIcon,
+  School,
+  Building,
+  Bookmark,
+  Activity,
+  Mail,
+  VideoIcon
+} from "lucide-react";
 import { toast } from "sonner";
-import { ShieldAlert, UserCheck, Edit, Info, BadgeCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-const AdminDashboard: React.FC = () => {
+const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) return;
       
-      // Check if the user has admin role in their metadata
-      const isUserAdmin = user.user_metadata?.role === 'admin';
-      setIsAdmin(isUserAdmin);
-      
-      if (!isUserAdmin) {
-        toast.error("You don't have permission to access this page");
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data && data.role === 'admin') {
+          setIsAdmin(true);
+        } else {
+          toast.error("You don't have permission to access this page");
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
         navigate('/');
       }
     };
@@ -35,42 +55,88 @@ const AdminDashboard: React.FC = () => {
       if (!user) {
         toast.error("Please sign in to access this page");
         navigate('/auth');
-        return;
+      } else {
+        checkAdminStatus();
       }
-      
-      checkAdminStatus();
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    if (isAdmin) {
-      fetchPendingRequests();
+  const adminLinks = [
+    {
+      title: "User Management",
+      description: "Manage user accounts and permissions",
+      icon: <Users className="h-5 w-5" />,
+      href: "/admin/users"
+    },
+    {
+      title: "Booking Management",
+      description: "Manage session bookings and zoom links",
+      icon: <VideoIcon className="h-5 w-5" />,
+      href: "/admin/bookings"
+    },
+    {
+      title: "Request Management",
+      description: "Handle user requests and verification",
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: "/admin/requests"
+    },
+    {
+      title: "Analytics",
+      description: "View site performance and user metrics",
+      icon: <BarChart3 className="h-5 w-5" />,
+      href: "/admin/analytics"
+    },
+    {
+      title: "Content Management",
+      description: "Manage site content and blog posts",
+      icon: <FileText className="h-5 w-5" />,
+      href: "/insights/university-content-manager"
+    },
+    {
+      title: "Email Templates",
+      description: "Manage system email templates",
+      icon: <Mail className="h-5 w-5" />,
+      href: "/admin/emails"
+    },
+    {
+      title: "Schools Management",
+      description: "Add and update school information",
+      icon: <School className="h-5 w-5" />,
+      href: "/admin/schools"
+    },
+    {
+      title: "Companies Management",
+      description: "Manage employer and company data",
+      icon: <Building className="h-5 w-5" />,
+      href: "/admin/companies"
+    },
+    {
+      title: "Major Management",
+      description: "Edit and create academic majors",
+      icon: <Bookmark className="h-5 w-5" />,
+      href: "/admin/majors"
+    },
+    {
+      title: "Activities Management",
+      description: "Manage clubs, sports and activities",
+      icon: <Activity className="h-5 w-5" />,
+      href: "/admin/activities"
+    },
+    {
+      title: "Calendar Management",
+      description: "Manage important dates and events",
+      icon: <CalendarIcon className="h-5 w-5" />,
+      href: "/admin/calendar"
+    },
+    {
+      title: "System Settings",
+      description: "Configure system settings and parameters",
+      icon: <Settings className="h-5 w-5" />,
+      href: "/admin/settings"
     }
-  }, [isAdmin]);
+  ];
 
-  const fetchPendingRequests = async () => {
-    try {
-      // Use a direct REST call with type assertion to bypass TypeScript type checking
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/admin_requests?status=eq.pending&select=count`,
-        {
-          method: 'GET',
-          headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': 'count=exact'
-          }
-        }
-      );
-      
-      const count = parseInt(response.headers.get('content-range')?.split('/')[1] || '0');
-      setPendingRequestsCount(count);
-    } catch (error) {
-      console.error("Error fetching pending requests:", error);
-    }
-  };
-
-  if (loading) {
+  if (loading || isAdmin === null) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -80,155 +146,47 @@ const AdminDashboard: React.FC = () => {
       </div>
     );
   }
-
-  if (!user || !isAdmin) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <main className="container-custom py-12">
-          <div className="max-w-6xl mx-auto text-center">
-            <ShieldAlert className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-navy mb-4">Access Denied</h1>
-            <p className="mb-6">You need to be signed in as an administrator to access this page.</p>
-            <Button onClick={() => navigate("/auth")}>
-              Go to Sign In
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+  
+  if (!isAdmin) {
+    return null; // Will redirect via useEffect
   }
 
   return (
     <div className="min-h-screen bg-white">
-      <Helmet>
-        <title>Admin Dashboard | AlumniSights</title>
-        <meta name="description" content="Admin dashboard for managing content and users" />
-      </Helmet>
-
       <Navbar />
 
       <main className="container-custom py-12">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-navy mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-600">
-              Welcome, {user.user_metadata?.first_name || user.email}. Manage site content and users from this dashboard.
-            </p>
-          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-navy mb-8">
+            Admin Dashboard
+          </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Edit className="h-5 w-5 mr-2 text-blue-600" />
-                  Content Management
-                </CardTitle>
-                <CardDescription>
-                  Edit and manage website content
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  Manage university pages, insights, and other website content.
-                </p>
-              </CardContent>
-              <CardFooter>
+            {adminLinks.map((link, index) => (
+              <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
                 <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => navigate("/insights/university-content-manager")}
+                  variant="ghost" 
+                  className="h-full w-full p-0 items-start"
+                  onClick={() => navigate(link.href)}
                 >
-                  Manage University Content
+                  <div className="w-full">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-blue-50 p-2 rounded-lg">
+                          {link.icon}
+                        </div>
+                        <CardTitle className="text-lg">{link.title}</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-left">
+                        {link.description}
+                      </CardDescription>
+                    </CardContent>
+                  </div>
                 </Button>
-              </CardFooter>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <UserCheck className="h-5 w-5 mr-2 text-green-600" />
-                  User Management
-                </CardTitle>
-                <CardDescription>
-                  Manage user accounts and badges
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  Assign badges to users, manage permissions, and view user details.
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate("/admin/users")}
-                >
-                  Manage Users
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BadgeCheck className="h-5 w-5 mr-2 text-purple-600" />
-                  User Requests
-                  {pendingRequestsCount > 0 && (
-                    <span className="ml-2 text-sm bg-red-600 text-white py-1 px-2 rounded-full">
-                      {pendingRequestsCount}
-                    </span>
-                  )}
-                </CardTitle>
-                <CardDescription>
-                  Manage verification and admin requests
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  Review and approve requests from users for verification or admin privileges.
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate("/admin/requests")}
-                >
-                  View Requests
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Info className="h-5 w-5 mr-2 text-orange-600" />
-                  Analytics
-                </CardTitle>
-                <CardDescription>
-                  View site statistics and user activity
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  Monitor user engagement, popular content, and other analytics.
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate("/admin/analytics")}
-                >
-                  View Analytics
-                </Button>
-              </CardFooter>
-            </Card>
+              </Card>
+            ))}
           </div>
         </div>
       </main>

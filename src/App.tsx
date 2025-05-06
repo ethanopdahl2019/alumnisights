@@ -21,9 +21,9 @@ import BookingPage from "./pages/BookingPage";
 import SchoolMajorLanding from "./pages/SchoolMajorLanding";
 import SchoolActivityLanding from "./pages/SchoolActivityLanding";
 import MyAccount from "./pages/MyAccount";
-import UndergraduateAdmissions from "./pages/UndergraduateAdmissions"; // Added this import
+import UndergraduateAdmissions from "./pages/UndergraduateAdmissions";
 
-// Import the new dashboard pages
+// Import the dashboard pages
 import MentorDashboard from "./pages/MentorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 
@@ -45,6 +45,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import RequestManagement from "./pages/admin/RequestManagement";
 import Analytics from "./pages/admin/Analytics";
+import BookingManagement from "./pages/admin/BookingManagement";
 
 // Import specific university pages
 import AlleghenyCollege from "./pages/insights/universities/allegheny-college";
@@ -103,6 +104,7 @@ const App = () => (
               <Route path="/admin/users" element={<UserManagement />} />
               <Route path="/admin/requests" element={<RequestManagement />} />
               <Route path="/admin/analytics" element={<Analytics />} />
+              <Route path="/admin/bookings" element={<BookingManagement />} />
               
               {/* Specific university routes for direct access */}
               <Route path="/schools/undergraduate-admissions/allegheny-college" element={<AlleghenyCollege />} />

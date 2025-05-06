@@ -14,13 +14,18 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
+import { toast } from "@/components/ui/use-toast";
 
 const BookingPage = () => {
   const { id, productId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -36,11 +41,11 @@ const BookingPage = () => {
   
   // Find the selected product based on the URL parameter
   const selectedProduct = profile?.price_15_min && productId === 'quick-chat' 
-    ? { title: "Quick Chat", price: profile.price_15_min, duration: "15 minutes" }
+    ? { title: "Quick Chat", price: profile.price_15_min, duration: "15 minutes", id: "quick-chat" }
     : profile?.price_30_min && productId === 'deep-dive'
-    ? { title: "Deep Dive", price: profile.price_30_min, duration: "30 minutes" }
+    ? { title: "Deep Dive", price: profile.price_30_min, duration: "30 minutes", id: "deep-dive" }
     : profile?.price_60_min && productId === 'comprehensive'
-    ? { title: "Comprehensive Session", price: profile.price_60_min, duration: "60 minutes" }
+    ? { title: "Comprehensive Session", price: profile.price_60_min, duration: "60 minutes", id: "comprehensive" }
     : null;
   
   if (isLoading) {
@@ -85,9 +90,99 @@ const BookingPage = () => {
     return day === 0 || day === 6;
   };
   
-  const handleConfirmBooking = () => {
-    // In a real application, this would create a booking in the database
-    setIsConfirmationOpen(true);
+  const handleConfirmBooking = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to book a session",
+        variant: "destructive"
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (!selectedDate || !selectedTime) {
+      toast({
+        title: "Error",
+        description: "Please select a date and time",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsProcessing(true);
+
+    try {
+      // Combine date and time
+      const [hours, minutes] = selectedTime.split(':');
+      const isPM = selectedTime.includes('PM');
+      const hoursInt = parseInt(hours);
+      
+      // Convert to 24 hour format for storage
+      const adjustedHours = isPM && hoursInt !== 12 ? hoursInt + 12 : hoursInt;
+      
+      const scheduledDateTime = new Date(selectedDate);
+      scheduledDateTime.setHours(adjustedHours);
+      scheduledDateTime.setMinutes(parseInt(minutes));
+      
+      // Find or create booking option
+      const { data: existingOptions, error: optionsError } = await supabase
+        .from('booking_options')
+        .select('id')
+        .eq('profile_id', id)
+        .eq('title', selectedProduct.title)
+        .eq('duration', selectedProduct.duration)
+        .eq('price', selectedProduct.price)
+        .maybeSingle();
+        
+      if (optionsError) throw optionsError;
+      
+      let bookingOptionId: string;
+      
+      if (existingOptions) {
+        bookingOptionId = existingOptions.id;
+      } else {
+        // Create booking option if it doesn't exist
+        const { data: newOption, error: createOptionError } = await supabase
+          .from('booking_options')
+          .insert({
+            profile_id: id,
+            title: selectedProduct.title,
+            duration: selectedProduct.duration,
+            price: selectedProduct.price,
+            description: `Session with ${profile.name}`
+          })
+          .select('id')
+          .single();
+          
+        if (createOptionError) throw createOptionError;
+        bookingOptionId = newOption.id;
+      }
+      
+      // Create booking record
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .insert({
+          user_id: user.id,
+          profile_id: id,
+          booking_option_id: bookingOptionId,
+          scheduled_at: scheduledDateTime.toISOString(),
+          status: 'pending'
+        });
+        
+      if (bookingError) throw bookingError;
+      
+      setIsConfirmationOpen(true);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      toast({
+        title: "Booking Failed",
+        description: "There was an issue creating your booking. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   return (
@@ -195,10 +290,17 @@ const BookingPage = () => {
                 <CardFooter>
                   <Button 
                     className="w-full" 
-                    disabled={!selectedDate || !selectedTime}
+                    disabled={!selectedDate || !selectedTime || isProcessing}
                     onClick={handleConfirmBooking}
                   >
-                    Confirm Booking
+                    {isProcessing ? (
+                      <>
+                        <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      "Confirm Booking"
+                    )}
                   </Button>
                 </CardFooter>
               </Card>
@@ -256,7 +358,7 @@ const BookingPage = () => {
               Booking Confirmed!
             </DialogTitle>
             <DialogDescription>
-              Your session has been booked successfully.
+              Your session has been booked successfully and is awaiting confirmation.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-3">
@@ -280,10 +382,15 @@ const BookingPage = () => {
               <span className="text-gray-500">With:</span>
               <span className="font-medium">{profile.name}</span>
             </div>
+            <div className="bg-blue-50 p-3 rounded-md mt-4">
+              <p className="text-sm text-blue-800">
+                An administrator will review your booking and add a Zoom link. You'll be able to see the link in your student dashboard once it's added.
+              </p>
+            </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => navigate(`/alumni/${id}`)}>
-              Return to Profile
+            <Button onClick={() => navigate(`/student-dashboard`)}>
+              Go to Dashboard
             </Button>
           </DialogFooter>
         </DialogContent>
