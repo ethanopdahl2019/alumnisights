@@ -13,12 +13,16 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getMajors, getActivities } from '@/services/profiles';
+import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
 
 const profileSchema = z.object({
   bio: z.string().min(20, { message: "Bio should be at least 20 characters" }),
+  universityId: z.string().min(1, { message: "Please select your university" }),
+  degree: z.string().min(1, { message: "Please select your degree" }),
   majorId: z.string().min(1, { message: "Please select your major" }),
   activities: z.array(z.string()).min(1, { message: "Please select at least one activity" }),
 });
@@ -32,11 +36,22 @@ const ProfileComplete = () => {
   const [majors, setMajors] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
+  const [universities, setUniversities] = useState<any[]>([]);
+  
+  const degrees = [
+    { id: "bachelors", name: "Bachelor's Degree" },
+    { id: "masters", name: "Master's Degree" },
+    { id: "phd", name: "PhD" },
+    { id: "associates", name: "Associate's Degree" },
+    { id: "other", name: "Other" }
+  ];
   
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       bio: "",
+      universityId: "",
+      degree: "",
       majorId: "",
       activities: [],
     },
@@ -50,10 +65,12 @@ const ProfileComplete = () => {
     // Calculate form completion progress
     let completedSteps = 0;
     if (watchedValues.bio.length >= 20) completedSteps++;
+    if (watchedValues.universityId) completedSteps++;
+    if (watchedValues.degree) completedSteps++;
     if (watchedValues.majorId) completedSteps++;
     if (watchedValues.activities.length > 0) completedSteps++;
     
-    setProgress((completedSteps / 3) * 100);
+    setProgress((completedSteps / 5) * 100);
   }, [watchedValues]);
   
   // Redirect if not logged in
@@ -62,6 +79,23 @@ const ProfileComplete = () => {
       navigate('/auth');
       return;
     }
+    
+    // Load universities from the insights page data
+    const loadUniversities = () => {
+      const universitiesByLetter = getUniversitiesByLetter();
+      const allUniversities: any[] = [];
+      
+      // Flatten the university list from all letters
+      Object.values(universitiesByLetter).forEach(universities => {
+        universities.forEach(university => {
+          allUniversities.push(university);
+        });
+      });
+      
+      // Sort universities by name
+      allUniversities.sort((a, b) => a.name.localeCompare(b.name));
+      setUniversities(allUniversities);
+    };
     
     // Load majors and activities
     const loadFormData = async () => {
@@ -73,6 +107,7 @@ const ProfileComplete = () => {
         
         setMajors(majorsData);
         setActivities(activitiesData);
+        loadUniversities();
       } catch (error) {
         console.error('Error loading form data:', error);
         toast({
@@ -91,9 +126,9 @@ const ProfileComplete = () => {
     
     setIsLoading(true);
     try {
-      // Get school_id from session user metadata
+      // Get school_id from session user metadata or from selected university
       const metadata = user.user_metadata || {};
-      const schoolId = metadata.school_id;
+      const schoolId = values.universityId;
       
       if (!schoolId) {
         throw new Error("School information not found. Please try again.");
@@ -201,24 +236,86 @@ const ProfileComplete = () => {
                   
                   <FormField
                     control={form.control}
+                    name="universityId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>University</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={isLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your university" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[300px]">
+                            {universities.map((university) => (
+                              <SelectItem key={university.id} value={university.id}>
+                                {university.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="degree"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Degree</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={isLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your degree" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {degrees.map((degree) => (
+                              <SelectItem key={degree.id} value={degree.id}>
+                                {degree.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
                     name="majorId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Major</FormLabel>
-                        <FormControl>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            disabled={isLoading}
-                            {...field}
-                          >
-                            <option value="">Select your major</option>
+                        <Select 
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          disabled={isLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your major" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[300px]">
                             {majors.map((major) => (
-                              <option key={major.id} value={major.id}>
+                              <SelectItem key={major.id} value={major.id}>
                                 {major.name}
-                              </option>
+                              </SelectItem>
                             ))}
-                          </select>
-                        </FormControl>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -301,3 +398,4 @@ const ProfileComplete = () => {
 };
 
 export default ProfileComplete;
+

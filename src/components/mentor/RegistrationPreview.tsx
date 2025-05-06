@@ -8,6 +8,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 const RegistrationPreview = () => {
   return (
@@ -91,9 +98,9 @@ const RegistrationPreview = () => {
                 <p className="text-sm text-gray-500">Help others find you by completing your profile</p>
                 
                 <div className="mt-4">
-                  <Progress value={33} className="h-2 w-full" />
+                  <Progress value={40} className="h-2 w-full" />
                   <p className="text-xs text-gray-500 mt-1">
-                    Profile completion: 33%
+                    Profile completion: 40%
                   </p>
                 </div>
               </div>
@@ -109,18 +116,51 @@ const RegistrationPreview = () => {
                 </div>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="university">University</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your university" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[200px]">
+                      <SelectItem value="harvard">Harvard University</SelectItem>
+                      <SelectItem value="stanford">Stanford University</SelectItem>
+                      <SelectItem value="mit">MIT</SelectItem>
+                      <SelectItem value="amherst">Amherst College</SelectItem>
+                      <SelectItem value="american">American University</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="degree">Degree</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your degree" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bachelors">Bachelor's Degree</SelectItem>
+                      <SelectItem value="masters">Master's Degree</SelectItem>
+                      <SelectItem value="phd">PhD</SelectItem>
+                      <SelectItem value="associates">Associate's Degree</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
                   <Label htmlFor="major">Major</Label>
-                  <select
-                    id="major"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Select your major</option>
-                    <option value="cs">Computer Science</option>
-                    <option value="business">Business Administration</option>
-                    <option value="engineering">Engineering</option>
-                    <option value="biology">Biology</option>
-                    <option value="psychology">Psychology</option>
-                  </select>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your major" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[200px]">
+                      <SelectItem value="cs">Computer Science</SelectItem>
+                      <SelectItem value="business">Business Administration</SelectItem>
+                      <SelectItem value="engineering">Engineering</SelectItem>
+                      <SelectItem value="biology">Biology</SelectItem>
+                      <SelectItem value="psychology">Psychology</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-3">
