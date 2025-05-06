@@ -27,7 +27,6 @@ import MentorDashboard from "./pages/MentorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 
 // Import the Insights pages
-import UndergraduateAdmissions from "./pages/insights/UndergraduateAdmissions";
 import GraduateAdmissions from "./pages/insights/GraduateAdmissions";
 import IndustryInsights from "./pages/insights/IndustryInsights";
 import ClubsAndGreekLife from "./pages/insights/ClubsAndGreekLife";
@@ -73,6 +72,8 @@ const App = () => (
               <Route path="/profile/complete" element={<ProfileComplete />} />
               <Route path="/schools" element={<Schools />} />
               <Route path="/schools/:id" element={<SchoolDetail />} />
+              <Route path="/schools/undergraduate-admissions" element={<UndergraduateAdmissions />} />
+              <Route path="/schools/undergraduate-admissions/:id" element={<UniversityPage />} />
               {/* Account and dashboards */}
               <Route path="/account" element={<MyAccount />} />
               <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
@@ -87,7 +88,6 @@ const App = () => (
               <Route path="/schools/:schoolId/activities/:activityId" element={<SchoolActivityLanding />} />
               
               {/* Insights routes */}
-              <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
               <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
               <Route path="/insights/industry" element={<IndustryInsights />} />
               <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
@@ -103,18 +103,15 @@ const App = () => (
               <Route path="/admin/requests" element={<RequestManagement />} />
               <Route path="/admin/analytics" element={<Analytics />} />
               
-              {/* University Admissions routes - dynamic route first */}
-              <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
-              
               {/* Specific university routes for direct access */}
-              <Route path="/insights/undergraduate-admissions/allegheny-college" element={<AlleghenyCollege />} />
-              <Route path="/insights/undergraduate-admissions/american-university" element={<AmericanUniversity />} />
-              <Route path="/insights/undergraduate-admissions/amherst-college" element={<AmherstCollege />} />
-              <Route path="/insights/undergraduate-admissions/appalachian-state-university" element={<AppalachianStateUniversity />} />
-              <Route path="/insights/undergraduate-admissions/auburn-university" element={<AuburnUniversity />} />
-              <Route path="/insights/undergraduate-admissions/harvard-university" element={<HarvardUniversity />} />
-              <Route path="/insights/undergraduate-admissions/stanford-university" element={<StanfordUniversity />} />
-              <Route path="/insights/undergraduate-admissions/massachusetts-institute-of-technology-mit" element={<MITUniversity />} />
+              <Route path="/schools/undergraduate-admissions/allegheny-college" element={<AlleghenyCollege />} />
+              <Route path="/schools/undergraduate-admissions/american-university" element={<AmericanUniversity />} />
+              <Route path="/schools/undergraduate-admissions/amherst-college" element={<AmherstCollege />} />
+              <Route path="/schools/undergraduate-admissions/appalachian-state-university" element={<AppalachianStateUniversity />} />
+              <Route path="/schools/undergraduate-admissions/auburn-university" element={<AuburnUniversity />} />
+              <Route path="/schools/undergraduate-admissions/harvard-university" element={<HarvardUniversity />} />
+              <Route path="/schools/undergraduate-admissions/stanford-university" element={<StanfordUniversity />} />
+              <Route path="/schools/undergraduate-admissions/massachusetts-institute-of-technology-mit" element={<MITUniversity />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -45,10 +45,7 @@ const UniversityPage: React.FC = () => {
   }
   
   const universityName = content?.name || universityData?.name || "";
-  
-  // Changed this line to correctly pass the logo regardless of its URL format
   const universityLogo = content?.logo || universityData?.logo || null;
-  
   const universityImage = content?.image || null;
   
   // Check if the user is an admin
@@ -99,15 +96,13 @@ const UniversityPage: React.FC = () => {
       ) : null}
     </>
   );
-
-  console.log("University logo URL:", universityLogo);
   
   return (
     <UniversityTemplate 
       name={universityName}
       logo={universityLogo}
       content={contentSections}
-      showEditButton={isAdmin} // Only show edit button for admins
+      showEditButton={isAdmin} 
     />
   );
 };
