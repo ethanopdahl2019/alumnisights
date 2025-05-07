@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -12,6 +11,12 @@ import { VideoIcon, CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+
+// Define interface for column check response
+interface ColumnCheckResponse {
+  exists: boolean;
+  data: { column_name: string }[];
+}
 
 interface Booking {
   id: string;
@@ -53,17 +58,18 @@ const StudentDashboard = () => {
       setIsLoadingBookings(true);
       try {
         // Check if the table has a zoom_link column
-        const { data: tableInfo, error: tableInfoError } = await supabase
-          .rpc('get_column_information', {
-            table_name: 'bookings',
-            column_name: 'zoom_link'
-          } as any); // Use type assertion to bypass TypeScript error
+        const { data: columnCheckData, error: columnCheckError } = await supabase
+          .functions.invoke<ColumnCheckResponse>('get_column_information', {
+            body: {
+              table_name: 'bookings',
+              column_name: 'zoom_link'
+            }
+          });
         
         // Determine whether to include zoom_link in the select statement
-        const includeZoomLink = !tableInfoError && 
-                              tableInfo && 
-                              Array.isArray(tableInfo) && 
-                              tableInfo.length > 0;
+        const includeZoomLink = !columnCheckError && 
+                              columnCheckData && 
+                              columnCheckData.exists;
         
         // Build select statement based on column existence
         const selectQuery = includeZoomLink ? 

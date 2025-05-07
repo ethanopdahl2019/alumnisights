@@ -5,6 +5,11 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Define response type
+interface ColumnInfo {
+  column_name: string;
+}
+
 /**
  * Function that checks if a column exists in a database table
  */
@@ -39,7 +44,9 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "Invalid JSON in request body", 
-          details: e.message 
+          details: e.message,
+          exists: false,
+          data: []
         }),
         { status: 400, headers: corsHeaders }
       );
@@ -52,7 +59,9 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "Missing or invalid table_name or column_name parameters",
-          received: { table_name, column_name }
+          received: { table_name, column_name },
+          exists: false,
+          data: []
         }),
         { status: 400, headers: corsHeaders }
       );
@@ -70,21 +79,29 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: error.message,
-          details: error
+          details: error,
+          exists: false,
+          data: []
         }),
         { status: 400, headers: corsHeaders }
       );
     }
     
+    // Return exists flag along with data for convenience
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({
+        exists: Array.isArray(data) && data.length > 0,
+        data: data || []
+      }),
       { status: 200, headers: corsHeaders }
     );
   } catch (error) {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        stack: error.stack 
+        stack: error.stack,
+        exists: false,
+        data: []
       }),
       { status: 500, headers: corsHeaders }
     );
