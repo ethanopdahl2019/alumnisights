@@ -102,8 +102,13 @@ const BookingPage = () => {
 
     try {
       // Combine date and time
-      const [hours, minutes] = selectedTime.split(':');
-      const isPM = selectedTime.includes('PM');
+      const timeMatch = selectedTime.match(/^(\d+):(\d+) (AM|PM)$/);
+      if (!timeMatch) {
+        throw new Error("Invalid time format");
+      }
+      
+      const [_, hours, minutes, period] = timeMatch;
+      const isPM = period === 'PM';
       const hoursInt = parseInt(hours);
       
       // Convert to 24 hour format for storage
@@ -114,18 +119,19 @@ const BookingPage = () => {
       scheduledDateTime.setMinutes(parseInt(minutes));
 
       console.log('Creating booking with scheduled time:', scheduledDateTime.toISOString());
+      console.log('User ID:', user?.id || '00000000-0000-0000-0000-000000000000');
+      console.log('Profile ID:', id);
 
-      // Create booking - now booking_option_id can be null
+      // Create booking - using a simplified approach with minimum fields
       const { data, error: bookingError } = await supabase
         .from('bookings')
         .insert({
-          user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Use a placeholder ID if user is not logged in
-          profile_id: id,
+          user_id: user?.id || '00000000-0000-0000-0000-000000000000',
+          profile_id: id || '',
           scheduled_at: scheduledDateTime.toISOString(),
           status: 'pending'
-          // Note: booking_option_id is now nullable in our database
         })
-        .select();
+        .select('*');
         
       if (bookingError) {
         console.error('Supabase error:', bookingError);
