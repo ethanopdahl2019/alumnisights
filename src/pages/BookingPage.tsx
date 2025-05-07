@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -106,26 +107,32 @@ const BookingPage = () => {
       const hoursInt = parseInt(hours);
       
       // Convert to 24 hour format for storage
-      const adjustedHours = isPM && hoursInt !== 12 ? hoursInt + 12 : hoursInt;
+      const adjustedHours = isPM && hoursInt !== 12 ? hoursInt + 12 : (isPM && hoursInt === 12 ? 12 : hoursInt === 12 ? 0 : hoursInt);
       
       const scheduledDateTime = new Date(selectedDate);
       scheduledDateTime.setHours(adjustedHours);
       scheduledDateTime.setMinutes(parseInt(minutes));
 
-      // Create booking with minimal required fields - thanks to our new policy,
-      // we don't need to be authenticated to create a booking
-      const { error: bookingError } = await supabase
+      console.log('Creating booking with scheduled time:', scheduledDateTime.toISOString());
+
+      // Create booking - now booking_option_id can be null
+      const { data, error: bookingError } = await supabase
         .from('bookings')
         .insert({
           user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Use a placeholder ID if user is not logged in
           profile_id: id,
-          booking_option_id: null, // Will be updated later by admin
           scheduled_at: scheduledDateTime.toISOString(),
           status: 'pending'
-        });
+          // Note: booking_option_id is now nullable in our database
+        })
+        .select();
         
-      if (bookingError) throw bookingError;
+      if (bookingError) {
+        console.error('Supabase error:', bookingError);
+        throw bookingError;
+      }
       
+      console.log('Booking created successfully:', data);
       setIsConfirmationOpen(true);
     } catch (error) {
       console.error('Error creating booking:', error);

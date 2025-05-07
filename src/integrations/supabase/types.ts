@@ -202,7 +202,7 @@ export type Database = {
       }
       bookings: {
         Row: {
-          booking_option_id: string
+          booking_option_id: string | null
           created_at: string | null
           id: string
           profile_id: string
@@ -211,7 +211,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          booking_option_id: string
+          booking_option_id?: string | null
           created_at?: string | null
           id?: string
           profile_id: string
@@ -220,7 +220,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          booking_option_id?: string
+          booking_option_id?: string | null
           created_at?: string | null
           id?: string
           profile_id?: string
