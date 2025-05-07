@@ -88,5 +88,31 @@ export function isMentor(user: any) {
 }
 
 export function isAdmin(user: any) {
+  // Check if user has admin role in user_metadata
   return getUserRole(user) === 'admin';
+}
+
+// New function to check admin status and refresh user metadata if needed
+export async function refreshAndCheckAdmin(user: any): Promise<boolean> {
+  if (!user) return false;
+  
+  // First check if user already has admin role in metadata
+  if (getUserRole(user) === 'admin') {
+    return true;
+  }
+  
+  // If not found in metadata, refresh the user data
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error('Error refreshing session:', error);
+      return false;
+    }
+    
+    const refreshedUser = data.user;
+    return getUserRole(refreshedUser) === 'admin';
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
 }

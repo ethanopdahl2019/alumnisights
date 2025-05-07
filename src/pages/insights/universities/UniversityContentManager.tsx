@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,36 +8,42 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { universities } from "./universities-data";
 import DefaultLogo from "./DefaultLogo";
-import { Edit, Plus, Trash2, ShieldAlert } from "lucide-react";
+import { Edit, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
+import AccessDenied from "./components/AccessDenied";
+import { refreshAndCheckAdmin } from "@/services/auth";
 
 const UniversityContentManager: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isAdminUser, setIsAdminUser] = useState<boolean | null>(null);
+  const [checkingAdmin, setCheckingAdmin] = useState<boolean>(true);
   
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (!user) return;
+      if (!user) {
+        setCheckingAdmin(false);
+        return;
+      }
       
-      // Check if user has admin role in metadata
-      const isUserAdmin = user.user_metadata?.role === 'admin';
-      setIsAdmin(isUserAdmin);
-      
-      if (!isUserAdmin) {
-        toast.error("You don't have permission to access this page");
-        navigate('/');
+      try {
+        // Check if user is admin
+        const hasAdminRole = await refreshAndCheckAdmin(user);
+        setIsAdminUser(hasAdminRole);
+        
+        if (!hasAdminRole) {
+          toast.error("You don't have permission to access this page");
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        toast.error("Error checking permissions");
+      } finally {
+        setCheckingAdmin(false);
       }
     };
     
     if (!loading) {
-      if (!user) {
-        toast.error("Please sign in to access this page");
-        navigate('/auth');
-        return;
-      }
-      
       checkAdminStatus();
     }
   }, [user, loading, navigate]);
@@ -47,7 +54,7 @@ const UniversityContentManager: React.FC = () => {
     toast.success(`Deleted ${name}`);
   };
 
-  if (loading) {
+  if (loading || checkingAdmin) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -58,23 +65,12 @@ const UniversityContentManager: React.FC = () => {
     );
   }
 
-  if (!user || !isAdmin) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <main className="container-custom py-12">
-          <div className="max-w-6xl mx-auto text-center">
-            <ShieldAlert className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-navy mb-4">Access Denied</h1>
-            <p className="mb-6">You need to be signed in as an administrator to access this page.</p>
-            <Button onClick={() => navigate("/auth")}>
-              Go to Sign In
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+  if (!user) {
+    return <AccessDenied message="Please sign in to access this page" />;
+  }
+
+  if (isAdminUser === false) {
+    return <AccessDenied message="You don't have permission to access this page" />;
   }
 
   return (

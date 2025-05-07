@@ -21,43 +21,41 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { isAdmin, refreshAndCheckAdmin } from "@/services/auth";
+import AccessDenied from "../insights/universities/components/AccessDenied";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isAdminUser, setIsAdminUser] = useState<boolean | null>(null);
+  const [checkingAdmin, setCheckingAdmin] = useState<boolean>(true);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (!user) return;
+      if (!user) {
+        setCheckingAdmin(false);
+        return;
+      }
       
       try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
+        // Check if user is admin using both methods
+        const hasAdminRole = await refreshAndCheckAdmin(user);
         
-        if (data && data.role === 'admin') {
-          setIsAdmin(true);
-        } else {
+        setIsAdminUser(hasAdminRole);
+        
+        if (!hasAdminRole) {
           toast.error("You don't have permission to access this page");
-          navigate('/');
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
-        navigate('/');
+        toast.error("Error checking permissions");
+      } finally {
+        setCheckingAdmin(false);
       }
     };
     
     if (!loading) {
-      if (!user) {
-        toast.error("Please sign in to access this page");
-        navigate('/auth');
-      } else {
-        checkAdminStatus();
-      }
+      checkAdminStatus();
     }
   }, [user, loading, navigate]);
 
@@ -136,7 +134,7 @@ const AdminDashboard = () => {
     }
   ];
 
-  if (loading || isAdmin === null) {
+  if (loading || checkingAdmin) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -147,8 +145,12 @@ const AdminDashboard = () => {
     );
   }
   
-  if (!isAdmin) {
-    return null; // Will redirect via useEffect
+  if (!user) {
+    return <AccessDenied message="Please sign in to access this page" />;
+  }
+
+  if (isAdminUser === false) {
+    return <AccessDenied message="You don't have permission to access this page" />;
   }
 
   return (

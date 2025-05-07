@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ShieldAlert, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isAdmin, isMentor, isStudent } from "@/services/auth";
+import { isMentor, isStudent } from "@/services/auth";
 
 export const NavbarUserSection = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   
   const goToDashboard = () => {
@@ -25,7 +25,7 @@ export const NavbarUserSection = () => {
       navigate('/mentor-dashboard');
     } else if (isStudent(user)) {
       navigate('/student-dashboard');
-    } else if (isAdmin(user)) {
+    } else if (isAdmin) {
       navigate('/admin/dashboard');
     } else {
       // Default fallback
@@ -75,7 +75,7 @@ export const NavbarUserSection = () => {
           Dashboard
         </DropdownMenuItem>
         
-        {isAdmin(user) && (
+        {isAdmin && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center">
