@@ -1,22 +1,20 @@
 
 import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { getProfileById } from "@/services/profiles";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar as CalendarIcon, Clock, ArrowLeft, Check } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "@/components/ui/use-toast";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
+// Import refactored components
+import BookingHeader from "@/components/booking/BookingHeader";
+import DateTimePicker from "@/components/booking/DateTimePicker";
+import BookingSummary from "@/components/booking/BookingSummary";
+import BookingConfirmationDialog from "@/components/booking/BookingConfirmationDialog";
 
 const BookingPage = () => {
   const { id, productId } = useParams();
@@ -147,47 +145,7 @@ const BookingPage = () => {
       <Navbar />
       <main className="container-custom py-8">
         <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-6"
-          >
-            <Button
-              variant="ghost"
-              onClick={() => navigate(`/alumni/${id}`)}
-              className="flex items-center text-gray-600"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Profile
-            </Button>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden">
-                    <img 
-                      src={profile.image || "/placeholder.svg"}
-                      alt={profile.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h1 className="text-xl">Book a Session with {profile.name}</h1>
-                    <p className="text-sm text-gray-500 font-normal">
-                      {profile.school?.name} • {profile.major?.name}
-                    </p>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-            </Card>
-          </motion.div>
+          <BookingHeader profile={profile} id={id!} />
           
           <div className="grid md:grid-cols-3 gap-8">
             <motion.div 
@@ -196,71 +154,16 @@ const BookingPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Select a Date & Time</CardTitle>
-                  <CardDescription>
-                    Choose from available slots in the mentor's calendar
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <h3 className="text-sm font-medium mb-2 flex items-center">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      Date
-                    </h3>
-                    <div className="border rounded-lg overflow-hidden">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        disabled={isDateDisabled}
-                        className="rounded-md border"
-                      />
-                    </div>
-                  </div>
-                  
-                  {selectedDate && (
-                    <div>
-                      <h3 className="text-sm font-medium mb-2 flex items-center">
-                        <Clock className="mr-2 h-4 w-4" />
-                        Available Times for {format(selectedDate, "MMMM d, yyyy")}
-                      </h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {availableTimes.map((time) => (
-                          <Button
-                            key={time}
-                            variant={selectedTime === time ? "default" : "outline"}
-                            className={cn(
-                              "justify-center",
-                              selectedTime === time ? "bg-primary text-primary-foreground" : ""
-                            )}
-                            onClick={() => setSelectedTime(time)}
-                          >
-                            {time}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    className="w-full" 
-                    disabled={!selectedDate || !selectedTime || isProcessing}
-                    onClick={handleConfirmBooking}
-                  >
-                    {isProcessing ? (
-                      <>
-                        <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full"></div>
-                        Processing...
-                      </>
-                    ) : (
-                      "Confirm Booking"
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
+              <DateTimePicker
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                selectedTime={selectedTime}
+                setSelectedTime={setSelectedTime}
+                availableTimes={availableTimes}
+                isDateDisabled={isDateDisabled}
+                handleConfirmBooking={handleConfirmBooking}
+                isProcessing={isProcessing}
+              />
             </motion.div>
             
             <motion.div
@@ -268,90 +171,24 @@ const BookingPage = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Booking Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h3 className="font-medium">{selectedProduct.title}</h3>
-                    <p className="text-sm text-gray-500">{selectedProduct.duration}</p>
-                  </div>
-                  
-                  {selectedDate && selectedTime && (
-                    <div className="pt-2 border-t">
-                      <h3 className="font-medium mb-1">Selected Time</h3>
-                      <p className="text-sm flex items-center gap-2">
-                        <CalendarIcon className="h-4 w-4 text-gray-500" />
-                        {format(selectedDate, "MMMM d, yyyy")}
-                      </p>
-                      <p className="text-sm flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        {selectedTime}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="pt-2 border-t">
-                    <div className="flex justify-between font-medium">
-                      <span>Total</span>
-                      <span>${selectedProduct.price}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <BookingSummary
+                selectedProduct={selectedProduct}
+                selectedDate={selectedDate}
+                selectedTime={selectedTime}
+              />
             </motion.div>
           </div>
         </div>
       </main>
       
-      <Dialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="bg-green-100 p-1 rounded-full">
-                <Check className="h-5 w-5 text-green-600" />
-              </div>
-              Booking Confirmed!
-            </DialogTitle>
-            <DialogDescription>
-              Your session has been booked successfully and is awaiting confirmation.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Session:</span>
-              <span className="font-medium">{selectedProduct.title} ({selectedProduct.duration})</span>
-            </div>
-            {selectedDate && selectedTime && (
-              <>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Date:</span>
-                  <span className="font-medium">{format(selectedDate, "MMMM d, yyyy")}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Time:</span>
-                  <span className="font-medium">{selectedTime}</span>
-                </div>
-              </>
-            )}
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">With:</span>
-              <span className="font-medium">{profile.name}</span>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-md mt-4">
-              <p className="text-sm text-blue-800">
-                An administrator will review your booking and add a Zoom link. You'll be able to see the link in your student dashboard once it's added.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => navigate(`/student-dashboard`)}>
-              Go to Dashboard
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BookingConfirmationDialog
+        isOpen={isConfirmationOpen}
+        setIsOpen={setIsConfirmationOpen}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+        selectedProduct={selectedProduct}
+        profile={profile}
+      />
       
       <Footer />
     </div>
