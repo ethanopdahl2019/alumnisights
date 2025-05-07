@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DateTimePickerProps {
@@ -69,6 +69,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = ({
                     selectedTime === time ? "bg-primary text-primary-foreground" : ""
                   )}
                   onClick={() => setSelectedTime(time)}
+                  disabled={isProcessing}
                 >
                   {time}
                 </Button>
@@ -85,7 +86,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = ({
         >
           {isProcessing ? (
             <>
-              <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full"></div>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
             </>
           ) : (
