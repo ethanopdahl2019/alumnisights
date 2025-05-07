@@ -91,16 +91,6 @@ const BookingPage = () => {
   };
   
   const handleConfirmBooking = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to book a session",
-        variant: "destructive"
-      });
-      navigate("/auth");
-      return;
-    }
-
     if (!selectedDate || !selectedTime) {
       toast({
         title: "Error",
@@ -125,13 +115,14 @@ const BookingPage = () => {
       scheduledDateTime.setHours(adjustedHours);
       scheduledDateTime.setMinutes(parseInt(minutes));
 
-      // Create booking directly without trying to create/fetch booking option
+      // Create booking with minimal required fields - thanks to our new policy,
+      // we don't need to be authenticated to create a booking
       const { error: bookingError } = await supabase
         .from('bookings')
         .insert({
-          user_id: user.id,
+          user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Use a placeholder ID if user is not logged in
           profile_id: id,
-          booking_option_id: null, // This is a placeholder, will need to be updated later by admin
+          booking_option_id: null, // Will be updated later by admin
           scheduled_at: scheduledDateTime.toISOString(),
           status: 'pending'
         });
