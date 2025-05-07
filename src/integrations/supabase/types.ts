@@ -209,6 +209,7 @@ export type Database = {
           scheduled_at: string
           status: Database["public"]["Enums"]["booking_status"] | null
           user_id: string
+          zoom_link: string | null
         }
         Insert: {
           booking_option_id?: string | null
@@ -218,6 +219,7 @@ export type Database = {
           scheduled_at: string
           status?: Database["public"]["Enums"]["booking_status"] | null
           user_id: string
+          zoom_link?: string | null
         }
         Update: {
           booking_option_id?: string | null
@@ -227,6 +229,7 @@ export type Database = {
           scheduled_at?: string
           status?: Database["public"]["Enums"]["booking_status"] | null
           user_id?: string
+          zoom_link?: string | null
         }
         Relationships: [
           {

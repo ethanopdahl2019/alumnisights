@@ -24,6 +24,7 @@ interface BookingConfirmationProps {
     duration: string;
   };
   profile: ProfileWithDetails;
+  zoomLink?: string | null;
 }
 
 const BookingConfirmationDialog: React.FC<BookingConfirmationProps> = ({
@@ -33,6 +34,7 @@ const BookingConfirmationDialog: React.FC<BookingConfirmationProps> = ({
   selectedTime,
   selectedProduct,
   profile,
+  zoomLink
 }) => {
   const navigate = useNavigate();
   
@@ -71,11 +73,20 @@ const BookingConfirmationDialog: React.FC<BookingConfirmationProps> = ({
             <span className="text-gray-500">With:</span>
             <span className="font-medium">{profile.name}</span>
           </div>
-          <div className="bg-blue-50 p-3 rounded-md mt-4">
-            <p className="text-sm text-blue-800">
-              An administrator will review your booking and add a Zoom link. You'll be able to see the link in your student dashboard once it's added.
-            </p>
-          </div>
+          
+          {zoomLink ? (
+            <div className="bg-blue-50 p-3 rounded-md mt-4">
+              <p className="text-sm text-blue-800">
+                Meeting link: <a href={zoomLink} className="underline" target="_blank" rel="noopener noreferrer">{zoomLink}</a>
+              </p>
+            </div>
+          ) : (
+            <div className="bg-blue-50 p-3 rounded-md mt-4">
+              <p className="text-sm text-blue-800">
+                An administrator will review your booking and add a Zoom link. You'll be able to see the link in your student dashboard once it's added.
+              </p>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button onClick={() => navigate(`/student-dashboard`)}>

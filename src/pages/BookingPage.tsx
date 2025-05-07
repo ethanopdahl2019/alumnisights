@@ -24,6 +24,7 @@ const BookingPage = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [bookingZoomLink, setBookingZoomLink] = useState<string | null>(null);
   
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -98,22 +99,63 @@ const BookingPage = () => {
       return;
     }
     
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to book a session",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsProcessing(true);
 
     try {
-      // Skip the actual database insert since we're having RLS issues
-      // Instead, we'll simulate a successful booking
-      console.log('Simulating booking creation with:');
-      console.log('- User ID:', user?.id || '(anonymous user)');
-      console.log('- Profile ID:', id);
-      console.log('- Date:', selectedDate.toDateString());
-      console.log('- Time:', selectedTime);
+      // Combine date and time for scheduled_at
+      const timeMatch = selectedTime.match(/^(\d+):(\d+) (AM|PM)$/);
+      if (!timeMatch) {
+        throw new Error("Invalid time format");
+      }
       
-      // Mock successful booking
-      setTimeout(() => {
-        setIsConfirmationOpen(true);
-        setIsProcessing(false);
-      }, 1500);
+      const [_, hours, minutes, period] = timeMatch;
+      const isPM = period === 'PM';
+      const hoursInt = parseInt(hours);
+      
+      // Convert to 24 hour format
+      const adjustedHours = isPM && hoursInt !== 12 
+        ? hoursInt + 12 
+        : (isPM && hoursInt === 12 ? 12 : hoursInt === 12 ? 0 : hoursInt);
+      
+      const scheduledDateTime = new Date(selectedDate);
+      scheduledDateTime.setHours(adjustedHours);
+      scheduledDateTime.setMinutes(parseInt(minutes));
+
+      console.log('Creating booking with:');
+      console.log('- User ID:', user.id);
+      console.log('- Profile ID:', id);
+      console.log('- Scheduled at:', scheduledDateTime.toISOString());
+      console.log('- Product:', selectedProduct.id);
+      
+      // Create the booking in the database
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert({
+          user_id: user.id,
+          profile_id: id,
+          scheduled_at: scheduledDateTime.toISOString(),
+          status: 'pending',
+          booking_option_id: selectedProduct.id === 'quick-chat' ? null : null // Replace with actual booking option ID if needed
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error(error.message);
+      }
+      
+      console.log('Booking created successfully:', data);
+      setIsConfirmationOpen(true);
     } catch (error) {
       console.error('Error creating booking:', error);
       toast({
@@ -121,6 +163,7 @@ const BookingPage = () => {
         description: "There was an issue creating your booking. Please try again.",
         variant: "destructive"
       });
+    } finally {
       setIsProcessing(false);
     }
   };
