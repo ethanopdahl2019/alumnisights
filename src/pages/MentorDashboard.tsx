@@ -82,10 +82,13 @@ const MentorDashboard = () => {
           .rpc('get_column_information', {
             table_name: 'bookings',
             column_name: 'zoom_link'
-          });
+          } as any); // Use type assertion to bypass TypeScript error
         
         // Determine whether to include zoom_link in the select statement
-        const includeZoomLink = !tableInfoError && tableInfo && Array.isArray(tableInfo) && tableInfo.length > 0;
+        const includeZoomLink = !tableInfoError && 
+                              tableInfo && 
+                              Array.isArray(tableInfo) && 
+                              tableInfo.length > 0;
         
         // Fetch bookings with student profiles and booking options
         const selectQuery = includeZoomLink ? 

@@ -9,6 +9,21 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  * Function that checks if a column exists in a database table
  */
 serve(async (req) => {
+  // Set CORS headers
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Content-Type': 'application/json'
+  };
+
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { 
+      status: 204, 
+      headers: corsHeaders 
+    });
+  }
+
   try {
     // Create a Supabase client with the service role key
     const supabaseClient = createClient(
@@ -22,8 +37,11 @@ serve(async (req) => {
       params = await req.json();
     } catch (e) {
       return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body" }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: "Invalid JSON in request body", 
+          details: e.message 
+        }),
+        { status: 400, headers: corsHeaders }
       );
     }
     
@@ -32,8 +50,11 @@ serve(async (req) => {
     // Validate parameters
     if (!table_name || !column_name || typeof table_name !== 'string' || typeof column_name !== 'string') {
       return new Response(
-        JSON.stringify({ error: "Missing or invalid table_name or column_name parameters" }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: "Missing or invalid table_name or column_name parameters",
+          received: { table_name, column_name }
+        }),
+        { status: 400, headers: corsHeaders }
       );
     }
     
@@ -47,19 +68,25 @@ serve(async (req) => {
       
     if (error) {
       return new Response(
-        JSON.stringify({ error: error.message }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: error.message,
+          details: error
+        }),
+        { status: 400, headers: corsHeaders }
       );
     }
     
     return new Response(
       JSON.stringify(data),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: corsHeaders }
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: error.message,
+        stack: error.stack 
+      }),
+      { status: 500, headers: corsHeaders }
     );
   }
 });
