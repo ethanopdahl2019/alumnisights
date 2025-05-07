@@ -124,48 +124,14 @@ const BookingPage = () => {
       const scheduledDateTime = new Date(selectedDate);
       scheduledDateTime.setHours(adjustedHours);
       scheduledDateTime.setMinutes(parseInt(minutes));
-      
-      // Find or create booking option
-      const { data: existingOptions, error: optionsError } = await supabase
-        .from('booking_options')
-        .select('id')
-        .eq('profile_id', id)
-        .eq('title', selectedProduct.title)
-        .eq('duration', selectedProduct.duration)
-        .eq('price', selectedProduct.price)
-        .maybeSingle();
-        
-      if (optionsError) throw optionsError;
-      
-      let bookingOptionId: string;
-      
-      if (existingOptions) {
-        bookingOptionId = existingOptions.id;
-      } else {
-        // Create booking option if it doesn't exist
-        const { data: newOption, error: createOptionError } = await supabase
-          .from('booking_options')
-          .insert({
-            profile_id: id,
-            title: selectedProduct.title,
-            duration: selectedProduct.duration,
-            price: selectedProduct.price,
-            description: `Session with ${profile.name}`
-          })
-          .select('id')
-          .single();
-          
-        if (createOptionError) throw createOptionError;
-        bookingOptionId = newOption.id;
-      }
-      
-      // Create booking record
+
+      // Create booking directly without trying to create/fetch booking option
       const { error: bookingError } = await supabase
         .from('bookings')
         .insert({
           user_id: user.id,
           profile_id: id,
-          booking_option_id: bookingOptionId,
+          booking_option_id: null, // This is a placeholder, will need to be updated later by admin
           scheduled_at: scheduledDateTime.toISOString(),
           status: 'pending'
         });
