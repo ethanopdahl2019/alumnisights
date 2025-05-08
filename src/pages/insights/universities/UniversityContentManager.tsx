@@ -12,41 +12,22 @@ import { Edit, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 import AccessDenied from "./components/AccessDenied";
-import { refreshAndCheckAdmin } from "@/services/auth";
 
 const UniversityContentManager: React.FC = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const [isAdminUser, setIsAdminUser] = useState<boolean | null>(null);
-  const [checkingAdmin, setCheckingAdmin] = useState<boolean>(true);
+  const { user, loading, isAdmin } = useAuth();
   
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) {
-        setCheckingAdmin(false);
-        return;
-      }
-      
-      try {
-        // Check if user is admin
-        const hasAdminRole = await refreshAndCheckAdmin(user);
-        setIsAdminUser(hasAdminRole);
-        
-        if (!hasAdminRole) {
-          toast.error("You don't have permission to access this page");
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        toast.error("Error checking permissions");
-      } finally {
-        setCheckingAdmin(false);
-      }
-    };
-    
-    if (!loading) {
-      checkAdminStatus();
+    if (!loading && !user) {
+      toast.error("Please sign in to access this page");
+      navigate('/auth');
     }
-  }, [user, loading, navigate]);
+    
+    if (!loading && user && !isAdmin) {
+      toast.error("You don't have permission to access this page");
+      navigate('/');
+    }
+  }, [user, loading, isAdmin, navigate]);
 
   const handleDeleteUniversity = (id: string, name: string) => {
     // In a real app, you would delete from the database
@@ -54,7 +35,7 @@ const UniversityContentManager: React.FC = () => {
     toast.success(`Deleted ${name}`);
   };
 
-  if (loading || checkingAdmin) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -69,7 +50,7 @@ const UniversityContentManager: React.FC = () => {
     return <AccessDenied message="Please sign in to access this page" />;
   }
 
-  if (isAdminUser === false) {
+  if (!isAdmin) {
     return <AccessDenied message="You don't have permission to access this page" />;
   }
 

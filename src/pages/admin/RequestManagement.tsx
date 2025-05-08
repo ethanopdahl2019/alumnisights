@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -16,25 +15,12 @@ import { AdminRequest } from "@/types/admin-requests";
 
 const RequestManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const { user, loading, isAdmin } = useAuth();
   const [requests, setRequests] = useState<AdminRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      // Check if the user has admin role in their metadata
-      const isUserAdmin = user.user_metadata?.role === 'admin';
-      setIsAdmin(isUserAdmin);
-      
-      if (!isUserAdmin) {
-        toast.error("You don't have permission to access this page");
-        navigate('/');
-      }
-    };
-    
+    // Simplified admin check
     if (!loading) {
       if (!user) {
         toast.error("Please sign in to access this page");
@@ -42,39 +28,31 @@ const RequestManagement: React.FC = () => {
         return;
       }
       
-      checkAdminStatus();
-    }
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (isAdmin) {
+      if (!isAdmin) {
+        toast.error("You don't have permission to access this page");
+        navigate('/');
+        return;
+      }
+      
+      // If we're here, user is an admin, so fetch requests
       fetchRequests();
     }
-  }, [isAdmin]);
+  }, [user, loading, isAdmin, navigate]);
 
   const fetchRequests = async () => {
     setIsLoading(true);
     try {
-      // Use fetch API for admin_requests directly since TypeScript doesn't know about it yet
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/admin_requests?select=*`,
-        {
-          headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch requests');
+      // Now that we've fixed RLS, we can directly query the admin_requests table
+      const { data: requestsData, error } = await supabase
+        .from('admin_requests')
+        .select('*');
+
+      if (error) {
+        throw error;
       }
       
-      const requestsData = await response.json() as AdminRequest[];
-      
       // Enrich request data with user information
-      const enrichedRequests = await Promise.all(requestsData.map(async (request) => {
+      const enrichedRequests = await Promise.all((requestsData || []).map(async (request) => {
         // Get user details from auth.users table using admin functions
         try {
           const { data } = await supabase.auth.admin.getUserById(request.user_id);

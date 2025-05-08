@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -25,26 +24,13 @@ type User = {
 
 const UserManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const { user, loading, isAdmin } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      // Check if the user has admin role in their metadata
-      const isUserAdmin = user.user_metadata?.role === 'admin';
-      setIsAdmin(isUserAdmin);
-      
-      if (!isUserAdmin) {
-        toast.error("You don't have permission to access this page");
-        navigate('/');
-      }
-    };
-    
+    // Simplified admin access check
     if (!loading) {
       if (!user) {
         toast.error("Please sign in to access this page");
@@ -52,15 +38,16 @@ const UserManagement: React.FC = () => {
         return;
       }
       
-      checkAdminStatus();
-    }
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (isAdmin) {
+      if (!isAdmin) {
+        toast.error("You don't have permission to access this page");
+        navigate('/');
+        return;
+      }
+      
+      // If we're here, user is admin, so fetch users
       fetchUsers();
     }
-  }, [isAdmin]);
+  }, [user, loading, isAdmin, navigate]);
 
   const fetchUsers = async () => {
     setIsLoading(true);

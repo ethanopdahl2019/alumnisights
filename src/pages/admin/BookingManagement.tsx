@@ -41,8 +41,7 @@ interface Booking {
 }
 
 const BookingManagement = () => {
-  const { user, loading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,134 +51,113 @@ const BookingManagement = () => {
   const [isUpdatingLink, setIsUpdatingLink] = useState(false);
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (data && data.role === 'admin') {
-          setIsAdmin(true);
-        } else {
-          toast.error("You don't have permission to access this page");
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        navigate('/');
-      }
-    };
-    
+    // Simplified admin check
     if (!loading) {
       if (!user) {
         toast.error("Please sign in to access this page");
         navigate('/auth');
-      } else {
-        checkAdminStatus();
+        return;
       }
-    }
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    const fetchBookings = async () => {
-      if (!isAdmin) return;
       
-      setIsLoading(true);
-      try {
-        // Check if the table has a zoom_link column
-        const { data: columnCheckData, error: columnCheckError } = await supabase
-          .functions.invoke<ColumnCheckResponse>('get_column_information', {
-            body: {
-              table_name: 'bookings',
-              column_name: 'zoom_link'
-            }
-          });
-        
-        // Determine whether to include zoom_link in the select statement
-        const includeZoomLink = !columnCheckError && 
-                              columnCheckData && 
-                              columnCheckData.exists;
-        
-        // Build select statement based on column existence
-        const selectQuery = includeZoomLink ? 
-          `id, scheduled_at, status, zoom_link, user_id, profile_id, booking_options(title, duration)` :
-          `id, scheduled_at, status, user_id, profile_id, booking_options(title, duration)`;
-          
-        const { data, error } = await supabase
-          .from('bookings')
-          .select(selectQuery)
-          .order('scheduled_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        if (!data) {
-          setBookings([]);
-          setIsLoading(false);
-          return;
-        }
-
-        // Get user profiles for both students and mentors
-        const enrichedBookings = await Promise.all(
-          data.map(async (booking) => {
-            try {
-              const bookingData = booking as any;
-              
-              // Get student profile
-              const { data: studentData } = await supabase
-                .from('profiles')
-                .select('name, id')
-                .eq('user_id', bookingData.user_id)
-                .single();
-              
-              // Get mentor profile
-              const { data: mentorData } = await supabase
-                .from('profiles')
-                .select('name, id')
-                .eq('id', bookingData.profile_id)
-                .single();
-              
-              return {
-                id: bookingData.id,
-                scheduled_at: bookingData.scheduled_at,
-                status: bookingData.status,
-                zoom_link: includeZoomLink ? bookingData.zoom_link : null,
-                student: studentData || { name: 'Unknown Student', id: '' },
-                mentor: mentorData || { name: 'Unknown Mentor', id: '' },
-                booking_option: bookingData.booking_options || { title: 'Unknown', duration: '30 min' }
-              };
-            } catch (error) {
-              console.error('Error fetching profiles:', error);
-              const bookingData = booking as any;
-              return {
-                id: bookingData.id,
-                scheduled_at: bookingData.scheduled_at,
-                status: bookingData.status,
-                zoom_link: includeZoomLink ? bookingData.zoom_link : null,
-                student: { name: 'Unknown Student', id: '' },
-                mentor: { name: 'Unknown Mentor', id: '' },
-                booking_option: bookingData.booking_options || { title: 'Unknown', duration: '30 min' }
-              };
-            }
-          })
-        );
-        
-        setBookings(enrichedBookings as Booking[]);
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-        toast.error('Failed to load bookings');
-      } finally {
-        setIsLoading(false);
+      if (!isAdmin) {
+        toast.error("You don't have permission to access this page");
+        navigate('/');
+        return;
       }
-    };
-    
-    if (isAdmin) {
+      
+      // If we're here, the user is an admin, so fetch bookings
       fetchBookings();
     }
-  }, [isAdmin]);
+  }, [user, loading, isAdmin, navigate]);
+
+  const fetchBookings = async () => {
+    setIsLoading(true);
+    try {
+      // Check if the table has a zoom_link column
+      const { data: columnCheckData, error: columnCheckError } = await supabase
+        .functions.invoke<ColumnCheckResponse>('get_column_information', {
+          body: {
+            table_name: 'bookings',
+            column_name: 'zoom_link'
+          }
+        });
+      
+      // Determine whether to include zoom_link in the select statement
+      const includeZoomLink = !columnCheckError && 
+                            columnCheckData && 
+                            columnCheckData.exists;
+      
+      // Build select statement based on column existence
+      const selectQuery = includeZoomLink ? 
+        `id, scheduled_at, status, zoom_link, user_id, profile_id, booking_options(title, duration)` :
+        `id, scheduled_at, status, user_id, profile_id, booking_options(title, duration)`;
+        
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(selectQuery)
+        .order('scheduled_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (!data) {
+        setBookings([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Get user profiles for both students and mentors
+      const enrichedBookings = await Promise.all(
+        data.map(async (booking) => {
+          try {
+            const bookingData = booking as any;
+            
+            // Get student profile
+            const { data: studentData } = await supabase
+              .from('profiles')
+              .select('name, id')
+              .eq('user_id', bookingData.user_id)
+              .single();
+            
+            // Get mentor profile
+            const { data: mentorData } = await supabase
+              .from('profiles')
+              .select('name, id')
+              .eq('id', bookingData.profile_id)
+              .single();
+            
+            return {
+              id: bookingData.id,
+              scheduled_at: bookingData.scheduled_at,
+              status: bookingData.status,
+              zoom_link: includeZoomLink ? bookingData.zoom_link : null,
+              student: studentData || { name: 'Unknown Student', id: '' },
+              mentor: mentorData || { name: 'Unknown Mentor', id: '' },
+              booking_option: bookingData.booking_options || { title: 'Unknown', duration: '30 min' }
+            };
+          } catch (error) {
+            console.error('Error fetching profiles:', error);
+            const bookingData = booking as any;
+            return {
+              id: bookingData.id,
+              scheduled_at: bookingData.scheduled_at,
+              status: bookingData.status,
+              zoom_link: includeZoomLink ? bookingData.zoom_link : null,
+              student: { name: 'Unknown Student', id: '' },
+              mentor: { name: 'Unknown Mentor', id: '' },
+              booking_option: bookingData.booking_options || { title: 'Unknown', duration: '30 min' }
+            };
+          }
+        })
+      );
+      
+      setBookings(enrichedBookings as Booking[]);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Failed to load bookings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleOpenZoomLinkDialog = (booking: Booking) => {
     setSelectedBooking(booking);
