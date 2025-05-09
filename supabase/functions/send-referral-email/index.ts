@@ -31,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
     const signupUrl = `${appUrl}/auth?role=mentor&ref=referral`;
 
     const emailResponse = await resend.emails.send({
-      from: "AlumniSights <onboarding@resend.dev>", // Update with your email once domain is verified
+      from: "AlumniSights <invitations@aluminsights.lovable.app>", // Updated to use a lovable domain
       to: [email],
       subject: `${referrerName} invites you to join AlumniSights as a mentor`,
       html: `
