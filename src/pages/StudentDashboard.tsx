@@ -57,29 +57,17 @@ const StudentDashboard = () => {
       
       setIsLoadingBookings(true);
       try {
-        // Check if the table has a zoom_link column
-        const { data: columnCheckData, error: columnCheckError } = await supabase
-          .functions.invoke<ColumnCheckResponse>('get_column_information', {
-            body: {
-              table_name: 'bookings',
-              column_name: 'zoom_link'
-            }
-          });
-        
-        // Determine whether to include zoom_link in the select statement
-        const includeZoomLink = !columnCheckError && 
-                              columnCheckData && 
-                              columnCheckData.exists;
-        
-        // Build select statement based on column existence
-        const selectQuery = includeZoomLink ? 
-          `id, scheduled_at, status, zoom_link, profiles!bookings_profile_id_fkey(name, image), booking_options(title, duration)` :
-          `id, scheduled_at, status, profiles!bookings_profile_id_fkey(name, image), booking_options(title, duration)`;
-
-        // Fetch bookings with mentor profiles and booking options
+        // Fetch bookings with zoom links directly - simpler approach
         const { data, error } = await supabase
           .from('bookings')
-          .select(selectQuery)
+          .select(`
+            id, 
+            scheduled_at, 
+            status, 
+            zoom_link, 
+            profiles!bookings_profile_id_fkey(name, image), 
+            booking_options(title, duration)
+          `)
           .eq('user_id', user.id)
           .order('scheduled_at', { ascending: true });
 
@@ -87,22 +75,15 @@ const StudentDashboard = () => {
           throw error;
         }
 
-        if (!data) {
-          setBookings([]);
-          setIsLoadingBookings(false);
-          return;
-        }
-
         // Transform data to match our expected format
         const formattedBookings = data.map(booking => {
-          const bookingData = booking as any;
           return {
-            id: bookingData.id,
-            scheduled_at: bookingData.scheduled_at,
-            status: bookingData.status,
-            zoom_link: includeZoomLink ? bookingData.zoom_link : null,
-            mentor: bookingData.profiles || { name: 'Unknown', image: null },
-            booking_option: bookingData.booking_options || { title: 'Session', duration: '30 min' }
+            id: booking.id,
+            scheduled_at: booking.scheduled_at,
+            status: booking.status,
+            zoom_link: booking.zoom_link,
+            mentor: booking.profiles || { name: 'Unknown', image: null },
+            booking_option: booking.booking_options || { title: 'Session', duration: '30 min' }
           };
         });
 

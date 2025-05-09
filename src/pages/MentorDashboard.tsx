@@ -82,28 +82,14 @@ const MentorDashboard = () => {
           throw profileError;
         }
 
-        // Check if the table has a zoom_link column
-        const { data: columnCheckData, error: columnCheckError } = await supabase
-          .functions.invoke<ColumnCheckResponse>('get_column_information', {
-            body: {
-              table_name: 'bookings',
-              column_name: 'zoom_link'
-            }
-          });
-        
-        // Determine whether to include zoom_link in the select statement
-        const includeZoomLink = !columnCheckError && 
-                             columnCheckData && 
-                             columnCheckData.exists;
-        
         // Fetch bookings with student profiles and booking options
-        const selectQuery = includeZoomLink ? 
-          `id, scheduled_at, status, zoom_link, booking_options(title, duration), user_id` :
-          `id, scheduled_at, status, booking_options(title, duration), user_id`;
-          
         const { data, error } = await supabase
           .from('bookings')
-          .select(selectQuery)
+          .select(`
+            id, scheduled_at, status, zoom_link, 
+            booking_options(title, duration), 
+            user_id
+          `)
           .eq('profile_id', profileData.id)
           .order('scheduled_at', { ascending: true });
 
@@ -121,8 +107,6 @@ const MentorDashboard = () => {
         const studentDetails = await Promise.all(
           data.map(async (booking) => {
             try {
-              // TypeScript complains if we try to access properties like booking.user_id
-              // so we need to use a type assertion
               const bookingData = booking as any;
               
               const { data: userData, error: userError } = await supabase
@@ -155,7 +139,7 @@ const MentorDashboard = () => {
             id: bookingData.id,
             scheduled_at: bookingData.scheduled_at,
             status: bookingData.status,
-            zoom_link: includeZoomLink ? bookingData.zoom_link : null,
+            zoom_link: bookingData.zoom_link,
             student: { name: student?.name || 'Anonymous Student' },
             booking_option: bookingData.booking_options || { title: 'Session', duration: '30 min' }
           };

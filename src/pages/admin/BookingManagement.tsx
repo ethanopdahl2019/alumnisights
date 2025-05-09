@@ -73,28 +73,13 @@ const BookingManagement = () => {
   const fetchBookings = async () => {
     setIsLoading(true);
     try {
-      // Check if the table has a zoom_link column
-      const { data: columnCheckData, error: columnCheckError } = await supabase
-        .functions.invoke<ColumnCheckResponse>('get_column_information', {
-          body: {
-            table_name: 'bookings',
-            column_name: 'zoom_link'
-          }
-        });
-      
-      // Determine whether to include zoom_link in the select statement
-      const includeZoomLink = !columnCheckError && 
-                            columnCheckData && 
-                            columnCheckData.exists;
-      
-      // Build select statement based on column existence
-      const selectQuery = includeZoomLink ? 
-        `id, scheduled_at, status, zoom_link, user_id, profile_id, booking_options(title, duration)` :
-        `id, scheduled_at, status, user_id, profile_id, booking_options(title, duration)`;
-        
+      // Fetch bookings with all needed data
       const { data, error } = await supabase
         .from('bookings')
-        .select(selectQuery)
+        .select(`
+          id, scheduled_at, status, zoom_link, user_id, profile_id, 
+          booking_options(title, duration)
+        `)
         .order('scheduled_at', { ascending: false });
       
       if (error) throw error;
@@ -129,7 +114,7 @@ const BookingManagement = () => {
               id: bookingData.id,
               scheduled_at: bookingData.scheduled_at,
               status: bookingData.status,
-              zoom_link: includeZoomLink ? bookingData.zoom_link : null,
+              zoom_link: bookingData.zoom_link,
               student: studentData || { name: 'Unknown Student', id: '' },
               mentor: mentorData || { name: 'Unknown Mentor', id: '' },
               booking_option: bookingData.booking_options || { title: 'Unknown', duration: '30 min' }
@@ -141,7 +126,7 @@ const BookingManagement = () => {
               id: bookingData.id,
               scheduled_at: bookingData.scheduled_at,
               status: bookingData.status,
-              zoom_link: includeZoomLink ? bookingData.zoom_link : null,
+              zoom_link: bookingData.zoom_link,
               student: { name: 'Unknown Student', id: '' },
               mentor: { name: 'Unknown Mentor', id: '' },
               booking_option: bookingData.booking_options || { title: 'Unknown', duration: '30 min' }
