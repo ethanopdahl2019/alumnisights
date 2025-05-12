@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Users, Award, Puzzle, Microphone, Palette, Globe, Trophy, Heart } from "lucide-react";
+import { Users, Award, Puzzle, FileText, Palette, Globe, Trophy, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -49,7 +48,7 @@ const ClubsAndGreekLife = () => {
     },
     {
       name: "Media & Publications",
-      icon: <Microphone className="h-8 w-8 text-amber-500" />,
+      icon: <FileText className="h-8 w-8 text-amber-500" />,
       examples: ["Student Newspaper", "Literary Magazine", "Radio Station", "TV Production Club"]
     },
     {
