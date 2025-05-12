@@ -8,12 +8,40 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getAlphabeticalLetters, getUniversitiesByLetter } from "./insights/universities/universities-data";
+import { getUniversityContent } from "@/services/landing-page";
 
 const UndergraduateAdmissions = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
+  const [universityContents, setUniversityContents] = useState<Record<string, any>>({});
+  
   const alphabeticalLetters = getAlphabeticalLetters();
   const universitiesByLetter = getUniversitiesByLetter();
+  
+  // Fetch university content for logos
+  useEffect(() => {
+    const fetchUniversityContent = async () => {
+      const contentMap: Record<string, any> = {};
+      
+      // Get all university IDs
+      const allUniversities = Object.values(universitiesByLetter).flat();
+      
+      for (const university of allUniversities) {
+        try {
+          const content = await getUniversityContent(university.id);
+          if (content) {
+            contentMap[university.id] = content;
+          }
+        } catch (error) {
+          console.error(`Failed to fetch content for ${university.name}:`, error);
+        }
+      }
+      
+      setUniversityContents(contentMap);
+    };
+    
+    fetchUniversityContent();
+  }, []);
   
   useEffect(() => {
     // Set initial active letter to the first one
@@ -88,9 +116,9 @@ const UndergraduateAdmissions = () => {
                   className="flex flex-col items-center p-4 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
                 >
                   <div className="h-24 flex items-center justify-center mb-3">
-                    {university.logo ? (
+                    {(universityContents[university.id]?.logo || university.logo) ? (
                       <img 
-                        src={university.logo} 
+                        src={universityContents[university.id]?.logo || university.logo} 
                         alt={`${university.name} logo`}
                         className="max-h-full max-w-full object-contain"
                       />
@@ -101,7 +129,6 @@ const UndergraduateAdmissions = () => {
                     )}
                   </div>
                   <h3 className="font-semibold text-lg mb-1 text-center">{university.name}</h3>
-                  {/* Fix the location error by checking if location exists or using a default message */}
                   <p className="text-sm text-gray-600 text-center">{"Location unavailable"}</p>
                 </Link>
               </motion.div>
