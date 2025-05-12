@@ -186,7 +186,7 @@ const SchoolDetail = () => {
         <main className="flex-grow container mx-auto py-12 px-4">
           <div className="text-center py-12">
             <h1 className="text-3xl font-bold mb-4">School Not Found</h1>
-            <p className="mb-8">The school you're looking for doesn't exist or has been removed.</p>
+            <p className="mb-8">The school you are looking for doesn't exist or has been removed.</p>
             <Button asChild>
               <Link to="/schools">Back to Schools</Link>
             </Button>
