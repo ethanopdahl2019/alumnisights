@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -57,13 +56,17 @@ const Analytics: React.FC = () => {
   useEffect(() => {
     // Only initialize PostHog once and only if we're in the admin section
     if (!posthogInitialized && user && isAdmin) {
-      // Use your PostHog public key here - this is safe to be in the frontend
-      posthog.init('phc_your_project_api_key_here', {
-        api_host: 'https://app.posthog.com',
+      // Initialize PostHog with environment variable
+      posthog.init(import.meta.env.VITE_POSTHOG_KEY || 'phc_placeholder', {
+        api_host: 'https://us.posthog.com',
         // Only capture events in production
         autocapture: import.meta.env.PROD,
-        // Disable session recording by default for privacy
-        session_recording: false
+        // Configure session recording
+        session_recording: {
+          enabled: false,
+          maskInputs: true,
+          maskText: true,
+        }
       });
       setPosthogInitialized(true);
       
@@ -77,7 +80,7 @@ const Analytics: React.FC = () => {
     return () => {
       // Clean up PostHog when component unmounts
       if (posthogInitialized) {
-        posthog.shutdown();
+        posthog.opt_out_capturing();
       }
     };
   }, [user, isAdmin, posthogInitialized]);
