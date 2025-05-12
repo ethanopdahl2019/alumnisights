@@ -61,9 +61,9 @@ const Analytics: React.FC = () => {
         api_host: 'https://us.posthog.com',
         // Only capture events in production
         autocapture: import.meta.env.PROD,
-        // Configure session recording
+        // Configure session recording - fixed the type error here
         session_recording: {
-          enabled: false,
+          // Remove the 'enabled' property as it's not part of SessionRecordingOptions
           maskInputs: true,
           maskText: true,
         }
