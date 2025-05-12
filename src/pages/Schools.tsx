@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, GraduationCap } from 'lucide-react';
+import { Search, GraduationCap, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -68,6 +67,15 @@ const Schools = () => {
         )
       )
     : [];
+    
+  const getUniversityLocation = (university: any) => {
+    // If we have location data in university or content, use it
+    if (university.location) return university.location;
+    if (universityContents[university.id]?.location) return universityContents[university.id].location;
+    
+    // Otherwise return a placeholder
+    return "United States";
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -95,9 +103,9 @@ const Schools = () => {
                 <div key={university.id}>
                   <Link 
                     to={`/schools/undergraduate-admissions/${university.id}`}
-                    className="flex flex-col items-center p-4 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
+                    className="flex flex-col items-center p-6 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
                   >
-                    <div className="h-24 flex items-center justify-center mb-3">
+                    <div className="h-24 flex items-center justify-center mb-4">
                       {(universityContents[university.id]?.logo || university.logo) ? (
                         <img 
                           src={universityContents[university.id]?.logo || university.logo} 
@@ -110,8 +118,11 @@ const Schools = () => {
                         </div>
                       )}
                     </div>
-                    <h3 className="font-semibold text-lg mb-1 text-center">{university.name}</h3>
-                    <p className="text-sm text-gray-600 text-center">{"Location unavailable"}</p>
+                    <h3 className="font-semibold text-lg mb-2 text-center">{university.name}</h3>
+                    <div className="flex items-center text-gray-600 text-sm">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      <span>{getUniversityLocation(university)}</span>
+                    </div>
                   </Link>
                 </div>
               )) : (
@@ -121,7 +132,7 @@ const Schools = () => {
               )}
             </div>
           ) : (
-            <div className="flex gap-6">
+            <div className="flex gap-4">
               <AlphabeticalNav 
                 letters={alphabeticalLetters} 
                 onLetterClick={handleLetterClick}
@@ -142,9 +153,9 @@ const Schools = () => {
                         <Link
                           key={university.id}
                           to={`/schools/undergraduate-admissions/${university.id}`}
-                          className="flex flex-col items-center p-4 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
+                          className="flex flex-col items-center p-5 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
                         >
-                          <div className="h-16 flex items-center justify-center mb-3">
+                          <div className="h-20 flex items-center justify-center mb-3">
                             {(universityContents[university.id]?.logo || university.logo) ? (
                               <img 
                                 src={universityContents[university.id]?.logo || university.logo} 
@@ -152,14 +163,18 @@ const Schools = () => {
                                 className="max-h-full max-w-full object-contain"
                               />
                             ) : (
-                              <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center">
-                                <GraduationCap className="h-6 w-6 text-slate-500" />
+                              <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
+                                <GraduationCap className="h-8 w-8 text-slate-500" />
                               </div>
                             )}
                           </div>
-                          <h3 className="font-medium text-center text-sm">
+                          <h3 className="font-medium text-center text-base mb-2">
                             {university.name}
                           </h3>
+                          <div className="flex items-center text-gray-600 text-xs">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            <span>{getUniversityLocation(university)}</span>
+                          </div>
                         </Link>
                       ))}
                     </div>
