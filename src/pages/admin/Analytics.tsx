@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -61,11 +62,10 @@ const Analytics: React.FC = () => {
         api_host: 'https://us.posthog.com',
         // Only capture events in production
         autocapture: import.meta.env.PROD,
-        // Configure session recording - fixed the type error here
+        // Configure session recording with the correct property names
         session_recording: {
-          // Remove the 'enabled' property as it's not part of SessionRecordingOptions
-          maskInputs: true,
-          maskText: true,
+          maskAllInputs: true,
+          maskAllText: true
         }
       });
       setPosthogInitialized(true);
