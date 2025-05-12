@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -10,11 +10,21 @@ interface UniversityHeaderProps {
 
 const UniversityHeader: React.FC<UniversityHeaderProps> = ({ title }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Determine where to navigate back to based on the current path
+  const handleBack = () => {
+    if (location.pathname.includes('/schools/')) {
+      navigate("/schools/undergraduate-admissions");
+    } else {
+      navigate("/insights/undergraduate-admissions");
+    }
+  };
   
   return (
     <div className="mb-8">
       <Button 
-        onClick={() => navigate("/insights/undergraduate-admissions")}
+        onClick={handleBack}
         variant="ghost" 
         className="mb-4 pl-0 hover:bg-transparent"
       >
