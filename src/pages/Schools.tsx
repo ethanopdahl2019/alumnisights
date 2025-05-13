@@ -2,16 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, GraduationCap, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AlphabeticalNav from '@/components/AlphabeticalNav';
 import { getAlphabeticalLetters, getUniversitiesByLetter } from './insights/universities/universities-data';
-import { getUniversityContent } from '@/services/landing-page';
+import { getUniversityLogo } from '@/services/landing-page';
 
 const Schools = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
-  const [universityContents, setUniversityContents] = useState<Record<string, any>>({});
+  const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
+  const [isLoadingLogos, setIsLoadingLogos] = useState(true);
   const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
   // Get the same university list as the insights page
@@ -19,26 +21,37 @@ const Schools = () => {
   const universitiesByLetter = getUniversitiesByLetter();
   const allUniversities = Object.values(universitiesByLetter).flat();
   
-  // Fetch university content for logos
+  // Fetch university logos efficiently
   useEffect(() => {
-    const fetchUniversityContent = async () => {
-      const contentMap: Record<string, any> = {};
+    const fetchUniversityLogos = async () => {
+      setIsLoadingLogos(true);
+      const logosMap: Record<string, string | null> = {};
       
-      for (const university of allUniversities) {
-        try {
-          const content = await getUniversityContent(university.id);
-          if (content) {
-            contentMap[university.id] = content;
+      try {
+        // Fetch logos in parallel for better performance
+        const logoPromises = allUniversities.map(async (university) => {
+          const logo = await getUniversityLogo(university.id);
+          return { id: university.id, logo };
+        });
+        
+        const results = await Promise.allSettled(logoPromises);
+        
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            logosMap[result.value.id] = result.value.logo;
           }
-        } catch (error) {
-          console.error(`Failed to fetch content for ${university.name}:`, error);
-        }
+        });
+        
+        setUniversityLogos(logosMap);
+      } catch (error) {
+        console.error('Failed to fetch university logos:', error);
+        toast.error('Failed to load some university logos');
+      } finally {
+        setIsLoadingLogos(false);
       }
-      
-      setUniversityContents(contentMap);
     };
     
-    fetchUniversityContent();
+    fetchUniversityLogos();
   }, []);
   
   useEffect(() => {
@@ -69,12 +82,32 @@ const Schools = () => {
     : [];
     
   const getUniversityLocation = (university: any) => {
-    // If we have location data in university or content, use it
+    // If we have location data in university, use it
     if (university.location) return university.location;
-    if (universityContents[university.id]?.location) return universityContents[university.id].location;
     
     // Otherwise return a placeholder
     return "United States";
+  };
+  
+  // Render university logo component
+  const renderUniversityLogo = (universityId: string, universityName: string) => {
+    const logo = universityLogos[universityId];
+    
+    if (logo) {
+      return (
+        <img 
+          src={logo} 
+          alt={`${universityName} logo`}
+          className="max-h-full max-w-full object-contain"
+        />
+      );
+    }
+    
+    return (
+      <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
+        <GraduationCap className="h-8 w-8 text-slate-500" />
+      </div>
+    );
   };
 
   return (
@@ -106,17 +139,7 @@ const Schools = () => {
                     className="flex flex-col items-center p-6 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
                   >
                     <div className="h-24 flex items-center justify-center mb-4">
-                      {(universityContents[university.id]?.logo || university.logo) ? (
-                        <img 
-                          src={universityContents[university.id]?.logo || university.logo} 
-                          alt={`${university.name} logo`}
-                          className="max-h-full max-w-full object-contain"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
-                          <GraduationCap className="h-8 w-8 text-slate-500" />
-                        </div>
-                      )}
+                      {renderUniversityLogo(university.id, university.name)}
                     </div>
                     <h3 className="font-semibold text-lg mb-2 text-center">{university.name}</h3>
                     <div className="flex items-center text-gray-600 text-sm">
@@ -156,17 +179,7 @@ const Schools = () => {
                           className="flex flex-col items-center p-5 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
                         >
                           <div className="h-20 flex items-center justify-center mb-3">
-                            {(universityContents[university.id]?.logo || university.logo) ? (
-                              <img 
-                                src={universityContents[university.id]?.logo || university.logo} 
-                                alt={`${university.name} logo`}
-                                className="max-h-full max-w-full object-contain"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
-                                <GraduationCap className="h-8 w-8 text-slate-500" />
-                              </div>
-                            )}
+                            {renderUniversityLogo(university.id, university.name)}
                           </div>
                           <h3 className="font-medium text-center text-base mb-2">
                             {university.name}
