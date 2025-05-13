@@ -5,11 +5,11 @@ import { NavbarUserSection } from "./NavbarUserSection";
 
 export const DesktopNavLinks = () => {
   return (
-    <div className="flex items-center gap-6">
-      <Link to="/browse" className="text-navy font-medium hover:text-navy/80">
+    <div className="flex items-center gap-8">
+      <Link to="/browse" className="text-navy font-medium hover:text-navy/80 transition-colors">
         Browse
       </Link>
-      <Link to="/schools" className="text-navy font-medium hover:text-navy/80">
+      <Link to="/schools" className="text-navy font-medium hover:text-navy/80 transition-colors">
         Schools
       </Link>
       

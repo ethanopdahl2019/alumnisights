@@ -1,8 +1,16 @@
 
 import * as React from "react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { 
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger
+} from "@/components/ui/navigation-menu";
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 // Define and export the insightsItems
 export const insightsItems = [
@@ -30,20 +38,35 @@ export const insightsItems = [
 
 export const InsightsDropdown = () => {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center text-navy font-medium hover:text-navy/80 cursor-pointer">
-        Insights <ChevronDown className="h-4 w-4 ml-1" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="w-64">
-        {insightsItems.map((item) => (
-          <DropdownMenuItem key={item.href} asChild className="py-2">
-            <Link to={item.href} className="cursor-pointer flex flex-col">
-              <span className="font-medium">{item.title}</span>
-              <span className="text-xs text-muted-foreground mt-1">{item.description}</span>
-            </Link>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger className="bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent text-navy font-medium hover:text-navy/80 px-0">
+            Insights <ChevronDown className="h-4 w-4 ml-1" />
+          </NavigationMenuTrigger>
+          <NavigationMenuContent className="min-w-[220px]">
+            <ul className="grid gap-1 p-2 w-full">
+              {insightsItems.map((item) => (
+                <li key={item.href}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      )}
+                    >
+                      <div className="text-sm font-medium">{item.title}</div>
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {item.description}
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+              ))}
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 };
