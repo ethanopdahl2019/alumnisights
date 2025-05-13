@@ -65,7 +65,9 @@ const Analytics: React.FC = () => {
         // Configure session recording with the correct property names
         session_recording: {
           maskAllInputs: true,
-          maskTextInputs: true
+          maskInputOptions: {
+            maskInputFn: (text) => '*'.repeat(text.length)
+          }
         }
       });
       setPosthogInitialized(true);

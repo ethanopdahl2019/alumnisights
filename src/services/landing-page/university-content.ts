@@ -41,3 +41,41 @@ export async function getUniversityLogo(id: string): Promise<string | null> {
     return null;
   }
 }
+
+// Add the missing function that's being imported in useUniversityContentForm
+export async function saveUniversityContent(id: string, content: {
+  name: string;
+  overview?: string;
+  admissionStats?: string;
+  applicationRequirements?: string;
+  alumniInsights?: string;
+  image?: string | null;
+  logo?: string | null;
+}): Promise<UniversityContent | null> {
+  try {
+    const { data, error } = await supabase
+      .from('universities_content')
+      .upsert({
+        id,
+        name: content.name,
+        overview: content.overview || null,
+        admission_stats: content.admissionStats || null,
+        application_requirements: content.applicationRequirements || null,
+        alumni_insights: content.alumniInsights || null,
+        image: content.image || null,
+        logo: content.logo || null,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error saving university content:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error saving university content:', error);
+    throw error;
+  }
+}
