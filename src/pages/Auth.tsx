@@ -17,6 +17,10 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getSchools } from '@/services/profiles';
 import { signIn, signUp } from '@/services/auth';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from '@/lib/utils';
 
 // Form schemas
 const loginSchema = z.object({
@@ -67,6 +71,7 @@ const Auth = () => {
   const [userType, setUserType] = useState<"student" | "mentor">("student");
   const [schools, setSchools] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [schoolsPopoverOpen, setSchoolsPopoverOpen] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -407,22 +412,56 @@ const Auth = () => {
                             control={registerForm.control}
                             name="schoolId"
                             render={({ field }) => (
-                              <FormItem>
+                              <FormItem className="flex flex-col">
                                 <FormLabel>School</FormLabel>
-                                <FormControl>
-                                  <select
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    disabled={isLoading}
-                                    {...field}
-                                  >
-                                    <option value="">Select your school</option>
-                                    {schools.map((school) => (
-                                      <option key={school.id} value={school.id}>
-                                        {school.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </FormControl>
+                                <Popover open={schoolsPopoverOpen} onOpenChange={setSchoolsPopoverOpen}>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={schoolsPopoverOpen}
+                                        className={cn(
+                                          "w-full justify-between",
+                                          !field.value && "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value
+                                          ? schools.find((school) => school.id === field.value)?.name
+                                          : "Select your school"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[400px] p-0" align="start">
+                                    <Command>
+                                      <CommandInput placeholder="Search school..." />
+                                      <CommandEmpty>No school found.</CommandEmpty>
+                                      <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                        {schools.map((school) => (
+                                          <CommandItem
+                                            key={school.id}
+                                            value={school.name}
+                                            onSelect={() => {
+                                              registerForm.setValue("schoolId", school.id);
+                                              setSchoolsPopoverOpen(false);
+                                            }}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                school.id === field.value
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              )}
+                                            />
+                                            {school.name}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
                                 <FormMessage />
                               </FormItem>
                             )}
