@@ -221,8 +221,9 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
       });
       
       toast.success("University content saved successfully");
-      // Redirect to undergraduate admissions page
-      navigate("/insights/undergraduate-admissions");
+      
+      // Redirect back to the editor page for this university instead of the listing page
+      navigate(`/insights/university-content-editor/${id}`);
       
     } catch (error: any) {
       console.error("Error saving university content:", error);
