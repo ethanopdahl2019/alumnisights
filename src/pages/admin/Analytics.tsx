@@ -66,7 +66,11 @@ const Analytics: React.FC = () => {
         session_recording: {
           maskAllInputs: true,
           maskInputOptions: {
-            maskInputFn: (text) => '*'.repeat(text.length)
+            // Use boolean values for each input type instead of custom function
+            password: true,
+            email: true,
+            text: true,
+            textarea: true
           }
         }
       });
