@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Search } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -14,18 +16,22 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { getUniversitiesByLetter } from "@/pages/insights/universities/universities-data";
 
 const RegistrationPreview = () => {
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   
-  // Sample universities for the preview
-  const universities = [
-    { id: "harvard", name: "Harvard University" },
-    { id: "stanford", name: "Stanford University" },
-    { id: "mit", name: "MIT" },
-    { id: "amherst", name: "Amherst College" },
-    { id: "american", name: "American University" },
-  ];
+  // Get universities from the same source as Schools page
+  const universitiesByLetter = getUniversitiesByLetter();
+  const allUniversities = Object.values(universitiesByLetter).flat();
+  
+  // Filter universities based on search term
+  const filteredUniversities = searchTerm 
+    ? allUniversities.filter(uni => 
+        uni.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ).slice(0, 5) // Limit to 5 results for better UX
+    : [];
 
   return (
     <Card>
@@ -128,23 +134,38 @@ const RegistrationPreview = () => {
                 <div className="space-y-2">
                   <Label htmlFor="university">University</Label>
                   <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input 
                       id="university-search"
                       type="text"
                       placeholder="Type to search universities..."
-                      className="w-full"
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                       list="university-options"
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const university = universities.find(u => u.name.toLowerCase() === value.toLowerCase());
-                        if (university) setSelectedUniversity(university.id);
-                      }}
                     />
                     <datalist id="university-options">
-                      {universities.map((university) => (
+                      {allUniversities.map((university) => (
                         <option key={university.id} value={university.name} />
                       ))}
                     </datalist>
+                    
+                    {searchTerm && filteredUniversities.length > 0 && (
+                      <div className="absolute z-10 w-full bg-white mt-1 rounded-md border border-gray-200 shadow-md max-h-60 overflow-auto">
+                        {filteredUniversities.map((university) => (
+                          <div
+                            key={university.id}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              setSelectedUniversity(university.id);
+                              setSearchTerm(university.name);
+                            }}
+                          >
+                            {university.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 

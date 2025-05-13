@@ -15,12 +15,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SearchInput from '@/components/SearchInput';
 import { getSchools } from '@/services/profiles';
+import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
 import { signIn, signUp } from '@/services/auth';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from '@/lib/utils';
 
 // Form schemas
 const loginSchema = z.object({
@@ -69,32 +67,18 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
   const [userType, setUserType] = useState<"student" | "mentor">("student");
-  const [schools, setSchools] = useState<any[]>([]);
+  const [schoolSearchTerm, setSchoolSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [schoolsPopoverOpen, setSchoolsPopoverOpen] = useState(false);
+  
+  // Get universities from the same data source as Schools page
+  const universitiesByLetter = getUniversitiesByLetter();
+  const universities = Object.values(universitiesByLetter).flat();
 
   // Redirect if already logged in
   useEffect(() => {
     if (session) {
       navigate('/');
     }
-    
-    // Load schools for mentor registration
-    const loadSchools = async () => {
-      try {
-        const schoolData = await getSchools();
-        setSchools(schoolData);
-      } catch (error) {
-        console.error('Error loading schools:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load schools. Please try again later.",
-          variant: "destructive",
-        });
-      }
-    };
-    
-    loadSchools();
   }, [session, navigate]);
 
   // Login form
@@ -201,6 +185,11 @@ const Auth = () => {
     const currentUserType = registerForm.getValues().userType as "student" | "mentor";
     setUserType(currentUserType);
   }, [registerForm.watch("userType")]);
+  
+  // Handle university selection
+  const handleUniversitySelect = (university) => {
+    registerForm.setValue("schoolId", university.id);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -412,56 +401,27 @@ const Auth = () => {
                             control={registerForm.control}
                             name="schoolId"
                             render={({ field }) => (
-                              <FormItem className="flex flex-col">
+                              <FormItem>
                                 <FormLabel>School</FormLabel>
-                                <Popover open={schoolsPopoverOpen} onOpenChange={setSchoolsPopoverOpen}>
-                                  <PopoverTrigger asChild>
-                                    <FormControl>
-                                      <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        aria-expanded={schoolsPopoverOpen}
-                                        className={cn(
-                                          "w-full justify-between",
-                                          !field.value && "text-muted-foreground"
-                                        )}
-                                      >
-                                        {field.value
-                                          ? schools.find((school) => school.id === field.value)?.name
-                                          : "Select your school"}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                      </Button>
-                                    </FormControl>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-[400px] p-0" align="start">
-                                    <Command>
-                                      <CommandInput placeholder="Search school..." />
-                                      <CommandEmpty>No school found.</CommandEmpty>
-                                      <CommandGroup className="max-h-[300px] overflow-y-auto">
-                                        {schools.map((school) => (
-                                          <CommandItem
-                                            key={school.id}
-                                            value={school.name}
-                                            onSelect={() => {
-                                              registerForm.setValue("schoolId", school.id);
-                                              setSchoolsPopoverOpen(false);
-                                            }}
-                                          >
-                                            <Check
-                                              className={cn(
-                                                "mr-2 h-4 w-4",
-                                                school.id === field.value
-                                                  ? "opacity-100"
-                                                  : "opacity-0"
-                                              )}
-                                            />
-                                            {school.name}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
+                                <FormControl>
+                                  <div className="w-full">
+                                    <SearchInput 
+                                      value={schoolSearchTerm}
+                                      onChange={setSchoolSearchTerm}
+                                      placeholder="Search for your school..."
+                                      options={universities}
+                                      onOptionSelect={(university) => {
+                                        handleUniversitySelect(university);
+                                        setSchoolSearchTerm(university.name);
+                                      }}
+                                    />
+                                    {field.value && (
+                                      <p className="text-xs text-green-600 mt-1">
+                                        School selected: {universities.find(u => u.id === field.value)?.name}
+                                      </p>
+                                    )}
+                                  </div>
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}

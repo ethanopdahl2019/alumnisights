@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, GraduationCap, MapPin } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { GraduationCap, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AlphabeticalNav from '@/components/AlphabeticalNav';
+import SearchInput from '@/components/SearchInput';
 import { getAlphabeticalLetters, getUniversitiesByLetter } from './insights/universities/universities-data';
 import { getUniversityLogo } from '@/services/landing-page';
 
@@ -120,13 +120,11 @@ const Schools = () => {
           </h1>
           
           <div className="relative mb-10 max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search for schools..."
-              className="pl-10"
+            <SearchInput
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={setSearchTerm}
+              placeholder="Search for schools..."
+              options={allUniversities}
             />
           </div>
           
