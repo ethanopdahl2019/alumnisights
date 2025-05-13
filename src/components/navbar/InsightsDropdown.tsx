@@ -1,5 +1,6 @@
 
 import * as React from "react";
+import { useState } from "react";
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -8,7 +9,6 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger
 } from "@/components/ui/navigation-menu";
-import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -37,12 +37,17 @@ export const insightsItems = [
 ];
 
 export const InsightsDropdown = () => {
+  const [open, setOpen] = useState(false);
+
   return (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuTrigger className="bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent text-navy font-medium hover:text-navy/80 px-0">
-            Insights <ChevronDown className="h-4 w-4 ml-1" />
+          <NavigationMenuTrigger 
+            className="bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent text-navy font-medium hover:text-navy/80 px-0"
+            onClick={() => setOpen(!open)}
+          >
+            Insights
           </NavigationMenuTrigger>
           <NavigationMenuContent className="min-w-[220px]">
             <ul className="grid gap-1 p-2 w-full">

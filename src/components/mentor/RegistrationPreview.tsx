@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +7,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { ChevronsUpDown, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { 
   Select, 
   SelectContent, 
@@ -22,7 +17,6 @@ import {
 
 const RegistrationPreview = () => {
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
-  const [universityOpen, setUniversityOpen] = useState(false);
   
   // Sample universities for the preview
   const universities = [
@@ -133,47 +127,25 @@ const RegistrationPreview = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="university">University</Label>
-                  <Popover open={universityOpen} onOpenChange={setUniversityOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={universityOpen}
-                        className="w-full justify-between"
-                      >
-                        {selectedUniversity
-                          ? universities.find((university) => university.id === selectedUniversity)?.name
-                          : "Select your university"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search university..." />
-                        <CommandEmpty>No university found.</CommandEmpty>
-                        <CommandGroup className="max-h-[200px] overflow-y-auto">
-                          {universities.map((university) => (
-                            <CommandItem
-                              key={university.id}
-                              value={university.name}
-                              onSelect={() => {
-                                setSelectedUniversity(university.id === selectedUniversity ? "" : university.id);
-                                setUniversityOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedUniversity === university.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {university.name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <div className="relative">
+                    <Input 
+                      id="university-search"
+                      type="text"
+                      placeholder="Type to search universities..."
+                      className="w-full"
+                      list="university-options"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const university = universities.find(u => u.name.toLowerCase() === value.toLowerCase());
+                        if (university) setSelectedUniversity(university.id);
+                      }}
+                    />
+                    <datalist id="university-options">
+                      {universities.map((university) => (
+                        <option key={university.id} value={university.name} />
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
