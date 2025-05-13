@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
@@ -6,13 +7,52 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import AlphabeticalNav from "@/components/AlphabeticalNav";
 import DefaultLogo from "./universities/DefaultLogo";
+import { GraduationCap } from "lucide-react";
 import { getAlphabeticalLetters, getUniversitiesByLetter } from "./universities/universities-data";
+import { getUniversityLogo } from "@/services/landing-page";
 
 const UndergraduateAdmissions = () => {
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
+  const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
+  const [isLoadingLogos, setIsLoadingLogos] = useState(true);
   const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const alphabeticalLetters = getAlphabeticalLetters();
   const universitiesByLetter = getUniversitiesByLetter();
+  
+  // Fetch university logos efficiently
+  useEffect(() => {
+    const fetchUniversityLogos = async () => {
+      setIsLoadingLogos(true);
+      const logosMap: Record<string, string | null> = {};
+      
+      try {
+        // Get all universities to fetch logos for
+        const allUniversities = Object.values(universitiesByLetter).flat();
+        
+        // Fetch logos in parallel for better performance
+        const logoPromises = allUniversities.map(async (university) => {
+          const logo = await getUniversityLogo(university.id);
+          return { id: university.id, logo };
+        });
+        
+        const results = await Promise.allSettled(logoPromises);
+        
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            logosMap[result.value.id] = result.value.logo;
+          }
+        });
+        
+        setUniversityLogos(logosMap);
+      } catch (error) {
+        console.error('Failed to fetch university logos:', error);
+      } finally {
+        setIsLoadingLogos(false);
+      }
+    };
+    
+    fetchUniversityLogos();
+  }, []);
   
   const scrollToLetter = (letter: string) => {
     setActiveLetter(letter);
@@ -47,6 +87,27 @@ const UndergraduateAdmissions = () => {
     
     return () => observer.disconnect();
   }, [alphabeticalLetters.length]);
+
+  // Render university logo component
+  const renderUniversityLogo = (universityId: string, universityName: string) => {
+    const logo = universityLogos[universityId];
+    
+    if (logo) {
+      return (
+        <img 
+          src={logo} 
+          alt={`${universityName} logo`}
+          className="h-16 w-16 object-contain"
+        />
+      );
+    }
+    
+    return (
+      <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
+        <GraduationCap className="h-8 w-8 text-slate-500" />
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -97,15 +158,7 @@ const UndergraduateAdmissions = () => {
                         <Card className="overflow-hidden border shadow hover:shadow-md h-full">
                           <CardContent className="p-4 flex flex-col items-center justify-center text-center">
                             <div className="mb-3 h-16 w-16 flex items-center justify-center">
-                              {university.logo ? (
-                                <img 
-                                  src={university.logo} 
-                                  alt={`${university.name} logo`}
-                                  className="h-16 w-16 object-contain"
-                                />
-                              ) : (
-                                <DefaultLogo name={university.name} className="h-16 w-16" />
-                              )}
+                              {renderUniversityLogo(university.id, university.name)}
                             </div>
                             <h3 className="font-medium text-navy">
                               {university.name}
