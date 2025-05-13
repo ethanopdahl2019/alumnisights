@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -63,8 +64,8 @@ const Analytics: React.FC = () => {
         autocapture: import.meta.env.PROD,
         // Configure session recording with the correct property names
         session_recording: {
-          maskInputs: true,
-          maskText: true
+          maskAllInputs: true,
+          maskAllText: true
         }
       });
       setPosthogInitialized(true);
