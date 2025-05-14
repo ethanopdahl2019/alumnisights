@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,7 +19,6 @@ export default {
 		},
 		fontFamily: {
 			'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-			'display': ['Manrope', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
 		},
 		extend: {
 			colors: {
@@ -69,28 +67,24 @@ export default {
 				},
 				// AlumniSights custom colors
 				navy: {
-					DEFAULT: '#1E3A8A',
-					light: '#3B82F6'
+					DEFAULT: '#1A1F2C',
+					light: '#384160'
 				},
 				tag: {
-					major: '#E0E7FF',
-					'major-text': '#4338CA',
-					sport: '#DCFCE7',
-					'sport-text': '#15803D',
-					club: '#FFEDD5',
-					'club-text': '#9A3412',
-					study: '#F3E8FF',
-					'study-text': '#7E22CE'
+					major: '#E9EFFF',
+					'major-text': '#384160',
+					sport: '#E5FFF1',
+					'sport-text': '#0D6B34',
+					club: '#FFF5E5',
+					'club-text': '#915005',
+					study: '#F5EDFF',
+					'study-text': '#6B2BAD'
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
-			},
-			boxShadow: {
-				'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.08)',
-				'card': '0 4px 12px rgba(0, 0, 0, 0.05)',
 			},
 			keyframes: {
 				'accordion-down': {

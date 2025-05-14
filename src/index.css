@@ -14,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 221 83% 53%;
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 214 100% 97%;
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 214 32% 96%;
+    --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 214 100% 97%;
+    --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,9 +31,9 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    --ring: 222.2 84% 4.9%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -42,7 +42,7 @@
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -56,7 +56,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-semibold tracking-tight text-navy;
+    @apply font-medium tracking-tight;
   }
 
   h1 {
@@ -102,23 +102,23 @@
   }
   
   .profile-card {
-    @apply bg-white rounded-xl shadow-card hover:shadow-soft transition-shadow duration-300 overflow-hidden flex flex-col;
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col;
   }
   
   .btn-primary {
-    @apply inline-block bg-primary text-white font-medium px-6 py-3 rounded-lg shadow-sm transition-all hover:bg-primary/90 hover:shadow-md;
+    @apply inline-block border border-navy bg-navy text-white px-6 py-3 rounded-lg transition-all hover:bg-navy/90;
   }
   
   .btn-secondary {
-    @apply inline-block border border-gray-200 bg-white text-navy font-medium px-6 py-3 rounded-lg shadow-sm transition-all hover:border-primary hover:text-primary hover:shadow-md;
+    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-gray-50;
   }
   
   .filter-pill {
-    @apply inline-block px-4 py-2 rounded-full border border-gray-200 transition-colors hover:border-primary/50 hover:text-primary;
+    @apply inline-block px-4 py-2 rounded-full border border-gray-200 transition-colors hover:border-navy;
   }
   
   .filter-pill-active {
-    @apply bg-primary text-white border-primary;
+    @apply bg-navy text-white border-navy;
   }
 }
 

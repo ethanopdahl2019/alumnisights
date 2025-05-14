@@ -10,10 +10,10 @@ const Navbar = () => {
   const isMobile = useIsMobile();
 
   return (
-    <nav className="py-5 border-b border-gray-100 bg-white sticky top-0 z-50 shadow-sm">
+    <nav className="py-4 border-b border-gray-100 bg-white sticky top-0 z-50 shadow-sm">
       <div className="container-custom flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logoPath} alt="AlumniSights Logo" className="h-6" />
+          <img src={logoPath} alt="AlumniSights Logo" className="h-5" />
         </Link>
         
         {isMobile ? <MobileMenu /> : <DesktopNavLinks />}
