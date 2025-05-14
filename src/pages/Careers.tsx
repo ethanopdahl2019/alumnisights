@@ -3,62 +3,6 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
-const positions = [
-  {
-    title: "Senior Full Stack Engineer",
-    type: "Full-time",
-    location: "Remote (US-based)",
-    department: "Engineering",
-    description: "We're looking for an experienced full stack engineer to help build and scale our platform. You'll work on challenging problems and contribute to all aspects of our tech stack."
-  },
-  {
-    title: "UX/UI Designer",
-    type: "Full-time",
-    location: "New York, NY (Hybrid)",
-    department: "Design",
-    description: "Join our design team to create intuitive, engaging experiences that connect students with mentors. You'll lead design projects from concept to implementation."
-  },
-  {
-    title: "University Partnerships Manager",
-    type: "Full-time",
-    location: "Boston, MA (Hybrid)",
-    department: "Partnerships",
-    description: "Build relationships with universities across the country to expand our network of alumni and current students. You'll be the key liaison between AlumniSights and educational institutions."
-  },
-  {
-    title: "Content Marketing Specialist",
-    type: "Full-time",
-    location: "Remote (US-based)",
-    department: "Marketing",
-    description: "Create compelling content that educates prospective students about the college application process and the value of mentorship in education decisions."
-  },
-  {
-    title: "Community Manager",
-    type: "Part-time",
-    location: "Remote (US-based)",
-    department: "Operations",
-    description: "Foster engagement within our mentor community, facilitate connections, and ensure quality experiences for both mentors and mentees."
-  }
-];
-
-const values = [
-  {
-    title: "Authenticity",
-    description: "We believe in transparent, honest communication that helps students make truly informed decisions."
-  },
-  {
-    title: "Accessibility",
-    description: "We're committed to making quality guidance available to students from all backgrounds."
-  },
-  {
-    title: "Community",
-    description: "We foster meaningful connections that extend beyond single conversations."
-  },
-  {
-    title: "Growth",
-    description: "We encourage continuous learning and development for our team, mentors, and mentees."
-  }
-];
 
 const Careers = () => {
   return (
