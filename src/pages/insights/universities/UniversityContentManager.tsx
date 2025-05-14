@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { universities } from "./universities-data";
 import DefaultLogo from "./DefaultLogo";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Edit, Plus, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 import AccessDenied from "./components/AccessDenied";
@@ -65,13 +65,21 @@ const UniversityContentManager: React.FC = () => {
 
       <main className="container-custom py-12">
         <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-navy">
               University Content Manager
             </h1>
-            <Button onClick={() => navigate("/insights/university-content-editor")}>
-              <Plus className="h-4 w-4 mr-2" /> Add University
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button 
+                onClick={() => navigate("/insights/universities/bulk-content-generator")}
+                variant="outline"
+              >
+                <Wand2 className="h-4 w-4 mr-2" /> AI Generator
+              </Button>
+              <Button onClick={() => navigate("/insights/university-content-editor")}>
+                <Plus className="h-4 w-4 mr-2" /> Add University
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
