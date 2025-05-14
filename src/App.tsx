@@ -57,6 +57,20 @@ import HarvardUniversity from "./pages/insights/universities/harvard-university"
 import StanfordUniversity from "./pages/insights/universities/stanford-university";
 import MITUniversity from "./pages/insights/universities/mit";
 
+// Import new pages
+import AboutUs from "./pages/AboutUs";
+import Resources from "./pages/Resources";
+import FAQ from "./pages/FAQ";
+import HowItWorks from "./pages/HowItWorks";
+import Testimonials from "./pages/Testimonials";
+import Blog from "./pages/Blog";
+import Careers from "./pages/Careers";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import BecomeMentor from "./pages/BecomeMentor";
+import SuccessStories from "./pages/SuccessStories";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -76,6 +90,7 @@ const App = () => (
               <Route path="/schools/:id" element={<SchoolDetail />} />
               <Route path="/schools/undergraduate-admissions" element={<UndergraduateAdmissions />} />
               <Route path="/schools/undergraduate-admissions/:id" element={<UniversityPage />} />
+              
               {/* Account and dashboards */}
               <Route path="/account" element={<MyAccount />} />
               <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
@@ -85,6 +100,7 @@ const App = () => (
               <Route path="/alumni/:id" element={<AlumniProfilePage />} />
               <Route path="/booking/:id/:productId" element={<BookingPage />} />
               <Route path="/p/:slug" element={<LandingPage />} />
+              
               {/* School x Major/Activity landing pages */}
               <Route path="/schools/:schoolId/majors/:majorId" element={<SchoolMajorLanding />} />
               <Route path="/schools/:schoolId/activities/:activityId" element={<SchoolActivityLanding />} />
@@ -115,6 +131,20 @@ const App = () => (
               <Route path="/schools/undergraduate-admissions/harvard-university" element={<HarvardUniversity />} />
               <Route path="/schools/undergraduate-admissions/stanford-university" element={<StanfordUniversity />} />
               <Route path="/schools/undergraduate-admissions/massachusetts-institute-of-technology-mit" element={<MITUniversity />} />
+              
+              {/* New pages from footer links */}
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/testimonials" element={<Testimonials />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/become-mentor" element={<BecomeMentor />} />
+              <Route path="/success-stories" element={<SuccessStories />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
