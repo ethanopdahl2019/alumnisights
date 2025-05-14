@@ -23,38 +23,6 @@ const values = [
   }
 ];
 
-// Define the positions array
-const positions = [
-  {
-    title: "Full Stack Developer",
-    type: "Full-time",
-    location: "Remote",
-    department: "Engineering",
-    description: "Join our engineering team to build and scale our platform using React, Node.js, and TypeScript."
-  },
-  {
-    title: "Data Analyst",
-    type: "Full-time",
-    location: "Remote",
-    department: "Data",
-    description: "Help us gather, analyze, and interpret educational data to create valuable insights for our users."
-  },
-  {
-    title: "UX/UI Designer",
-    type: "Full-time",
-    location: "Remote",
-    department: "Design",
-    description: "Create intuitive, accessible user experiences that make complex education data easy to understand."
-  },
-  {
-    title: "Education Partnerships Manager",
-    type: "Full-time",
-    location: "Remote",
-    department: "Partnerships",
-    description: "Build relationships with universities and educational institutions to expand our data sources."
-  }
-];
-
 const Careers = () => {
   return (
     <div className="min-h-screen bg-white">
@@ -86,41 +54,6 @@ const Careers = () => {
                   <p className="text-gray-700">{value.description}</p>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-        
-        {/* Open Positions */}
-        <section className="py-16 px-4 sm:px-6 bg-gray-50">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-10">Open Positions</h2>
-            
-            <div className="space-y-6">
-              {positions.map((position, index) => (
-                <div key={index} className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
-                    <h3 className="text-xl font-medium">{position.title}</h3>
-                    <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
-                      <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">{position.type}</span>
-                      <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">{position.location}</span>
-                      <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">{position.department}</span>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-4">{position.description}</p>
-                  <a href="#" className="text-blue-600 font-medium hover:underline">
-                    Learn more and apply →
-                  </a>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-10 text-center">
-              <p className="text-lg text-gray-700 mb-4">
-                Don't see a position that matches your skills?
-              </p>
-              <a href="mailto:careers@alumnisights.com" className="text-blue-600 font-medium hover:underline">
-                Send us your resume →
-              </a>
             </div>
           </div>
         </section>

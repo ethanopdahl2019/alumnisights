@@ -37,20 +37,6 @@ const AboutUs = () => {
               and accessible for all.
             </p>
             
-            <h2 className="text-2xl font-bold text-gray-900 mt-10 mb-4">Our Team</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6 mb-10">
-              <div className="flex flex-col items-center">
-                <div className="w-32 h-32 bg-gray-200 rounded-full mb-4"></div>
-                <h3 className="text-xl font-medium">Sarah Johnson</h3>
-                <p className="text-gray-600">Co-founder & CEO</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-32 h-32 bg-gray-200 rounded-full mb-4"></div>
-                <h3 className="text-xl font-medium">Michael Chen</h3>
-                <p className="text-gray-600">Co-founder & CTO</p>
-              </div>
-            </div>
-            
             <h2 className="text-2xl font-bold text-gray-900 mt-10 mb-4">Join Our Community</h2>
             <p className="text-gray-700 mb-6">
               Whether you're a prospective student seeking guidance or an alumnus looking to give back, 
