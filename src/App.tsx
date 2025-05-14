@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -5,10 +6,10 @@ import Index from './pages/Index';
 import LandingPage from './pages/LandingPage';
 import Browse from './pages/Browse';
 import BookingPage from './pages/BookingPage';
-import StudentDashboard from './pages/dashboards/StudentDashboard';
-import ApplicantDashboard from './pages/dashboards/ApplicantDashboard';
-import MentorDashboard from './pages/dashboards/MentorDashboard';
-import AlumniDashboard from './pages/dashboards/AlumniDashboard';
+import StudentDashboard from './pages/StudentDashboard';
+import ApplicantDashboard from './pages/ApplicantDashboard';
+import MentorDashboard from './pages/MentorDashboard';
+import AlumniDashboard from './pages/AlumniDashboard';
 import Auth from './pages/Auth';
 import AlumniProfilePage from './pages/AlumniProfilePage';
 import ProfileComplete from './pages/ProfileComplete';
