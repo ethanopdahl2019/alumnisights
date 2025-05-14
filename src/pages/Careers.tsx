@@ -3,6 +3,57 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
+// Define the values array
+const values = [
+  {
+    title: "Student-First Approach",
+    description: "We put students' needs at the center of everything we do, creating tools that genuinely help them make better decisions."
+  },
+  {
+    title: "Data-Driven Insights",
+    description: "We believe in the power of data to provide clarity and transparency in the complex world of higher education."
+  },
+  {
+    title: "Continuous Innovation",
+    description: "We're constantly exploring new ways to make education data more accessible, useful, and actionable."
+  },
+  {
+    title: "Diversity & Inclusion",
+    description: "We're committed to creating a platform that serves students from all backgrounds and perspectives."
+  }
+];
+
+// Define the positions array
+const positions = [
+  {
+    title: "Full Stack Developer",
+    type: "Full-time",
+    location: "Remote",
+    department: "Engineering",
+    description: "Join our engineering team to build and scale our platform using React, Node.js, and TypeScript."
+  },
+  {
+    title: "Data Analyst",
+    type: "Full-time",
+    location: "Remote",
+    department: "Data",
+    description: "Help us gather, analyze, and interpret educational data to create valuable insights for our users."
+  },
+  {
+    title: "UX/UI Designer",
+    type: "Full-time",
+    location: "Remote",
+    department: "Design",
+    description: "Create intuitive, accessible user experiences that make complex education data easy to understand."
+  },
+  {
+    title: "Education Partnerships Manager",
+    type: "Full-time",
+    location: "Remote",
+    department: "Partnerships",
+    description: "Build relationships with universities and educational institutions to expand our data sources."
+  }
+];
 
 const Careers = () => {
   return (
