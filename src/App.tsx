@@ -37,6 +37,7 @@ import Terms from './pages/Terms';
 import BecomeMentor from './pages/BecomeMentor';
 import SuccessStories from './pages/SuccessStories';
 import NotFound from './pages/NotFound';
+import TestErrorBoundary from './components/TestErrorBoundary';
 
 function App() {
   console.log('App rendering');
@@ -44,43 +45,191 @@ function App() {
     <div>
       <Toaster position="top-center" richColors closeButton />
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/landing-page" element={<LandingPage />} />
-        <Route path="/browse" element={<Browse />} />
-        <Route path="/booking/:profileId" element={<BookingPage />} />
-        <Route path="/student-dashboard" element={<StudentDashboard />} />
-        <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
-        <Route path="/mentor-dashboard" element={<MentorDashboard />} />
-        <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/alumni/:id" element={<AlumniProfilePage />} />
-        <Route path="/profile-complete" element={<ProfileComplete />} />
-        <Route path="/my-account" element={<MyAccount />} />
-        <Route path="/schools" element={<Schools />} />
-        <Route path="/school/:id" element={<SchoolDetail />} />
-        <Route path="/schools/activities/:id" element={<SchoolActivityLanding />} />
-        <Route path="/schools/majors/:id" element={<SchoolMajorLanding />} />
-        <Route path="/schools/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-        <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-        <Route path="/insights/undergraduate-admissions/:id" element={<UniversityAdmissions />} />
-        <Route path="/insights/university-page/:id" element={<UniversityPage />} />
-        <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
-        <Route path="/insights/university-content-editor" element={<UniversityContentEditor />} />
-        <Route path="/insights/universities/content-manager" element={<UniversityContentManager />} />
-        <Route path="/insights/universities/bulk-content-generator" element={<UniversityBulkContentGenerator />} />
-        <Route path="/about-us" element={<AboutUs />} />
-        <Route path="/resources" element={<Resources />} />
-        <Route path="/faq" element={<FAQ />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/testimonials" element={<Testimonials />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/careers" element={<Careers />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/become-mentor" element={<BecomeMentor />} />
-        <Route path="/success-stories" element={<SuccessStories />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path="/" element={
+          <TestErrorBoundary label="Index">
+            <Index />
+          </TestErrorBoundary>
+        } />
+        <Route path="/landing-page" element={
+          <TestErrorBoundary label="LandingPage">
+            <LandingPage />
+          </TestErrorBoundary>
+        } />
+        <Route path="/browse" element={
+          <TestErrorBoundary label="Browse">
+            <Browse />
+          </TestErrorBoundary>
+        } />
+        <Route path="/booking/:profileId" element={
+          <TestErrorBoundary label="BookingPage">
+            <BookingPage />
+          </TestErrorBoundary>
+        } />
+        <Route path="/student-dashboard" element={
+          <TestErrorBoundary label="StudentDashboard">
+            <StudentDashboard />
+          </TestErrorBoundary>
+        } />
+        <Route path="/applicant-dashboard" element={
+          <TestErrorBoundary label="ApplicantDashboard">
+            <ApplicantDashboard />
+          </TestErrorBoundary>
+        } />
+        <Route path="/mentor-dashboard" element={
+          <TestErrorBoundary label="MentorDashboard">
+            <MentorDashboard />
+          </TestErrorBoundary>
+        } />
+        <Route path="/alumni-dashboard" element={
+          <TestErrorBoundary label="AlumniDashboard">
+            <AlumniDashboard />
+          </TestErrorBoundary>
+        } />
+        <Route path="/auth" element={
+          <TestErrorBoundary label="Auth">
+            <Auth />
+          </TestErrorBoundary>
+        } />
+        <Route path="/alumni/:id" element={
+          <TestErrorBoundary label="AlumniProfilePage">
+            <AlumniProfilePage />
+          </TestErrorBoundary>
+        } />
+        <Route path="/profile-complete" element={
+          <TestErrorBoundary label="ProfileComplete">
+            <ProfileComplete />
+          </TestErrorBoundary>
+        } />
+        <Route path="/my-account" element={
+          <TestErrorBoundary label="MyAccount">
+            <MyAccount />
+          </TestErrorBoundary>
+        } />
+        <Route path="/schools" element={
+          <TestErrorBoundary label="Schools">
+            <Schools />
+          </TestErrorBoundary>
+        } />
+        <Route path="/school/:id" element={
+          <TestErrorBoundary label="SchoolDetail">
+            <SchoolDetail />
+          </TestErrorBoundary>
+        } />
+        <Route path="/schools/activities/:id" element={
+          <TestErrorBoundary label="SchoolActivityLanding">
+            <SchoolActivityLanding />
+          </TestErrorBoundary>
+        } />
+        <Route path="/schools/majors/:id" element={
+          <TestErrorBoundary label="SchoolMajorLanding">
+            <SchoolMajorLanding />
+          </TestErrorBoundary>
+        } />
+        <Route path="/schools/undergraduate-admissions" element={
+          <TestErrorBoundary label="UndergraduateAdmissions">
+            <UndergraduateAdmissions />
+          </TestErrorBoundary>
+        } />
+        <Route path="/insights/undergraduate-admissions" element={
+          <TestErrorBoundary label="UndergraduateAdmissions">
+            <UndergraduateAdmissions />
+          </TestErrorBoundary>
+        } />
+        <Route path="/insights/undergraduate-admissions/:id" element={
+          <TestErrorBoundary label="UniversityAdmissions">
+            <UniversityAdmissions />
+          </TestErrorBoundary>
+        } />
+        <Route path="/insights/university-page/:id" element={
+          <TestErrorBoundary label="UniversityPage">
+            <UniversityPage />
+          </TestErrorBoundary>
+        } />
+        <Route path="/insights/university-content-editor/:id" element={
+          <TestErrorBoundary label="UniversityContentEditorWithId">
+            <UniversityContentEditor />
+          </TestErrorBoundary>
+        } />
+        <Route path="/insights/university-content-editor" element={
+          <TestErrorBoundary label="UniversityContentEditor">
+            <UniversityContentEditor />
+          </TestErrorBoundary>
+        } />
+        <Route path="/insights/universities/content-manager" element={
+          <TestErrorBoundary label="UniversityContentManager">
+            <UniversityContentManager />
+          </TestErrorBoundary>
+        } />
+        <Route path="/insights/universities/bulk-content-generator" element={
+          <TestErrorBoundary label="UniversityBulkContentGenerator">
+            <UniversityBulkContentGenerator />
+          </TestErrorBoundary>
+        } />
+        <Route path="/about-us" element={
+          <TestErrorBoundary label="AboutUs">
+            <AboutUs />
+          </TestErrorBoundary>
+        } />
+        <Route path="/resources" element={
+          <TestErrorBoundary label="Resources">
+            <Resources />
+          </TestErrorBoundary>
+        } />
+        <Route path="/faq" element={
+          <TestErrorBoundary label="FAQ">
+            <FAQ />
+          </TestErrorBoundary>
+        } />
+        <Route path="/how-it-works" element={
+          <TestErrorBoundary label="HowItWorks">
+            <HowItWorks />
+          </TestErrorBoundary>
+        } />
+        <Route path="/testimonials" element={
+          <TestErrorBoundary label="Testimonials">
+            <Testimonials />
+          </TestErrorBoundary>
+        } />
+        <Route path="/blog" element={
+          <TestErrorBoundary label="Blog">
+            <Blog />
+          </TestErrorBoundary>
+        } />
+        <Route path="/careers" element={
+          <TestErrorBoundary label="Careers">
+            <Careers />
+          </TestErrorBoundary>
+        } />
+        <Route path="/contact" element={
+          <TestErrorBoundary label="Contact">
+            <Contact />
+          </TestErrorBoundary>
+        } />
+        <Route path="/privacy" element={
+          <TestErrorBoundary label="Privacy">
+            <Privacy />
+          </TestErrorBoundary>
+        } />
+        <Route path="/terms" element={
+          <TestErrorBoundary label="Terms">
+            <Terms />
+          </TestErrorBoundary>
+        } />
+        <Route path="/become-mentor" element={
+          <TestErrorBoundary label="BecomeMentor">
+            <BecomeMentor />
+          </TestErrorBoundary>
+        } />
+        <Route path="/success-stories" element={
+          <TestErrorBoundary label="SuccessStories">
+            <SuccessStories />
+          </TestErrorBoundary>
+        } />
+        <Route path="*" element={
+          <TestErrorBoundary label="NotFound">
+            <NotFound />
+          </TestErrorBoundary>
+        } />
       </Routes>
     </div>
   );
