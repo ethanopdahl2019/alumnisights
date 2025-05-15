@@ -5,17 +5,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 import { universities } from "./universities-data";
 import UniversityContentLoading from "./components/UniversityContentLoading";
 import AccessDenied from "./components/AccessDenied";
 import UniversityContentForm from "./components/UniversityContentForm";
-import UniversityContentGenerator from "./components/UniversityContentGenerator";
 import { getUniversityContent } from "@/services/landing-page";
-import { Wand2 } from "lucide-react";
 
 const UniversityContentEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,8 +20,8 @@ const UniversityContentEditor: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isLoadingContent, setIsLoadingContent] = useState<boolean>(true);
   const [universityData, setUniversityData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<string>("edit");
-  
+  const [authChecked, setAuthChecked] = useState<boolean>(true); // Set to true by default now
+
   // Check if the university exists in our static data
   const universityInfo = id ? universities.find(uni => uni.id === id) : null;
   
@@ -81,52 +77,18 @@ const UniversityContentEditor: React.FC = () => {
 
       <main className="container-custom py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-navy">
-              {universityData ? `Edit ${universityName}` : "Add New University"}
-            </h1>
-            
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/insights/universities/content-manager")}
-            >
-              Back to Manager
-            </Button>
-          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-navy mb-8">
+            {universityData ? `Edit ${universityName}` : "Add New University"}
+          </h1>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <div className="flex justify-between items-center mb-6">
-              <TabsList>
-                <TabsTrigger value="edit">Manual Edit</TabsTrigger>
-                <TabsTrigger value="ai">
-                  <Wand2 className="h-4 w-4 mr-2" />
-                  AI Generator
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="edit" className="mt-0">
-              <Card>
-                <CardContent className="pt-6">
-                  <UniversityContentForm 
-                    id={id} 
-                    universityName={universityName} 
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="ai" className="mt-0">
-              <UniversityContentGenerator
-                universityId={id}
-                universityName={universityName}
-                onComplete={() => {
-                  setActiveTab("edit");
-                  toast.info("AI-generated content saved. You can now edit it manually if needed.");
-                }}
+          <Card>
+            <CardContent className="pt-6">
+              <UniversityContentForm 
+                id={id} 
+                universityName={universityName} 
               />
-            </TabsContent>
-          </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
