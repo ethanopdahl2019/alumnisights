@@ -9,10 +9,10 @@ import { ArrowRight, GraduationCap, Users, Building, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
-  console.log('Index page rendering');
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
+      
       <main>
         <Hero />
 
