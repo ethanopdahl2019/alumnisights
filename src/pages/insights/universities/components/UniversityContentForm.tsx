@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -13,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import UniversityImageUpload from "./UniversityImageUpload";
 import { useUniversityContentForm } from "../hooks/useUniversityContentForm";
+import { generateUniversityContent } from "@/services/ai/generateUniversityContent";
+import { toast } from "sonner";
 
 interface UniversityContentFormProps {
   id?: string;
@@ -33,9 +34,48 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
     resetLogo
   } = useUniversityContentForm({ id, universityName });
 
+  // NEW: Handler for AI content generation
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const handleGenerateContent = async () => {
+    if (!form.getValues("name")) {
+      toast.warning("Please enter the university name first");
+      return;
+    }
+    setIsGenerating(true);
+    toast.info("Generating content with AI...");
+    try {
+      const aiContent = await generateUniversityContent(form.getValues("name"));
+      if (aiContent) {
+        form.setValue("overview", aiContent.overview || "");
+        form.setValue("admissionStats", aiContent.admissionStats || "");
+        form.setValue("applicationRequirements", aiContent.applicationRequirements || "");
+        form.setValue("alumniInsights", aiContent.alumniInsights || "");
+        toast.success("AI generated content filled!");
+      } else {
+        toast.error("Failed to generate content, try again");
+      }
+    } catch (e) {
+      toast.error("Error generating content");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="flex justify-between items-center mb-4">
+          <div></div>
+          <Button 
+            type="button" 
+            variant="secondary" 
+            onClick={handleGenerateContent}
+            disabled={isGenerating}
+          >
+            {isGenerating ? "Generating..." : "Generate All Content with AI"}
+          </Button>
+        </div>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <FormField
