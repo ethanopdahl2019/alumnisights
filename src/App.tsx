@@ -39,6 +39,7 @@ import SuccessStories from './pages/SuccessStories';
 import NotFound from './pages/NotFound';
 
 function App() {
+  console.log('App rendering');
   return (
     <div>
       <Toaster position="top-center" richColors closeButton />
