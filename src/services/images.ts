@@ -19,7 +19,7 @@ export async function getImagesFromDatabase(): Promise<ImageData[]> {
       src: img.url,
       alt: img.alt_text || '',
       caption: img.caption,
-      category: img.category
+      category: img.category as ImageData['category']
     })) || [];
   } catch (error) {
     console.error('Failed to fetch images from database:', error);
@@ -28,7 +28,7 @@ export async function getImagesFromDatabase(): Promise<ImageData[]> {
 }
 
 // Get images by category
-export async function getDatabaseImagesByCategory(category: string, limit?: number): Promise<ImageData[]> {
+export async function getDatabaseImagesByCategory(category: ImageData['category'], limit?: number): Promise<ImageData[]> {
   try {
     let query = supabase
       .from('site_images')
@@ -51,7 +51,7 @@ export async function getDatabaseImagesByCategory(category: string, limit?: numb
       src: img.url,
       alt: img.alt_text || '',
       caption: img.caption,
-      category: img.category
+      category: img.category as ImageData['category']
     })) || [];
   } catch (error) {
     console.error(`Failed to fetch ${category} images from database:`, error);
@@ -78,7 +78,7 @@ export async function getRandomDatabaseImages(count: number = 3): Promise<ImageD
       src: img.url,
       alt: img.alt_text || '',
       caption: img.caption,
-      category: img.category
+      category: img.category as ImageData['category']
     })) || [];
   } catch (error) {
     console.error('Failed to fetch random images from database:', error);
@@ -87,7 +87,7 @@ export async function getRandomDatabaseImages(count: number = 3): Promise<ImageD
 }
 
 // Upload a new image
-export async function uploadImage(file: File, category: string, altText: string, caption?: string): Promise<ImageData | null> {
+export async function uploadImage(file: File, category: ImageData['category'], altText: string, caption?: string): Promise<ImageData | null> {
   try {
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
@@ -131,7 +131,7 @@ export async function uploadImage(file: File, category: string, altText: string,
       src: data.url,
       alt: data.alt_text || '',
       caption: data.caption || undefined,
-      category: data.category
+      category: data.category as ImageData['category']
     };
   } catch (error) {
     console.error('Failed to upload image:', error);
