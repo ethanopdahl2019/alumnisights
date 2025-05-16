@@ -44,7 +44,7 @@ export const NavbarUserSection = () => {
 
   if (!user) {
     return (
-      <Link to="/auth" className="ml-2 px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 font-medium transition-colors">
+      <Link to="/auth" className="text-base px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 transition-colors">
         Sign In
       </Link>
     );
@@ -61,38 +61,38 @@ export const NavbarUserSection = () => {
             <AvatarImage src={user?.user_metadata?.avatar_url} alt={user.email || "profile"} />
             <AvatarFallback>{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline text-sm font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
+          <span className="text-base font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-base">My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/account')}>
+        <DropdownMenuItem onClick={() => navigate('/account')} className="text-base">
           <User className="mr-2 h-4 w-4" />
           View Account
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={goToDashboard}>
+        <DropdownMenuItem onClick={goToDashboard} className="text-base">
           Dashboard
         </DropdownMenuItem>
         
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center">
+            <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center text-base">
               <ShieldAlert className="mr-2 h-4 w-4" />
               Admin Dashboard
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/student-dashboard')}>
+            <DropdownMenuItem onClick={() => navigate('/student-dashboard')} className="text-base">
               Student Dashboard
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')}>
+            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')} className="text-base">
               Mentor Dashboard
             </DropdownMenuItem>
           </>
         )}
         
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem onClick={handleSignOut} className="text-base">
           Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>

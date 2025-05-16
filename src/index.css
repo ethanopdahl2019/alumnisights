@@ -52,7 +52,7 @@
   }
 
   body {
-    @apply bg-gradient-to-b from-blue-50/70 to-white text-navy font-sans;
+    @apply bg-white text-navy font-sans;
   }
 
   /* Use serif font for headings */
@@ -111,11 +111,11 @@
   }
   
   .btn-secondary {
-    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-gray-50;
+    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-navy/90 hover:text-white;
   }
   
   .btn-outline {
-    @apply inline-block border border-white text-white px-6 py-3 rounded-lg transition-all hover:bg-white/10;
+    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-navy/10;
   }
   
   .filter-pill {
