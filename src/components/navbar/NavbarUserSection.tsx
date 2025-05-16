@@ -44,7 +44,7 @@ export const NavbarUserSection = () => {
 
   if (!user) {
     return (
-      <Link to="/auth" className="text-sm font-sans text-navy hover:text-navy/80 transition-colors border-b border-transparent hover:border-navy">
+      <Link to="/auth" className="ml-2 px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 font-medium transition-colors">
         Sign In
       </Link>
     );
@@ -54,46 +54,46 @@ export const NavbarUserSection = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex items-center gap-3 p-1.5 rounded-full bg-soft-beige hover:bg-gray-100 cursor-pointer transition-colors duration-200"
+          className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200"
           title={user.email}
         >
-          <Avatar className="h-8 w-8 border border-gray-200">
+          <Avatar className="h-8 w-8">
             <AvatarImage src={user?.user_metadata?.avatar_url} alt={user.email || "profile"} />
-            <AvatarFallback className="bg-navy/5 text-navy font-alice">{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline text-sm font-sans text-navy pr-2">{user.user_metadata?.first_name || user.email?.split('@')[0]}</span>
+          <span className="hidden md:inline text-sm font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="font-alice">My Account</DropdownMenuLabel>
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/account')} className="cursor-pointer">
+        <DropdownMenuItem onClick={() => navigate('/account')}>
           <User className="mr-2 h-4 w-4" />
-          <span className="font-sans text-sm">View Account</span>
+          View Account
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={goToDashboard} className="cursor-pointer">
-          <span className="font-sans text-sm">Dashboard</span>
+        <DropdownMenuItem onClick={goToDashboard}>
+          Dashboard
         </DropdownMenuItem>
         
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center cursor-pointer">
+            <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center">
               <ShieldAlert className="mr-2 h-4 w-4" />
-              <span className="font-sans text-sm">Admin Dashboard</span>
+              Admin Dashboard
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/student-dashboard')} className="cursor-pointer">
-              <span className="font-sans text-sm">Student Dashboard</span>
+            <DropdownMenuItem onClick={() => navigate('/student-dashboard')}>
+              Student Dashboard
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')} className="cursor-pointer">
-              <span className="font-sans text-sm">Mentor Dashboard</span>
+            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')}>
+              Mentor Dashboard
             </DropdownMenuItem>
           </>
         )}
         
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-          <span className="font-sans text-sm">Sign out</span>
+        <DropdownMenuItem onClick={handleSignOut}>
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

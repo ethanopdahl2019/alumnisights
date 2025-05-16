@@ -25,14 +25,14 @@ export const MobileMenu = () => {
           <div className="container-custom flex flex-col space-y-4">
             <Link 
               to="/browse" 
-              className="text-navy font-medium py-2 hover:bg-gray-50 px-4 rounded text-sm"
+              className="text-navy font-medium py-2 hover:bg-gray-50 px-4 rounded"
               onClick={() => setMobileMenuOpen(false)}
             >
               Browse
             </Link>
             <Link 
               to="/schools" 
-              className="text-navy font-medium py-2 hover:bg-gray-50 px-4 rounded text-sm"
+              className="text-navy font-medium py-2 hover:bg-gray-50 px-4 rounded"
               onClick={() => setMobileMenuOpen(false)}
             >
               Schools
@@ -40,7 +40,7 @@ export const MobileMenu = () => {
             
             {/* Mobile Insights Dropdown */}
             <div className="flex flex-col gap-2">
-              <div className="text-navy font-medium py-2 px-4 text-sm">
+              <div className="text-navy font-medium py-2 px-4">
                 Insights
               </div>
               <div className="pl-4 flex flex-col gap-1">
@@ -48,7 +48,7 @@ export const MobileMenu = () => {
                   <Link
                     key={item.href}
                     to={item.href}
-                    className="text-navy py-2 px-4 hover:bg-gray-50 rounded text-sm"
+                    className="text-navy py-2 px-4 hover:bg-gray-50 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.title}
@@ -57,9 +57,7 @@ export const MobileMenu = () => {
               </div>
             </div>
             
-            <div className="px-4">
-              <NavbarUserSection />
-            </div>
+            <NavbarUserSection />
           </div>
         </div>
       )}

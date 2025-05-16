@@ -1,494 +1,100 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import TypeWriter from '@/components/TypeWriter';
-import { getImagesByCategory, getRandomImages, ImageData } from '@/data/images';
-import { ProfileWithDetails } from '@/types/database';
-import { getFeaturedProfiles } from '@/services/profiles';
-import { getDatabaseImagesByCategory } from '@/services/images';
 
-const schoolExamples = [
-  'Harvard economics major',
-  'Amherst lacrosse player',
-  'Alabama sorority member',
-  'Stanford computer science student',
-  'Duke basketball player',
-  'Berkeley entrepreneur',
-  'Yale debate team captain'
-];
+import { useEffect } from 'react';
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import Footer from '@/components/Footer';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, GraduationCap, Users, Building, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
-  const [studentImages, setStudentImages] = useState<ImageData[]>([]);
-  const [campusImages, setCampusImages] = useState<ImageData[]>([]);
-  const [profileImages, setProfileImages] = useState<ImageData[]>([]);
-  const [featuredProfiles, setFeaturedProfiles] = useState<ProfileWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    // Initialize images from database
-    const loadImages = async () => {
-      try {
-        const studentImgs = await getDatabaseImagesByCategory('students', 6);
-        const campusImgs = await getDatabaseImagesByCategory('campus', 4);
-        const profileImgs = await getDatabaseImagesByCategory('profile', 6);
-        
-        setStudentImages(studentImgs.length > 0 ? studentImgs : getImagesByCategory('students', 6));
-        setCampusImages(campusImgs.length > 0 ? campusImgs : getImagesByCategory('campus', 4));
-        setProfileImages(profileImgs.length > 0 ? profileImgs : getImagesByCategory('profile', 6));
-      } catch (error) {
-        console.error('Error fetching images:', error);
-        // Fallback to static data
-        setStudentImages(getImagesByCategory('students', 6));
-        setCampusImages(getImagesByCategory('campus', 4));
-        setProfileImages(getImagesByCategory('profile', 6));
-      }
-    };
-    
-    // Fetch featured profiles from the database
-    const loadProfiles = async () => {
-      try {
-        const dbProfiles = await getFeaturedProfiles();
-        if (dbProfiles.length > 0) {
-          setFeaturedProfiles(dbProfiles);
-        }
-      } catch (error) {
-        console.error('Error fetching profiles:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadImages();
-    loadProfiles();
-  }, []);
-
   return (
-    <div className="min-h-screen bg-soft-beige">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
       <main>
-        {/* Hero Section */}
-        <section className="relative min-h-[85vh] flex items-center bg-soft-beige">
-          <div className="absolute inset-0 overflow-hidden opacity-10">
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />
-          </div>
-          
-          <div className="container-custom relative z-10 py-16 md:py-24">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <motion.div 
-                className="max-w-2xl"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7 }}
-              >
-                <motion.h1 
-                  className="text-5xl md:text-6xl lg:text-7xl font-garamond mb-6 tracking-tight"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.8 }}
-                >
-                  Connect with a <br />
-                  <span className="font-garamond"><TypeWriter words={schoolExamples} typingSpeed={100} deletingSpeed={50} /></span>
-                </motion.h1>
-                
-                <motion.p 
-                  className="text-xl text-gray-700 mb-10 font-sans"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4, duration: 0.8 }}
-                >
-                  Book conversations with current students and alumni to gain authentic, 
-                  school-specific insights for your college journey and application process.
-                </motion.p>
-                
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6, duration: 0.6 }}
-                >
-                  <Link 
-                    to="/browse" 
-                    className="inline-block px-8 py-3 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors font-sans text-lg"
-                  >
-                    Find Your Connection
-                  </Link>
-                </motion.div>
-              </motion.div>
+        <Hero />
 
-              <motion.div
-                className="hidden lg:grid grid-cols-2 gap-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.8 }}
-              >
-                {studentImages.slice(0, 4).map((image, index) => (
-                  <motion.div 
-                    key={image.id}
-                    className="overflow-hidden rounded-lg shadow-md"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 + (index * 0.1), duration: 0.5 }}
-                    whileHover={{ y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <img 
-                      src={image.src} 
-                      alt={image.alt}
-                      className="w-full h-48 object-cover"
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
+        {/* Features Section */}
+        <section className="py-16 px-4 sm:px-6 bg-gray-50">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Discover Your Path to Success</h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Connect with alumni who've walked the path before you, get insights into universities,
+                and prepare for your academic journey.
+              </p>
             </div>
             
-            <div className="mt-16 lg:mt-24">
-              <h2 className="text-2xl font-garamond mb-6 text-center">Featured Alumni & Students</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                {featuredProfiles.map((profile, index) => (
-                  <motion.div 
-                    key={profile.id}
-                    className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-4 text-center transform transition-all duration-300 moving-element"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + (index * 0.1), duration: 0.5 }}
-                    whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                  >
-                    <div className="w-16 h-16 mx-auto rounded-full overflow-hidden mb-3">
-                      <img 
-                        src={profileImages[index % profileImages.length]?.src || profile.image || ''} 
-                        alt={`${profile.name}`} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <h3 className="text-sm font-medium font-sans line-clamp-1">{profile.name}</h3>
-                    <p className="text-xs text-gray-600 font-sans line-clamp-1">
-                      {typeof profile.school === 'string' ? profile.school : profile.school?.name}
-                    </p>
-                    <p className="text-xs text-gray-500 font-sans line-clamp-1">
-                      {typeof profile.major === 'string' ? profile.major : profile.major?.name}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Campus Section */}
-        <section className="py-20 bg-white">
-          <div className="container-custom">
-            <div className="max-w-4xl mx-auto text-center mb-12">
-              <motion.h2 
-                className="text-4xl font-garamond mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                Discover Your Perfect Campus
-              </motion.h2>
-              <motion.p 
-                className="text-xl text-gray-600 font-sans"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-              >
-                Explore universities across the country and connect with people who know them best
-              </motion.p>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {campusImages.map((image, index) => (
-                <motion.div 
-                  key={image.id} 
-                  className="overflow-hidden rounded-lg shadow-md bg-white"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                >
-                  <div className="h-56 overflow-hidden">
-                    <img 
-                      src={image.src} 
-                      alt={image.alt}
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                    />
+              <Card className="border border-gray-200 hover:shadow-lg transition-all">
+                <CardContent className="pt-6">
+                  <div className="rounded-full bg-blue-100 p-3 w-12 h-12 flex items-center justify-center mb-4">
+                    <Users className="h-6 w-6 text-blue-600" />
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-alice text-xl mb-2">{image.alt}</h3>
-                    <p className="text-gray-600 text-sm font-sans mb-4">{image.caption}</p>
-                    <Link to="/schools" className="text-navy font-medium text-sm hover:underline font-sans">
-                      Explore More
-                    </Link>
+                  <h3 className="font-bold text-lg mb-2">Connect with Alumni</h3>
+                  <p className="text-gray-600 mb-4">Get advice from graduates who've been in your shoes</p>
+                  <Link to="/browse" className="text-blue-600 font-medium flex items-center">
+                    Browse Alumni <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </CardContent>
+              </Card>
+              
+              <Card className="border border-gray-200 hover:shadow-lg transition-all">
+                <CardContent className="pt-6">
+                  <div className="rounded-full bg-green-100 p-3 w-12 h-12 flex items-center justify-center mb-4">
+                    <GraduationCap className="h-6 w-6 text-green-600" />
                   </div>
-                </motion.div>
-              ))}
-            </div>
-            
-            <div className="text-center mt-12">
-              <Link 
-                to="/schools" 
-                className="inline-block border-b border-navy text-navy hover:border-navy/70 hover:text-navy/70 transition-colors font-sans"
-              >
-                View All Schools
-              </Link>
+                  <h3 className="font-bold text-lg mb-2">University Insights</h3>
+                  <p className="text-gray-600 mb-4">Explore detailed information about universities and programs</p>
+                  <Link to="/schools" className="text-green-600 font-medium flex items-center">
+                    View Universities <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </CardContent>
+              </Card>
+              
+              <Card className="border border-gray-200 hover:shadow-lg transition-all">
+                <CardContent className="pt-6">
+                  <div className="rounded-full bg-purple-100 p-3 w-12 h-12 flex items-center justify-center mb-4">
+                    <Building className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Industry Knowledge</h3>
+                  <p className="text-gray-600 mb-4">Gain insights into different careers and industries</p>
+                  <Link to="/insights/industry" className="text-purple-600 font-medium flex items-center">
+                    Explore Industries <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </CardContent>
+              </Card>
+              
+              <Card className="border border-gray-200 hover:shadow-lg transition-all">
+                <CardContent className="pt-6">
+                  <div className="rounded-full bg-orange-100 p-3 w-12 h-12 flex items-center justify-center mb-4">
+                    <Star className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Campus Life</h3>
+                  <p className="text-gray-600 mb-4">Learn about clubs, activities, and campus culture</p>
+                  <Link to="/insights/clubs-and-greek-life" className="text-orange-600 font-medium flex items-center">
+                    Discover Campus Life <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
         
-        {/* How It Works Section */}
-        <section className="py-20 bg-soft-beige">
-          <div className="container-custom">
-            <div className="text-center mb-16">
-              <motion.h2 
-                className="text-4xl font-garamond mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                How It Works
-              </motion.h2>
-              <motion.p 
-                className="text-xl text-gray-600 max-w-2xl mx-auto font-sans"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-              >
-                Get connected with the right person to guide your college journey
-              </motion.p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              <motion.div 
-                className="bg-white p-8 rounded-xl shadow-sm relative"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-              >
-                <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100 font-alice">1</span>
-                <h3 className="text-2xl font-alice mb-3">Browse Profiles</h3>
-                <p className="text-gray-600 font-sans">
-                  Search through our diverse community of students and alumni from your target schools.
-                </p>
-              </motion.div>
-
-              <motion.div 
-                className="bg-white p-8 rounded-xl shadow-sm relative"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-              >
-                <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100 font-alice">2</span>
-                <h3 className="text-2xl font-alice mb-3">Book a Session</h3>
-                <p className="text-gray-600 font-sans">
-                  Schedule a personalized conversation at a time that works best for you.
-                </p>
-              </motion.div>
-
-              <motion.div 
-                className="bg-white p-8 rounded-xl shadow-sm relative"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-              >
-                <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100 font-alice">3</span>
-                <h3 className="text-2xl font-alice mb-3">Get Insider Insights</h3>
-                <p className="text-gray-600 font-sans">
-                  Gain authentic perspectives about academics, campus life, and admission strategies.
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials Section */}
-        <section className="py-24 bg-white">
-          <div className="container-custom">
-            <div className="text-center mb-16">
-              <motion.h2 
-                className="text-4xl font-garamond mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                What Students Say
-              </motion.h2>
-              <motion.p 
-                className="text-xl text-gray-600 max-w-2xl mx-auto font-sans"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-              >
-                Real stories from students who found their path through alumni connections
-              </motion.p>
-            </div>
-
-            <motion.div 
-              className="grid md:grid-cols-3 gap-8"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              {[
-                {
-                  quote: "Speaking with someone who had just been through the exact application process I was facing gave me insights that no guidebook could. I got accepted to my dream school!",
-                  author: "Taylor R., High School Senior",
-                  avatar: profileImages[0]?.src || "/placeholder.svg"
-                },
-                {
-                  quote: "My mentor helped me understand what classes to prioritize and which professors to seek out. This insider knowledge made my freshman year so much smoother.",
-                  author: "Jordan L., Freshman",
-                  avatar: profileImages[1]?.src || "/placeholder.svg"
-                },
-                {
-                  quote: "I was torn between two great schools until I spoke with alumni from both. Their perspectives on campus culture helped me make the best decision for me.",
-                  author: "Alex K., Transfer Student",
-                  avatar: profileImages[2]?.src || "/placeholder.svg"
-                }
-              ].map((testimonial, index) => (
-                <motion.div 
-                  key={index}
-                  className="bg-white p-8 rounded-xl shadow-sm border border-gray-100"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -5 }}
-                >
-                  <p className="text-lg mb-6 italic text-gray-700 font-sans">"{testimonial.quote}"</p>
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 rounded-full overflow-hidden mr-4 border border-gray-200">
-                      <img src={testimonial.avatar} alt={testimonial.author} className="w-full h-full object-cover" />
-                    </div>
-                    <span className="font-alice">{testimonial.author}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-            
-            <div className="mt-12 text-center">
-              <Link to="/testimonials" className="text-navy font-medium hover:underline inline-block border-b border-navy font-sans">
-                Read More Stories
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Featured Schools */}
-        <section className="py-20 bg-soft-beige">
-          <div className="container-custom">
-            <div className="text-center mb-16">
-              <motion.h2 
-                className="text-4xl font-garamond mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                Featured Schools
-              </motion.h2>
-              <motion.p 
-                className="text-xl text-gray-600 max-w-2xl mx-auto font-sans"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-              >
-                Connect with students from top universities across the country
-              </motion.p>
-            </div>
-
-            <motion.div 
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              {[
-                { name: "Harvard University", logo: "/placeholder.svg" },
-                { name: "Stanford University", logo: "/placeholder.svg" },
-                { name: "MIT", logo: "/placeholder.svg" },
-                { name: "Yale University", logo: "/placeholder.svg" },
-                { name: "Princeton University", logo: "/placeholder.svg" },
-                { name: "Columbia University", logo: "/placeholder.svg" },
-                { name: "UC Berkeley", logo: "/placeholder.svg" },
-                { name: "University of Michigan", logo: "/placeholder.svg" }
-              ].map((school, index) => (
-                <motion.div
-                  key={index}
-                  className="p-6 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-shadow text-center animate-float"
-                  style={{ animationDelay: `${index * 0.2}s` }}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: (index % 4) * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -5 }}
-                >
-                  <div className="w-16 h-16 flex items-center justify-center mb-4">
-                    <img src={school.logo} alt={school.name} className="max-w-full max-h-full object-contain" />
-                  </div>
-                  <h3 className="font-alice">{school.name}</h3>
-                </motion.div>
-              ))}
-            </motion.div>
-            
-            <div className="text-center mt-12">
-              <Link to="/schools" className="inline-block border-b border-navy text-navy hover:border-navy/70 hover:text-navy/70 transition-colors font-sans">
-                View All Schools
-              </Link>
-            </div>
-          </div>
-        </section>
-
         {/* CTA Section */}
-        <section className="py-16 bg-white">
-          <div className="container-custom">
-            <div className="max-w-4xl mx-auto text-center">
-              <motion.h2 
-                className="text-4xl font-garamond mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                Ready to find your college mentor?
-              </motion.h2>
-              <motion.p 
-                className="text-xl mb-10 text-gray-700 font-sans"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-              >
-                Get personalized insights that can transform your college experience.
-                Start your journey today!
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-              >
-                <Link to="/browse" className="inline-block px-8 py-3 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors font-sans text-lg">
-                  Browse Alumni
-                </Link>
-              </motion.div>
+        <section className="py-12 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to start your journey?</h2>
+            <p className="text-gray-600 mb-6">Create an account today and get personalized guidance for your academic future.</p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+                <Link to="/auth">Sign Up Now</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/browse">Browse Alumni</Link>
+              </Button>
             </div>
           </div>
         </section>

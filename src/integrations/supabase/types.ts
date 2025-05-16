@@ -850,33 +850,6 @@ export type Database = {
         }
         Relationships: []
       }
-      site_images: {
-        Row: {
-          alt_text: string | null
-          caption: string | null
-          category: string
-          created_at: string
-          id: string
-          url: string
-        }
-        Insert: {
-          alt_text?: string | null
-          caption?: string | null
-          category: string
-          created_at?: string
-          id?: string
-          url: string
-        }
-        Update: {
-          alt_text?: string | null
-          caption?: string | null
-          category?: string
-          created_at?: string
-          id?: string
-          url?: string
-        }
-        Relationships: []
-      }
       tags: {
         Row: {
           created_at: string
