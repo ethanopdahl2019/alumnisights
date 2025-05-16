@@ -20,7 +20,7 @@ export default {
 		},
 		fontFamily: {
 			'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-			'alice': ['Alice', 'Georgia', 'serif']
+			'garamond': ['EB Garamond', 'Georgia', 'serif']
 		},
 		extend: {
 			colors: {

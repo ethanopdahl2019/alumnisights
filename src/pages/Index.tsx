@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -6,6 +7,8 @@ import Footer from '@/components/Footer';
 import TypeWriter from '@/components/TypeWriter';
 import { getImagesByCategory, getRandomImages, ImageData } from '@/data/images';
 import profiles from '@/data/profiles';
+import { getFeaturedProfiles } from '@/services/profiles';
+import { ProfileWithDetails } from '@/types/database';
 
 const schoolExamples = [
   'Harvard economics major',
@@ -21,7 +24,8 @@ const Index = () => {
   const [studentImages, setStudentImages] = useState<ImageData[]>([]);
   const [campusImages, setCampusImages] = useState<ImageData[]>([]);
   const [profileImages, setProfileImages] = useState<ImageData[]>([]);
-  const [featuredProfiles, setFeaturedProfiles] = useState(profiles.slice(0, 6));
+  const [featuredProfiles, setFeaturedProfiles] = useState<ProfileWithDetails[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Initialize images
@@ -29,10 +33,27 @@ const Index = () => {
     setCampusImages(getImagesByCategory('campus', 4));
     setProfileImages(getImagesByCategory('profile', 6));
     
-    // Shuffle featured profiles every 10 seconds
+    // Fetch featured profiles from the database
+    const loadProfiles = async () => {
+      try {
+        const dbProfiles = await getFeaturedProfiles();
+        setFeaturedProfiles(dbProfiles.length > 0 ? dbProfiles : profiles.slice(0, 6));
+      } catch (error) {
+        console.error('Error fetching profiles:', error);
+        setFeaturedProfiles(profiles.slice(0, 6));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadProfiles();
+    
+    // Refresh featured profiles every 10 seconds if using mock data
     const interval = setInterval(() => {
-      const shuffled = [...profiles].sort(() => 0.5 - Math.random());
-      setFeaturedProfiles(shuffled.slice(0, 6));
+      if (featuredProfiles.length === 0) {
+        const shuffled = [...profiles].sort(() => 0.5 - Math.random());
+        setFeaturedProfiles(shuffled.slice(0, 6));
+      }
     }, 10000);
     
     return () => clearInterval(interval);
@@ -58,13 +79,13 @@ const Index = () => {
                 transition={{ duration: 0.7 }}
               >
                 <motion.h1 
-                  className="text-5xl md:text-6xl lg:text-7xl font-alice mb-6 tracking-tight"
+                  className="text-5xl md:text-6xl lg:text-7xl font-garamond mb-6 tracking-tight"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.8 }}
                 >
                   Connect with a <br />
-                  <span className="font-alice"><TypeWriter words={schoolExamples} typingSpeed={100} deletingSpeed={50} /></span>
+                  <span className="font-garamond"><TypeWriter words={schoolExamples} typingSpeed={100} deletingSpeed={50} /></span>
                 </motion.h1>
                 
                 <motion.p 
@@ -118,7 +139,7 @@ const Index = () => {
             </div>
             
             <div className="mt-16 lg:mt-24">
-              <h2 className="text-2xl font-alice mb-6 text-center">Featured Alumni & Students</h2>
+              <h2 className="text-2xl font-garamond mb-6 text-center">Featured Alumni & Students</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {featuredProfiles.map((profile, index) => (
                   <motion.div 
@@ -137,8 +158,8 @@ const Index = () => {
                       />
                     </div>
                     <h3 className="text-sm font-medium font-sans line-clamp-1">{profile.name}</h3>
-                    <p className="text-xs text-gray-600 font-sans line-clamp-1">{profile.school}</p>
-                    <p className="text-xs text-gray-500 font-sans line-clamp-1">{profile.major}</p>
+                    <p className="text-xs text-gray-600 font-sans line-clamp-1">{profile.school?.name || profile.school}</p>
+                    <p className="text-xs text-gray-500 font-sans line-clamp-1">{profile.major?.name || profile.major}</p>
                   </motion.div>
                 ))}
               </div>
@@ -151,7 +172,7 @@ const Index = () => {
           <div className="container-custom">
             <div className="max-w-4xl mx-auto text-center mb-12">
               <motion.h2 
-                className="text-4xl font-alice mb-4"
+                className="text-4xl font-garamond mb-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -215,7 +236,7 @@ const Index = () => {
           <div className="container-custom">
             <div className="text-center mb-16">
               <motion.h2 
-                className="text-4xl font-alice mb-4"
+                className="text-4xl font-garamond mb-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -288,7 +309,7 @@ const Index = () => {
           <div className="container-custom">
             <div className="text-center mb-16">
               <motion.h2 
-                className="text-4xl font-alice mb-4"
+                className="text-4xl font-garamond mb-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -364,7 +385,7 @@ const Index = () => {
           <div className="container-custom">
             <div className="text-center mb-16">
               <motion.h2 
-                className="text-4xl font-alice mb-4"
+                className="text-4xl font-garamond mb-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -431,7 +452,7 @@ const Index = () => {
           <div className="container-custom">
             <div className="max-w-4xl mx-auto text-center">
               <motion.h2 
-                className="text-4xl font-alice mb-6"
+                className="text-4xl font-garamond mb-6"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}

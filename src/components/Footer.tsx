@@ -1,14 +1,16 @@
 
 import { Link } from 'react-router-dom';
 
+const logoPath = "/lovable-uploads/fac2fbdd-e38c-4d44-a6ff-a1e179fd7a57.png";
+
 const Footer = () => {
   return (
     <footer className="bg-gray-50 py-16">
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Link to="/" className="text-xl font-bold text-navy">
-              AlumniSights
+            <Link to="/" className="flex items-center mb-4">
+              <img src={logoPath} alt="AlumniSights Logo" className="h-4" />
             </Link>
             <p className="mt-4 text-gray-600">
               Connecting prospective students with authentic insights from 

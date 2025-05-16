@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
@@ -12,7 +13,7 @@ import { getUniversityLogo } from "@/services/landing-page";
 import { useAuth } from "@/components/AuthProvider";
 import { generateUniversityContent } from "@/services/ai/generateUniversityContent";
 import { toast } from "sonner";
-import { Wand } from "lucide-react";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
 const UndergraduateAdmissions = () => {
@@ -24,6 +25,7 @@ const UndergraduateAdmissions = () => {
   const alphabeticalLetters = getAlphabeticalLetters();
   const universitiesByLetter = getUniversitiesByLetter();
   const { isAdmin } = useAuth();
+  const observerRef = useRef<IntersectionObserver | null>(null);
   
   // Fetch university logos efficiently
   useEffect(() => {
@@ -65,7 +67,8 @@ const UndergraduateAdmissions = () => {
     if (letterRefs.current[letter]) {
       letterRefs.current[letter]?.scrollIntoView({
         behavior: "smooth",
-        block: "start"
+        block: "start",
+        inline: "nearest"
       });
     }
   };
@@ -76,23 +79,51 @@ const UndergraduateAdmissions = () => {
       setActiveLetter(alphabeticalLetters[0]);
     }
     
-    // Setup intersection observer to update active letter on scroll
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const letter = entry.target.getAttribute('data-letter');
-          if (letter) setActiveLetter(letter);
+    // Clean up previous observer if exists
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+    
+    // Create a new intersection observer
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        // Find the entry with the highest intersection ratio
+        const visibleEntries = entries.filter(entry => entry.isIntersecting);
+        
+        if (visibleEntries.length > 0) {
+          let highestEntry = visibleEntries[0];
+          
+          visibleEntries.forEach(entry => {
+            if (entry.intersectionRatio > highestEntry.intersectionRatio) {
+              highestEntry = entry;
+            }
+          });
+          
+          const letter = highestEntry.target.getAttribute('data-letter');
+          if (letter && letter !== activeLetter) {
+            setActiveLetter(letter);
+          }
         }
-      });
-    }, { threshold: 0.5 });
+      },
+      {
+        rootMargin: '-100px 0px -300px 0px',
+        threshold: [0.1, 0.5, 0.9]
+      }
+    );
     
     // Observe all letter section headers
-    Object.values(letterRefs.current).forEach(ref => {
-      if (ref) observer.observe(ref);
+    Object.entries(letterRefs.current).forEach(([letter, ref]) => {
+      if (ref) {
+        observerRef.current?.observe(ref);
+      }
     });
     
-    return () => observer.disconnect();
-  }, [alphabeticalLetters.length]);
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [alphabeticalLetters, letterRefs.current]);
 
   // Generate content for a specific university
   const handleGenerateContent = async (universityId: string, universityName: string) => {
@@ -120,7 +151,7 @@ const UndergraduateAdmissions = () => {
       } else {
         toast.error(`Failed to generate content for ${universityName}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating content:", error);
       toast.error(`Error generating content: ${error.message || "Unknown error"}`);
     } finally {
@@ -160,15 +191,20 @@ const UndergraduateAdmissions = () => {
 
       <main className="container-custom py-12">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+          <motion.div 
+            className="mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-3xl md:text-4xl font-garamond font-bold text-navy mb-4">
               Undergraduate Admissions Insights
             </h1>
             <p className="text-lg text-gray-600 mb-6">
               Expert advice and insights on undergraduate admissions processes at top universities
             </p>
             <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
-          </div>
+          </motion.div>
 
           <div className="flex gap-6">
             {/* Alphabetical navigation sidebar */}
@@ -181,51 +217,64 @@ const UndergraduateAdmissions = () => {
             {/* Main content area with universities */}
             <div className="flex-1">
               {alphabeticalLetters.map((letter) => (
-                <div 
+                <motion.div 
                   key={letter}
                   ref={el => letterRefs.current[letter] = el}
                   data-letter={letter}
                   className="mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  viewport={{ once: true }}
                 >
-                  <h2 className="text-2xl font-bold text-navy mb-4 px-2 border-l-4 border-blue-500">{letter}</h2>
+                  <h2 className="text-2xl font-garamond font-bold text-navy mb-4 px-2 border-l-4 border-blue-500">{letter}</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {universitiesByLetter[letter]?.map((university) => (
-                      <Card key={university.id} className="overflow-hidden border shadow hover:shadow-md h-full">
-                        <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                          <Link
-                            to={`/insights/undergraduate-admissions/${university.id}`}
-                            className="block w-full transform transition-transform hover:scale-105 focus:outline-none"
-                          >
-                            <div className="mb-3 h-16 w-16 flex items-center justify-center mx-auto">
-                              {renderUniversityLogo(university.id, university.name)}
-                            </div>
-                            <h3 className="font-medium text-navy">
-                              {university.name}
-                            </h3>
-                          </Link>
-                          
-                          {isAdmin && (
-                            <div className="mt-3 w-full">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="w-full"
-                                disabled={generatingContentFor === university.id}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleGenerateContent(university.id, university.name);
-                                }}
+                      <motion.div 
+                        key={university.id}
+                        whileHover={{ y: -5 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Card className="overflow-hidden border shadow hover:shadow-md h-full">
+                          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                            <Link
+                              to={`/insights/undergraduate-admissions/${university.id}`}
+                              className="block w-full transform transition-transform hover:scale-105 focus:outline-none"
+                            >
+                              <motion.div 
+                                className="mb-3 h-16 w-16 flex items-center justify-center mx-auto"
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ type: "spring", stiffness: 400 }}
                               >
-                                <Wand className="h-3 w-3 mr-1" />
-                                {generatingContentFor === university.id ? "Generating..." : "Generate AI Content"}
-                              </Button>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
+                                {renderUniversityLogo(university.id, university.name)}
+                              </motion.div>
+                              <h3 className="font-medium font-garamond text-navy">
+                                {university.name}
+                              </h3>
+                            </Link>
+                            
+                            {isAdmin && (
+                              <div className="mt-3 w-full">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="w-full"
+                                  disabled={generatingContentFor === university.id}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleGenerateContent(university.id, university.name);
+                                  }}
+                                >
+                                  {generatingContentFor === university.id ? "Generating..." : "Generate AI Content"}
+                                </Button>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
