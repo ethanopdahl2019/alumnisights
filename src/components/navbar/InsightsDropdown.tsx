@@ -6,6 +6,7 @@ import {
   NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuList,
+  NavigationMenuLink,
   NavigationMenuTrigger
 } from "@/components/ui/navigation-menu";
 import { Link } from "react-router-dom";
