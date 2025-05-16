@@ -20,7 +20,7 @@ export default {
 		},
 		fontFamily: {
 			'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-			'serif': ['Playfair Display', 'Georgia', 'serif']
+			'alice': ['Alice', 'Georgia', 'serif']
 		},
 		extend: {
 			colors: {
@@ -81,7 +81,8 @@ export default {
 					'club-text': '#915005',
 					study: '#F5EDFF',
 					'study-text': '#6B2BAD'
-				}
+				},
+				'soft-beige': '#F9F6F2',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

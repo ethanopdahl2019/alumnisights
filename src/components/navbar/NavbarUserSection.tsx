@@ -44,7 +44,7 @@ export const NavbarUserSection = () => {
 
   if (!user) {
     return (
-      <Link to="/auth" className="text-sm font-medium text-navy hover:text-navy/80 transition-colors">
+      <Link to="/auth" className="text-sm font-sans text-navy hover:text-navy/80 transition-colors border-b border-transparent hover:border-navy">
         Sign In
       </Link>
     );
@@ -54,18 +54,18 @@ export const NavbarUserSection = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer"
+          className="flex items-center gap-3 p-1.5 rounded-full bg-soft-beige hover:bg-gray-100 cursor-pointer transition-colors duration-200"
           title={user.email}
         >
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 border border-gray-200">
             <AvatarImage src={user?.user_metadata?.avatar_url} alt={user.email || "profile"} />
-            <AvatarFallback>{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
+            <AvatarFallback className="bg-navy/5 text-navy font-alice">{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline text-sm font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
+          <span className="hidden md:inline text-sm font-sans text-navy pr-2">{user.user_metadata?.first_name || user.email?.split('@')[0]}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="font-serif">My Account</DropdownMenuLabel>
+        <DropdownMenuLabel className="font-alice">My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/account')} className="cursor-pointer">
           <User className="mr-2 h-4 w-4" />
