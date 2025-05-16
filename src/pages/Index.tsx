@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -6,9 +5,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TypeWriter from '@/components/TypeWriter';
 import { getImagesByCategory, getRandomImages, ImageData } from '@/data/images';
-import profiles from '@/data/profiles';
-import { getFeaturedProfiles } from '@/services/profiles';
 import { ProfileWithDetails } from '@/types/database';
+import { getFeaturedProfiles } from '@/services/profiles';
+import { getDatabaseImagesByCategory } from '@/services/images';
 
 const schoolExamples = [
   'Harvard economics major',
@@ -28,35 +27,41 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Initialize images
-    setStudentImages(getImagesByCategory('students', 6));
-    setCampusImages(getImagesByCategory('campus', 4));
-    setProfileImages(getImagesByCategory('profile', 6));
+    // Initialize images from database
+    const loadImages = async () => {
+      try {
+        const studentImgs = await getDatabaseImagesByCategory('students', 6);
+        const campusImgs = await getDatabaseImagesByCategory('campus', 4);
+        const profileImgs = await getDatabaseImagesByCategory('profile', 6);
+        
+        setStudentImages(studentImgs.length > 0 ? studentImgs : getImagesByCategory('students', 6));
+        setCampusImages(campusImgs.length > 0 ? campusImgs : getImagesByCategory('campus', 4));
+        setProfileImages(profileImgs.length > 0 ? profileImgs : getImagesByCategory('profile', 6));
+      } catch (error) {
+        console.error('Error fetching images:', error);
+        // Fallback to static data
+        setStudentImages(getImagesByCategory('students', 6));
+        setCampusImages(getImagesByCategory('campus', 4));
+        setProfileImages(getImagesByCategory('profile', 6));
+      }
+    };
     
     // Fetch featured profiles from the database
     const loadProfiles = async () => {
       try {
         const dbProfiles = await getFeaturedProfiles();
-        setFeaturedProfiles(dbProfiles.length > 0 ? dbProfiles : profiles.slice(0, 6));
+        if (dbProfiles.length > 0) {
+          setFeaturedProfiles(dbProfiles);
+        }
       } catch (error) {
         console.error('Error fetching profiles:', error);
-        setFeaturedProfiles(profiles.slice(0, 6));
       } finally {
         setIsLoading(false);
       }
     };
     
+    loadImages();
     loadProfiles();
-    
-    // Refresh featured profiles every 10 seconds if using mock data
-    const interval = setInterval(() => {
-      if (featuredProfiles.length === 0) {
-        const shuffled = [...profiles].sort(() => 0.5 - Math.random());
-        setFeaturedProfiles(shuffled.slice(0, 6));
-      }
-    }, 10000);
-    
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -152,14 +157,18 @@ const Index = () => {
                   >
                     <div className="w-16 h-16 mx-auto rounded-full overflow-hidden mb-3">
                       <img 
-                        src={profileImages[index % profileImages.length]?.src || profile.image} 
+                        src={profileImages[index % profileImages.length]?.src || profile.image || ''} 
                         alt={`${profile.name}`} 
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <h3 className="text-sm font-medium font-sans line-clamp-1">{profile.name}</h3>
-                    <p className="text-xs text-gray-600 font-sans line-clamp-1">{profile.school?.name || profile.school}</p>
-                    <p className="text-xs text-gray-500 font-sans line-clamp-1">{profile.major?.name || profile.major}</p>
+                    <p className="text-xs text-gray-600 font-sans line-clamp-1">
+                      {typeof profile.school === 'string' ? profile.school : profile.school?.name}
+                    </p>
+                    <p className="text-xs text-gray-500 font-sans line-clamp-1">
+                      {typeof profile.major === 'string' ? profile.major : profile.major?.name}
+                    </p>
                   </motion.div>
                 ))}
               </div>

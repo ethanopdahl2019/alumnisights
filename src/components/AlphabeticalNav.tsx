@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface AlphabeticalNavProps {
@@ -11,18 +11,19 @@ interface AlphabeticalNavProps {
 const AlphabeticalNav = ({ letters, onLetterClick, activeLetter }: AlphabeticalNavProps) => {
   // Adding scroll highlight functionality
   const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Add scroll listener to update active letter based on scroll position
     const handleScroll = () => {
       setIsScrolling(true);
       // Clear the timeout if it exists
-      if (window.scrollTimeout) {
-        clearTimeout(window.scrollTimeout);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
       }
       
       // Set a timeout to detect when scrolling stops
-      window.scrollTimeout = setTimeout(() => {
+      scrollTimeoutRef.current = window.setTimeout(() => {
         setIsScrolling(false);
       }, 150);
     };
@@ -30,8 +31,8 @@ const AlphabeticalNav = ({ letters, onLetterClick, activeLetter }: AlphabeticalN
     window.addEventListener('scroll', handleScroll);
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (window.scrollTimeout) {
-        clearTimeout(window.scrollTimeout);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
       }
     };
   }, []);
