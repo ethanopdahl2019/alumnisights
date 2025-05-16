@@ -74,8 +74,7 @@ Respond with a valid JSON object with properties: overview, admissionStats, appl
       data = JSON.parse(content);
     } catch (err) {
       // Try to extract JSON from a Markdown code block if necessary
-      const match = content.match(/
-/s);
+      const match = content.match(/```json\n([\s\S]*)\n```/s);
       if (match) {
         data = JSON.parse(match[1]);
       } else {
