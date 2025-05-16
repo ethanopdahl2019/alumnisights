@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,7 +19,6 @@ export default {
 		},
 		fontFamily: {
 			'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-			'serif': ['Playfair Display', 'Georgia', 'serif'],
 		},
 		extend: {
 			colors: {
@@ -71,11 +69,6 @@ export default {
 				navy: {
 					DEFAULT: '#1A1F2C',
 					light: '#384160'
-				},
-				blue: {
-					50: '#EEF4FF',
-					100: '#E0EAFF',
-					200: '#C7D7FE',
 				},
 				tag: {
 					major: '#E9EFFF',
