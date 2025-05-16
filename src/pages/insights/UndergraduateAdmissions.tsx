@@ -1,23 +1,29 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import AlphabeticalNav from "@/components/AlphabeticalNav";
 import DefaultLogo from "./universities/DefaultLogo";
-import { GraduationCap } from "lucide-react";
 import { getAlphabeticalLetters, getUniversitiesByLetter } from "./universities/universities-data";
 import { getUniversityLogo } from "@/services/landing-page";
+import { useAuth } from "@/components/AuthProvider";
+import { generateUniversityContent } from "@/services/ai/generateUniversityContent";
+import { toast } from "sonner";
+import { Wand } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const UndergraduateAdmissions = () => {
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
   const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
   const [isLoadingLogos, setIsLoadingLogos] = useState(true);
+  const [generatingContentFor, setGeneratingContentFor] = useState<string | null>(null);
   const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const alphabeticalLetters = getAlphabeticalLetters();
   const universitiesByLetter = getUniversitiesByLetter();
+  const { isAdmin } = useAuth();
   
   // Fetch university logos efficiently
   useEffect(() => {
@@ -88,6 +94,40 @@ const UndergraduateAdmissions = () => {
     return () => observer.disconnect();
   }, [alphabeticalLetters.length]);
 
+  // Generate content for a specific university
+  const handleGenerateContent = async (universityId: string, universityName: string) => {
+    setGeneratingContentFor(universityId);
+    toast.info(`Generating content for ${universityName}...`);
+    
+    try {
+      const content = await generateUniversityContent(universityName);
+      if (content) {
+        // Update the content in the database
+        const { data, error } = await supabase.from('universities_content').upsert({
+          id: universityId,
+          name: universityName,
+          overview: content.overview || "",
+          admission_stats: content.admissionStats || "",
+          application_requirements: content.applicationRequirements || "",
+          alumni_insights: content.alumniInsights || ""
+        });
+        
+        if (error) {
+          throw error;
+        }
+        
+        toast.success(`Generated and saved content for ${universityName}`);
+      } else {
+        toast.error(`Failed to generate content for ${universityName}`);
+      }
+    } catch (error) {
+      console.error("Error generating content:", error);
+      toast.error(`Error generating content: ${error.message || "Unknown error"}`);
+    } finally {
+      setGeneratingContentFor(null);
+    }
+  };
+
   // Render university logo component
   const renderUniversityLogo = (universityId: string, universityName: string) => {
     const logo = universityLogos[universityId];
@@ -104,7 +144,7 @@ const UndergraduateAdmissions = () => {
     
     return (
       <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
-        <GraduationCap className="h-8 w-8 text-slate-500" />
+        <DefaultLogo name={universityName} className="h-8 w-8 text-slate-500" />
       </div>
     );
   };
@@ -150,22 +190,39 @@ const UndergraduateAdmissions = () => {
                   <h2 className="text-2xl font-bold text-navy mb-4 px-2 border-l-4 border-blue-500">{letter}</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {universitiesByLetter[letter]?.map((university) => (
-                      <Link
-                        key={university.id}
-                        to={`/insights/undergraduate-admissions/${university.id}`}
-                        className="transform transition-transform hover:scale-105 focus:outline-none"
-                      >
-                        <Card className="overflow-hidden border shadow hover:shadow-md h-full">
-                          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                            <div className="mb-3 h-16 w-16 flex items-center justify-center">
+                      <Card key={university.id} className="overflow-hidden border shadow hover:shadow-md h-full">
+                        <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                          <Link
+                            to={`/insights/undergraduate-admissions/${university.id}`}
+                            className="block w-full transform transition-transform hover:scale-105 focus:outline-none"
+                          >
+                            <div className="mb-3 h-16 w-16 flex items-center justify-center mx-auto">
                               {renderUniversityLogo(university.id, university.name)}
                             </div>
                             <h3 className="font-medium text-navy">
                               {university.name}
                             </h3>
-                          </CardContent>
-                        </Card>
-                      </Link>
+                          </Link>
+                          
+                          {isAdmin && (
+                            <div className="mt-3 w-full">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="w-full"
+                                disabled={generatingContentFor === university.id}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleGenerateContent(university.id, university.name);
+                                }}
+                              >
+                                <Wand className="h-3 w-3 mr-1" />
+                                {generatingContentFor === university.id ? "Generating..." : "Generate AI Content"}
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 </div>
