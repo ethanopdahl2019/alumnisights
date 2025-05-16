@@ -14,7 +14,6 @@ const Navbar = () => {
       <div className="container-custom flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img src={logoPath} alt="AlumniSights Logo" className="h-5" />
-          <span className="font-serif text-sm text-navy">AlumniSights</span>
         </Link>
         
         {isMobile ? <MobileMenu /> : <DesktopNavLinks />}
