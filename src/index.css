@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -56,7 +58,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tight;
+    @apply font-serif font-medium tracking-tight;
   }
 
   h1 {
@@ -69,6 +71,10 @@
 
   h3 {
     @apply text-2xl md:text-3xl;
+  }
+
+  p {
+    @apply font-sans;
   }
 }
 
@@ -105,12 +111,16 @@
     @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col;
   }
   
-  .btn-primary {
-    @apply inline-block border border-navy bg-navy text-white px-6 py-3 rounded-lg transition-all hover:bg-navy/90;
+  .clickable-element {
+    @apply inline-flex items-center justify-center whitespace-nowrap gap-2 font-medium transition-colors rounded-lg cursor-pointer border border-transparent hover:bg-gray-50;
   }
   
-  .btn-secondary {
-    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-gray-50;
+  .clickable-element-primary {
+    @apply bg-navy text-white hover:bg-navy/90 border-navy;
+  }
+  
+  .clickable-element-secondary {
+    @apply border border-navy text-navy hover:bg-gray-50;
   }
   
   .filter-pill {
@@ -119,6 +129,30 @@
   
   .filter-pill-active {
     @apply bg-navy text-white border-navy;
+  }
+
+  .section-spacing {
+    @apply py-16 md:py-24;
+  }
+
+  .testimonial-card {
+    @apply bg-white border border-gray-200 rounded-lg shadow-sm p-6 transition-transform hover:-translate-y-1;
+  }
+  
+  .feature-section {
+    @apply bg-gray-50 py-16 md:py-24;
+  }
+
+  .featured-profiles {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+
+  .featured-schools {
+    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600;
   }
 }
 

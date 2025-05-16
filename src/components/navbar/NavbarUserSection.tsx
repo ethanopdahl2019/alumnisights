@@ -44,7 +44,7 @@ export const NavbarUserSection = () => {
 
   if (!user) {
     return (
-      <Link to="/auth" className="ml-2 px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 font-medium transition-colors">
+      <Link to="/auth" className="text-sm font-medium text-navy hover:text-navy/80 transition-colors">
         Sign In
       </Link>
     );
@@ -54,7 +54,7 @@ export const NavbarUserSection = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200"
+          className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer"
           title={user.email}
         >
           <Avatar className="h-8 w-8">
@@ -65,35 +65,35 @@ export const NavbarUserSection = () => {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel className="font-serif">My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/account')}>
+        <DropdownMenuItem onClick={() => navigate('/account')} className="cursor-pointer">
           <User className="mr-2 h-4 w-4" />
-          View Account
+          <span className="font-sans text-sm">View Account</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={goToDashboard}>
-          Dashboard
+        <DropdownMenuItem onClick={goToDashboard} className="cursor-pointer">
+          <span className="font-sans text-sm">Dashboard</span>
         </DropdownMenuItem>
         
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center">
+            <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center cursor-pointer">
               <ShieldAlert className="mr-2 h-4 w-4" />
-              Admin Dashboard
+              <span className="font-sans text-sm">Admin Dashboard</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/student-dashboard')}>
-              Student Dashboard
+            <DropdownMenuItem onClick={() => navigate('/student-dashboard')} className="cursor-pointer">
+              <span className="font-sans text-sm">Student Dashboard</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')}>
-              Mentor Dashboard
+            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')} className="cursor-pointer">
+              <span className="font-sans text-sm">Mentor Dashboard</span>
             </DropdownMenuItem>
           </>
         )}
         
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          Sign out
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+          <span className="font-sans text-sm">Sign out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

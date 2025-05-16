@@ -5,7 +5,6 @@ import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger
 } from "@/components/ui/navigation-menu";
@@ -44,7 +43,7 @@ export const InsightsDropdown = () => {
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuTrigger 
-            className="bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent text-navy font-medium hover:text-navy/80 px-0"
+            className="bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent text-navy text-sm font-medium hover:text-navy/80 px-0"
             onClick={() => setOpen(!open)}
             onPointerEnter={(e) => e.preventDefault()} // Disable hover behavior
             onPointerLeave={(e) => e.preventDefault()} // Disable hover behavior

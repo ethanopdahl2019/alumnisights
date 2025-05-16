@@ -39,17 +39,17 @@ const SchoolActivityLanding = () => {
   }, [schoolId, activityId]);
 
   return (
-    <div>
+    <div className="bg-white min-h-screen">
       <Navbar />
-      <main className="container-custom py-8">
-        <h1 className="text-3xl font-bold mb-4">
+      <main className="container-custom py-12">
+        <h1 className="text-3xl font-serif font-medium mb-6">
           {school?.name} &middot; {activity?.name}
         </h1>
         <div className="space-y-6">
           {paragraphs.length === 0
-            ? <p>No insights about this school/activity yet.</p>
+            ? <p className="text-lg font-sans text-gray-700">No insights about this school/activity yet.</p>
             : paragraphs.map((p, i) => (
-              <div key={i} className="bg-gray-50 p-5 rounded-lg">{p}</div>
+              <div key={i} className="bg-gray-50 p-6 rounded-lg border border-gray-100 font-sans">{p}</div>
             ))}
         </div>
       </main>

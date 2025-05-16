@@ -1,66 +1,58 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white py-4 shadow-md">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center justify-between">
-            <Link to="/" className="text-2xl font-bold text-gray-800">
-              Alumni Network
-            </Link>
-            <div>
-              <Link to="/auth" className="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
-                Sign In
-              </Link>
-              <Link to="/sign-up" className="ml-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700">
-                Sign Up
-              </Link>
-            </div>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white">
+      <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
-        <section className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to the Alumni Network
+      <main className="container mx-auto px-4 py-12">
+        <section className="text-center max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-serif font-medium mb-6 text-gray-800">
+            Connect with Alumni Network
           </h1>
-          <p className="text-lg text-gray-700 mb-8">
-            Connect with alumni, share experiences, and build your professional network.
+          <p className="text-xl text-gray-700 mb-8 font-sans">
+            Find mentors, gain insights, and make informed decisions about your educational journey.
           </p>
-          <Link to="/browse" className="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-700">
-            Browse Alumni
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link to="/browse" className="px-8 py-3 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors font-sans">
+              Browse Alumni
+            </Link>
+            <Link to="/auth" className="px-8 py-3 border border-navy text-navy rounded-lg hover:bg-gray-50 transition-colors font-sans">
+              Sign In
+            </Link>
+          </div>
         </section>
 
-        <section className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <section className="mt-16">
+          <h2 className="text-2xl font-serif font-medium text-gray-900 mb-6 text-center">
             Featured Alumni
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-serif text-gray-900 mb-2">
                 John Doe
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-700 font-sans">
                 Software Engineer at Google
               </p>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-serif text-gray-900 mb-2">
                 Jane Smith
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-700 font-sans">
                 Marketing Manager at Amazon
               </p>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-serif text-gray-900 mb-2">
                 David Lee
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-700 font-sans">
                 Data Scientist at Facebook
               </p>
             </div>
@@ -68,11 +60,7 @@ const LandingPage = () => {
         </section>
       </main>
 
-      <footer className="bg-gray-200 py-4 text-center">
-        <p className="text-gray-700">
-          &copy; 2023 Alumni Network
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 };

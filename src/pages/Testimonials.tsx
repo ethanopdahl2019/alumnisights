@@ -2,7 +2,6 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 const Testimonials = () => {
@@ -51,9 +50,9 @@ const Testimonials = () => {
       
       <main className="py-12 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 text-center">Student Testimonials</h1>
+          <h1 className="text-3xl md:text-4xl font-serif font-medium text-gray-900 mb-6 text-center">Student Testimonials</h1>
           
-          <p className="text-lg text-gray-700 mb-12 max-w-3xl mx-auto text-center">
+          <p className="text-lg text-gray-700 mb-12 max-w-3xl mx-auto text-center font-sans">
             Hear from students who have used AlumniSights to connect with mentors and gain valuable insights 
             that helped them make informed decisions about their education.
           </p>
@@ -66,23 +65,23 @@ const Testimonials = () => {
                     <img src={testimonial.image} alt={testimonial.name} className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <h3 className="font-medium">{testimonial.name}</h3>
-                    <p className="text-sm text-gray-600">{testimonial.role}</p>
+                    <h3 className="font-serif">{testimonial.name}</h3>
+                    <p className="text-sm text-gray-600 font-sans">{testimonial.role}</p>
                   </div>
                 </div>
-                <p className="text-gray-700 italic flex-grow">"{testimonial.quote}"</p>
+                <p className="text-gray-700 italic flex-grow font-sans">"{testimonial.quote}"</p>
               </div>
             ))}
           </div>
           
           <div className="bg-gray-50 p-8 rounded-lg border border-gray-200 text-center max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold mb-4">Ready to find your mentor?</h2>
-            <p className="text-gray-700 mb-6">
+            <h2 className="text-2xl font-serif mb-4">Ready to find your mentor?</h2>
+            <p className="text-gray-700 mb-6 font-sans">
               Join thousands of students who have found valuable guidance through AlumniSights.
             </p>
-            <Button asChild size="lg">
-              <Link to="/browse">Browse Mentors Now</Link>
-            </Button>
+            <Link to="/browse" className="inline-block px-8 py-3 bg-navy text-white rounded-lg hover:bg-navy/90 transition-colors font-sans text-lg">
+              Browse Mentors Now
+            </Link>
           </div>
         </div>
       </main>
