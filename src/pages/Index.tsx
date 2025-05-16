@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -6,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TypeWriter from '@/components/TypeWriter';
 import { getImagesByCategory, getRandomImages, ImageData } from '@/data/images';
-import { profiles } from '@/data/profiles';
+import profiles from '@/data/profiles';
 
 const schoolExamples = [
   'Harvard economics major',
