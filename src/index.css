@@ -55,6 +55,7 @@
     @apply bg-white text-navy font-sans;
   }
 
+  /* Use serif font for headings */
   h1, h2, h3, h4, h5, h6 {
     @apply font-medium tracking-tight;
   }
@@ -119,6 +120,15 @@
   
   .filter-pill-active {
     @apply bg-navy text-white border-navy;
+  }
+
+  /* Add font family utilities */
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .font-sans {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
 
