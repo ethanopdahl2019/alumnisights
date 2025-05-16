@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -56,7 +58,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tight;
+    @apply font-serif font-medium tracking-tight;
   }
 
   h1 {
@@ -69,6 +71,10 @@
 
   h3 {
     @apply text-2xl md:text-3xl;
+  }
+
+  p {
+    @apply font-sans;
   }
 }
 
@@ -102,15 +108,15 @@
   }
   
   .profile-card {
-    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col;
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col cursor-pointer;
   }
   
   .btn-primary {
-    @apply inline-block border border-navy bg-navy text-white px-6 py-3 rounded-lg transition-all hover:bg-navy/90;
+    @apply inline-block border border-navy bg-navy text-white px-6 py-3 rounded-lg transition-all hover:bg-navy/90 cursor-pointer;
   }
   
   .btn-secondary {
-    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-gray-50;
+    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-gray-50 cursor-pointer;
   }
   
   .filter-pill {
@@ -119,6 +125,18 @@
   
   .filter-pill-active {
     @apply bg-navy text-white border-navy;
+  }
+
+  .soft-section {
+    @apply bg-soft-gray py-24;
+  }
+
+  .heading-serif {
+    @apply font-serif font-medium tracking-tight;
+  }
+
+  .text-sans {
+    @apply font-sans;
   }
 }
 

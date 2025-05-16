@@ -1,78 +1,72 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white py-4 shadow-md">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center justify-between">
-            <Link to="/" className="text-2xl font-bold text-gray-800">
-              Alumni Network
-            </Link>
-            <div>
-              <Link to="/auth" className="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
-                Sign In
-              </Link>
-              <Link to="/sign-up" className="ml-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700">
-                Sign Up
-              </Link>
-            </div>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white">
+      <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
-        <section className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+      <main className="container-custom py-12">
+        <section className="text-center max-w-4xl mx-auto mb-16">
+          <h1 className="font-serif text-5xl md:text-6xl text-gray-900 mb-6">
             Welcome to the Alumni Network
           </h1>
-          <p className="text-lg text-gray-700 mb-8">
+          <p className="font-sans text-xl text-gray-700 mb-8">
             Connect with alumni, share experiences, and build your professional network.
           </p>
-          <Link to="/browse" className="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-700">
+          <Link to="/browse" className="inline-block bg-navy text-white px-8 py-3 rounded-lg font-sans hover:bg-navy/90 transition-colors cursor-pointer">
             Browse Alumni
           </Link>
         </section>
 
-        <section className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <section className="mt-16">
+          <h2 className="font-serif text-3xl md:text-4xl text-gray-900 mb-8 text-center">
             Featured Alumni
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                John Doe
-              </h3>
-              <p className="text-gray-700">
-                Software Engineer at Google
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Jane Smith
-              </h3>
-              <p className="text-gray-700">
-                Marketing Manager at Amazon
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                David Lee
-              </h3>
-              <p className="text-gray-700">
-                Data Scientist at Facebook
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "John Doe",
+                position: "Software Engineer at Google",
+                image: "/placeholder.svg"
+              },
+              {
+                name: "Jane Smith",
+                position: "Marketing Manager at Amazon",
+                image: "/placeholder.svg"
+              },
+              {
+                name: "David Lee",
+                position: "Data Scientist at Facebook",
+                image: "/placeholder.svg"
+              }
+            ].map((alumni, index) => (
+              <Link to="/browse" key={index} className="block">
+                <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-6 cursor-pointer">
+                  <div className="flex justify-center mb-4">
+                    <img 
+                      src={alumni.image} 
+                      alt={alumni.name} 
+                      className="w-24 h-24 rounded-full object-cover"
+                    />
+                  </div>
+                  <h3 className="font-serif text-xl mb-2 text-center">
+                    {alumni.name}
+                  </h3>
+                  <p className="font-sans text-gray-600 text-center">
+                    {alumni.position}
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
       </main>
 
-      <footer className="bg-gray-200 py-4 text-center">
-        <p className="text-gray-700">
-          &copy; 2023 Alumni Network
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -61,7 +61,7 @@ export const NavbarUserSection = () => {
             <AvatarImage src={user?.user_metadata?.avatar_url} alt={user.email || "profile"} />
             <AvatarFallback>{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline text-sm font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
+          <span className="text-sm font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

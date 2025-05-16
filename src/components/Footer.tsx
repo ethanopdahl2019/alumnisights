@@ -7,18 +7,18 @@ const Footer = () => {
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Link to="/" className="text-xl font-bold text-navy">
+            <Link to="/" className="text-xl font-serif font-medium text-navy">
               AlumniSights
             </Link>
-            <p className="mt-4 text-gray-600">
+            <p className="mt-4 text-gray-600 font-sans">
               Connecting prospective students with authentic insights from 
               current students and alumni.
             </p>
           </div>
           
           <div>
-            <h3 className="text-lg font-medium mb-4">For Prospective Students</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-serif font-medium mb-4">For Prospective Students</h3>
+            <ul className="space-y-2 font-sans">
               <li>
                 <Link to="/browse" className="text-gray-600 hover:text-navy">
                   Browse Profiles
@@ -43,8 +43,8 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium mb-4">For Students & Alumni</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-serif font-medium mb-4">For Students & Alumni</h3>
+            <ul className="space-y-2 font-sans">
               <li>
                 <Link to="/become-mentor" className="text-gray-600 hover:text-navy">
                   Become a Mentor
@@ -64,8 +64,8 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium mb-4">Company</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-serif font-medium mb-4">Company</h3>
+            <ul className="space-y-2 font-sans">
               <li>
                 <Link to="/about" className="text-gray-600 hover:text-navy">
                   About Us
@@ -74,11 +74,6 @@ const Footer = () => {
               <li>
                 <Link to="/blog" className="text-gray-600 hover:text-navy">
                   Blog
-                </Link>
-              </li>
-              <li>
-                <Link to="/careers" className="text-gray-600 hover:text-navy">
-                  Careers
                 </Link>
               </li>
               <li>
@@ -91,11 +86,11 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-sm font-sans">
             &copy; {new Date().getFullYear()} AlumniSights. All rights reserved.
           </p>
           
-          <div className="flex space-x-6 mt-4 md:mt-0">
+          <div className="flex space-x-6 mt-4 md:mt-0 font-sans">
             <Link to="/privacy" className="text-gray-500 text-sm hover:text-navy">
               Privacy Policy
             </Link>
