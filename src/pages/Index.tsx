@@ -131,7 +131,7 @@ const Index = () => {
                   >
                     <div className="w-16 h-16 mx-auto rounded-full overflow-hidden mb-3">
                       <img 
-                        src={profileImages[index % profileImages.length]?.src || profile.avatar} 
+                        src={profileImages[index % profileImages.length]?.src || profile.image} 
                         alt={`${profile.name}`} 
                         className="w-full h-full object-cover"
                       />
