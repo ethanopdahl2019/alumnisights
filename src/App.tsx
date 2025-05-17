@@ -8,7 +8,7 @@ import "./App.css";
 // Import pages
 import HomePage from "./pages/Index";
 import BrowsePage from "./pages/Browse";
-import ProfilePage from "./pages/ProfilePage";
+import ProfilePage from "./pages/AlumniProfilePage";
 import MyAccount from "./pages/MyAccount";
 import MentorDashboard from "./pages/MentorDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";

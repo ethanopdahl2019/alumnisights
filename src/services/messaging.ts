@@ -9,7 +9,7 @@ export interface Conversation {
   created_at: string;
   updated_at: string;
   last_message_at?: string;
-  // Legacy fields
+  // Legacy fields that might exist in the database
   applicant_id?: string; 
   alumni_id?: string;
   product_type?: string;
@@ -54,7 +54,7 @@ export const getConversations = async () => {
   if (!user) throw new Error("Not authenticated");
 
   try {
-    // First try the new schema (conversations table with student_id and mentor_id)
+    // Try to fetch conversations from the database
     const { data, error } = await supabase
       .from("conversations")
       .select(`
@@ -69,16 +69,16 @@ export const getConversations = async () => {
       return [];
     }
 
+    // Process the conversations data
     if (data && data.length > 0) {
-      // We have data in the new schema
       return data.map(conv => {
-        // Check if student and mentor are valid
-        const student = typeof conv.student === 'object' ? conv.student : null;
-        const mentor = typeof conv.mentor === 'object' ? conv.mentor : null;
+        // Type guard to ensure we have objects
+        const studentData = typeof conv.student === 'object' && conv.student ? conv.student : null;
+        const mentorData = typeof conv.mentor === 'object' && conv.mentor ? conv.mentor : null;
 
-        // Add profile property based on which side of the conversation the user is on
+        // Determine if user is student or mentor
         const isStudent = user.id === conv.student_id;
-        let profileData = isStudent ? mentor : student;
+        const profileData = isStudent ? mentorData : studentData;
         
         const profile = {
           name: profileData?.name || (isStudent ? "Mentor" : "Student"),
@@ -92,9 +92,7 @@ export const getConversations = async () => {
       });
     }
     
-    // Fall back to empty array if no conversations
     return [];
-    
   } catch (error) {
     console.error("Error fetching conversations:", error);
     return [];
@@ -116,7 +114,6 @@ export const getConversation = async (conversationId: string) => {
 
     if (error) {
       console.error("Error fetching conversation:", error);
-      // Return null to indicate error
       return null;
     }
 
@@ -139,23 +136,19 @@ export const getConversation = async (conversationId: string) => {
 // Get messages for a conversation
 export const getMessages = async (conversationId: string) => {
   try {
-    // Check if the messages table exists
-    const { data: messagesData, error: messagesError } = await supabase
+    const { data, error } = await supabase
       .from("messages")
       .select("*")
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true });
       
-    if (messagesError) {
-      console.error("Error fetching messages:", messagesError);
+    if (error) {
+      console.error("Error fetching messages:", error);
       return [];
     }
     
-    if (messagesData && messagesData.length > 0) {
-      return messagesData as Message[];
-    }
-    
-    return [];
+    // Cast data to Message[] type
+    return (data || []) as Message[];
   } catch (error) {
     console.error("Error fetching messages:", error);
     return [];
@@ -176,22 +169,23 @@ export const sendMessage = async (conversationId: string, content: string, isPre
       .eq('id', conversationId)
       .single();
 
+    // Apply character limit for mentors
     let finalContent = content;
     if (conversation && conversation.mentor_id === user.id) {
-      // Apply character limit for mentors (120 chars)
       if (content.length > 120) {
         finalContent = content.substring(0, 120);
       }
     }
 
+    // Insert the message
     const { data, error } = await supabase
       .from("messages")
-      .insert([{
+      .insert({
         conversation_id: conversationId,
         sender_id: user.id,
         content: finalContent,
         is_preset: isPreset
-      }])
+      })
       .select()
       .single();
 
@@ -214,13 +208,13 @@ export const startConversation = async (mentorId: string) => {
   if (!user) throw new Error("Not authenticated");
 
   try {
-    // Only inserting fields that exist in the conversations table
+    // Insert a new conversation
     const { data, error } = await supabase
       .from("conversations")
-      .insert([{
+      .insert({
         student_id: user.id,
         mentor_id: mentorId
-      }])
+      })
       .select()
       .single();
 
@@ -263,6 +257,7 @@ export const markMessagesAsRead = async (conversationId: string) => {
   if (!user) throw new Error("Not authenticated");
 
   try {
+    // Update messages that are unread and not sent by current user
     const { error } = await supabase
       .from("messages")
       .update({ read_at: new Date().toISOString() })

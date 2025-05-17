@@ -30,18 +30,21 @@ const ConversationPage = () => {
   const queryClient = useQueryClient();
   const [showPresets, setShowPresets] = useState(false);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth", { state: { from: `/messaging/conversation/${id}` } });
     }
   }, [user, loading, navigate, id]);
 
+  // Fetch conversation data
   const { data: conversation, isLoading: conversationLoading } = useQuery({
     queryKey: ["conversation", id],
     queryFn: () => id ? getConversation(id) : Promise.reject("No conversation ID"),
     enabled: !!id && !!user,
   });
 
+  // Fetch messages
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
     queryKey: ["messages", id],
     queryFn: () => id ? getMessages(id) : Promise.reject("No conversation ID"),
@@ -49,6 +52,7 @@ const ConversationPage = () => {
     refetchInterval: 5000, // Poll every 5 seconds for new messages
   });
 
+  // Mark messages as read
   const markAsReadMutation = useMutation({
     mutationFn: () => id ? markMessagesAsRead(id) : Promise.reject("No conversation ID"),
     onError: (error) => {
@@ -56,6 +60,7 @@ const ConversationPage = () => {
     },
   });
 
+  // Send message
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) => id ? sendMessage(id, content) : Promise.reject("No conversation ID"),
     onSuccess: () => {
@@ -80,6 +85,7 @@ const ConversationPage = () => {
     markAsReadMutation.mutate();
   };
 
+  // Show loading state
   if (loading || conversationLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -88,6 +94,7 @@ const ConversationPage = () => {
     );
   }
 
+  // Handle conversation not found
   if (!conversation) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -110,8 +117,8 @@ const ConversationPage = () => {
   const defaultMentor = { id: "", name: "Mentor", image: null };
 
   // Safely extract data with defaults and type checking
-  const student = typeof conversation.student === 'object' && conversation.student ? conversation.student : defaultStudent;
-  const mentor = typeof conversation.mentor === 'object' && conversation.mentor ? conversation.mentor : defaultMentor;
+  const student = conversation.student || defaultStudent;
+  const mentor = conversation.mentor || defaultMentor;
   
   // Determine if the current user is the mentor or student
   const isMentor = user?.id === mentor.id;
