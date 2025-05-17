@@ -70,6 +70,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import BecomeMentor from "./pages/BecomeMentor";
 import SuccessStories from "./pages/SuccessStories";
+import MentorChat from "./pages/MentorChat";
 
 const queryClient = new QueryClient();
 
@@ -146,6 +147,10 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/become-mentor" element={<BecomeMentor />} />
               <Route path="/success-stories" element={<SuccessStories />} />
+              
+              {/* Add new mentor chat routes */}
+              <Route path="/mentor-chat" element={<MentorChat />} />
+              <Route path="/mentor-chat/:mentorId" element={<MentorChat />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

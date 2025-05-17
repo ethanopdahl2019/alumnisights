@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Tag from "@/components/Tag";
+import { MentorChatButton } from "@/components/mentor-chat/MentorChatButton";
 
 const AlumniProfilePage = () => {
   const { id } = useParams();
@@ -137,36 +138,47 @@ const AlumniProfilePage = () => {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <h1 className="text-3xl font-bold mb-2">{profile.name}</h1>
-                    {profile.headline && (
-                      <p className="text-lg text-gray-600 mb-4">{profile.headline}</p>
-                    )}
-                    
-                    <div className="flex flex-col gap-2 text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <School className="h-5 w-5" />
-                        <span>{profile.school.name}</span>
-                        {profile.graduation_year && (
-                          <>
-                            <span>•</span>
-                            <Calendar className="h-4 w-4" />
-                            <span>Class of {profile.graduation_year}</span>
-                          </>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h1 className="text-3xl font-bold mb-2">{profile.name}</h1>
+                        {profile.headline && (
+                          <p className="text-lg text-gray-600 mb-4">{profile.headline}</p>
                         )}
+                        
+                        <div className="flex flex-col gap-2 text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <School className="h-5 w-5" />
+                            <span>{profile.school.name}</span>
+                            {profile.graduation_year && (
+                              <>
+                                <span>•</span>
+                                <Calendar className="h-4 w-4" />
+                                <span>Class of {profile.graduation_year}</span>
+                              </>
+                            )}
+                          </div>
+                          {profile.major && (
+                            <div className="flex items-center gap-2">
+                              <Briefcase className="h-5 w-5" />
+                              <span>{profile.major.name}</span>
+                            </div>
+                          )}
+                          {profile.location && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-5 w-5" />
+                              <span>{profile.location}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {profile.major && (
-                        <div className="flex items-center gap-2">
-                          <Briefcase className="h-5 w-5" />
-                          <span>{profile.major.name}</span>
-                        </div>
-                      )}
-                      {profile.location && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-5 w-5" />
-                          <span>{profile.location}</span>
-                        </div>
-                      )}
+                      
+                      {/* Add the mentor chat button here */}
+                      <MentorChatButton 
+                        mentorId={profile.user_id} 
+                        mentorName={profile.name}
+                        className="ml-auto"
+                      />
                     </div>
                   </div>
                 </div>
