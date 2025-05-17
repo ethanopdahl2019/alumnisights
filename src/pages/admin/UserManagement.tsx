@@ -11,6 +11,14 @@ import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import { ShieldAlert, Search, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow 
+} from "@/components/ui/table";
 
 type User = {
   id: string;
@@ -229,6 +237,22 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // Get badge styling based on role
+  const getRoleBadgeStyle = (role?: string) => {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return "bg-blue-100 text-blue-700";
+      case 'mentor':
+      case 'alumni':
+        return "bg-green-100 text-green-700";
+      case 'student':
+      case 'applicant':
+        return "bg-purple-100 text-purple-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
     (user.first_name && user.first_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -313,107 +337,125 @@ const UserManagement: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <Card key={user.id} className="overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between">
-                      <div className="mb-4 md:mb-0">
-                        <div className="flex items-center mb-2">
-                          <h3 className="font-semibold text-lg mr-2">
-                            {user.first_name} {user.last_name}
-                          </h3>
-                          {user.role === 'admin' && (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                              Admin
+          <Card className="mb-8">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Badges</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">
+                          {user.first_name} {user.last_name}
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          {user.role ? (
+                            <Badge className={getRoleBadgeStyle(user.role)}>
+                              {user.role}
                             </Badge>
-                          )}
-                        </div>
-                        <p className="text-gray-600 text-sm">{user.email}</p>
-                        <p className="text-gray-500 text-xs mt-1">Joined: {user.created_at}</p>
-                        
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {user.badges && user.badges.length > 0 ? (
-                            user.badges.map((badge: string) => (
-                              <Badge key={badge} className="bg-green-100 text-green-700 flex items-center">
-                                {badge}
-                                <button 
-                                  className="ml-1 text-green-700 hover:text-green-900"
-                                  onClick={() => removeBadge(user.id, badge)}
-                                >
-                                  ×
-                                </button>
-                              </Badge>
-                            ))
                           ) : (
-                            <span className="text-gray-400 text-sm">No badges assigned</span>
+                            <span className="text-gray-400">Not set</span>
                           )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <select 
-                            className="p-1 border rounded text-sm"
-                            disabled={user.badges && user.badges.length >= availableBadges.length}
-                          >
-                            <option value="">Select a badge</option>
-                            {availableBadges
-                              .filter(badge => !user.badges || !user.badges.includes(badge))
-                              .map(badge => (
-                                <option key={badge} value={badge}>{badge}</option>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {user.badges && user.badges.length > 0 ? (
+                              user.badges.map((badge: string) => (
+                                <Badge key={badge} className="bg-green-100 text-green-700 flex items-center">
+                                  {badge}
+                                  <button 
+                                    className="ml-1 text-green-700 hover:text-green-900"
+                                    onClick={() => removeBadge(user.id, badge)}
+                                    title="Remove badge"
+                                  >
+                                    ×
+                                  </button>
+                                </Badge>
                               ))
-                            }
-                          </select>
-                          <Button 
-                            size="sm"
-                            disabled={user.badges && user.badges.length >= availableBadges.length}
-                            onClick={() => {
-                              const select = document.querySelector(`select`) as HTMLSelectElement;
-                              const badge = select.value;
-                              if (badge) {
-                                assignBadge(user.id, badge);
-                              }
-                            }}
-                          >
-                            <UserCheck className="h-4 w-4 mr-1" />
-                            Assign
-                          </Button>
-                        </div>
-
-                        <div>
-                          {user.role === 'admin' ? (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => removeAdmin(user.id)}
-                              className="w-full"
+                            ) : (
+                              <span className="text-gray-400 text-sm">None</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{user.created_at}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <select 
+                              className="p-1 border rounded text-sm"
+                              disabled={user.badges && user.badges.length >= availableBadges.length}
                             >
-                              Remove Admin
-                            </Button>
-                          ) : (
+                              <option value="">Add badge</option>
+                              {availableBadges
+                                .filter(badge => !user.badges || !user.badges.includes(badge))
+                                .map(badge => (
+                                  <option key={badge} value={badge}>{badge}</option>
+                                ))
+                              }
+                            </select>
                             <Button 
                               size="sm"
                               variant="outline"
-                              onClick={() => makeAdmin(user.id)}
-                              className="w-full"
+                              disabled={user.badges && user.badges.length >= availableBadges.length}
+                              onClick={() => {
+                                const select = document.querySelector(`select`) as HTMLSelectElement;
+                                const badge = select.value;
+                                if (badge) {
+                                  assignBadge(user.id, badge);
+                                }
+                              }}
                             >
-                              Make Admin
+                              <UserCheck className="h-4 w-4 mr-1" />
+                              Assign
                             </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500">No users found matching your search.</p>
-              </div>
-            )}
-          </div>
+                            
+                            {user.role === 'admin' ? (
+                              <Button 
+                                size="sm" 
+                                variant="destructive"
+                                onClick={() => removeAdmin(user.id)}
+                              >
+                                Remove Admin
+                              </Button>
+                            ) : (
+                              <Button 
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => makeAdmin(user.id)}
+                              >
+                                Make Admin
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                        No users found matching your search.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {filteredUsers.length > 0 && (
+            <div className="text-sm text-gray-500">
+              Showing {filteredUsers.length} of {users.length} users
+            </div>
+          )}
         </div>
       </main>
 
