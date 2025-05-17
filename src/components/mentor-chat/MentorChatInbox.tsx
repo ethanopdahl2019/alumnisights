@@ -7,6 +7,7 @@ import { MentorChatContact } from "@/types/mentor-chat";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion } from "framer-motion";
+import { MessageSquare } from "@/components/mentor-chat/MessageSquare";
 
 export const MentorChatInbox = () => {
   const { user } = useAuth();

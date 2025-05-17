@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { MentorChatInbox } from "@/components/mentor-chat/MentorChatInbox";
 import { MentorChatConversation } from "@/components/mentor-chat/MentorChatConversation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageSquare } from "@/components/mentor-chat/MessageSquare";
 
 const MentorChat = () => {
   const { mentorId } = useParams<{ mentorId?: string }>();

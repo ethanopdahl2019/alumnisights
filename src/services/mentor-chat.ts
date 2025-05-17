@@ -107,7 +107,7 @@ export async function getMentorChatContacts(userId: string): Promise<MentorChatC
   // Get profile information for each contact
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, name, image')
+    .select('id, user_id, name, image')
     .in('user_id', Array.from(contactIds));
     
   if (profilesError) {
@@ -117,7 +117,7 @@ export async function getMentorChatContacts(userId: string): Promise<MentorChatC
   
   // Build contact list with unread counts and last messages
   const contacts: MentorChatContact[] = [];
-  const contactMap = new Map<string, ProfileWithDetails>();
+  const contactMap = new Map<string, { id: string, user_id: string, name: string, image: string | null }>();
   
   profiles.forEach(profile => {
     contactMap.set(profile.user_id, profile);
