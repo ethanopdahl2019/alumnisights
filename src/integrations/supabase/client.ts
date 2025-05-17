@@ -9,3 +9,8 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Add a helper function to call admin-users edge function
+export async function fetchAdminUsers() {
+  return await supabase.functions.invoke('admin-users');
+}

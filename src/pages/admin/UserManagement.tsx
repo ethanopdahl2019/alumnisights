@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import { ShieldAlert, Search, UserCheck } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, fetchAdminUsers } from "@/integrations/supabase/client";
 import { 
   Table,
   TableBody,
@@ -60,8 +61,8 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Get all users from the auth.users table via the Supabase admin API
-      const { data, error } = await supabase.auth.admin.listUsers();
+      // Call our edge function instead of direct API
+      const { data, error } = await fetchAdminUsers();
       
       if (error) {
         throw error;
