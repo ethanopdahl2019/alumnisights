@@ -1,11 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useQuery } from '@tanstack/react-query';
 
-// Static testimonials for now
+// Static testimonials data
 const testimonials = [
   {
     id: '1',
