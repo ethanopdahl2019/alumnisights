@@ -31,13 +31,17 @@ serve(async (req) => {
     
     // OpenAI API call configuration
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+    
+    // Detailed API key validation
     if (!openaiApiKey) {
-      console.error("OpenAI API key not configured");
+      console.error("CRITICAL ERROR: OpenAI API key not found in environment variables");
       return new Response(JSON.stringify({ error: "OpenAI API key not configured" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
     }
+    
+    console.log("OpenAI API key found in environment, length:", openaiApiKey.length);
     
     // Configure the prompt based on content type
     let prompt = "";
@@ -63,15 +67,20 @@ serve(async (req) => {
     }
     
     console.log("Sending prompt to OpenAI:", prompt);
+    console.log("Making OpenAI API request...");
+    
+    // Properly formatted headers for OpenAI API
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${openaiApiKey}` // Ensure correct format: "Bearer <key>"
+    };
+    
+    console.log("Request headers prepared (auth header length):", headers.Authorization.length);
     
     // Call OpenAI API with proper authentication
-    console.log("Calling OpenAI API with proper authentication...");
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${openaiApiKey}`,
-      },
+      headers: headers,
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
         messages: [
@@ -89,11 +98,24 @@ serve(async (req) => {
       }),
     });
     
-    console.log("OpenAI API status code:", response.status);
+    console.log("OpenAI API response status:", response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
       console.error("OpenAI API error response:", errorText);
+      
+      // Provide detailed error message
+      if (response.status === 401) {
+        console.error("AUTHENTICATION ERROR: The API key appears to be invalid or expired");
+        return new Response(JSON.stringify({ 
+          error: "OpenAI API authentication error. Please check your API key.",
+          details: errorText
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        });
+      }
+      
       try {
         const errorData = JSON.parse(errorText);
         throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
@@ -103,7 +125,14 @@ serve(async (req) => {
     }
     
     const data = await response.json();
-    console.log("OpenAI API response received");
+    console.log("OpenAI API response received successfully");
+    
+    // Verify that we have the expected data
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error("Unexpected response format from OpenAI:", JSON.stringify(data).substring(0, 200));
+      throw new Error("Unexpected response format from OpenAI");
+    }
+    
     const rawContent = data.choices[0].message.content;
     
     console.log("Received content from OpenAI:", rawContent.substring(0, 100) + "...");

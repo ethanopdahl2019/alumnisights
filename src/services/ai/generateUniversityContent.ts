@@ -5,6 +5,8 @@ interface GeneratedContent {
   applicationRequirements?: string;
   alumniInsights?: string;
   didYouKnow?: string;
+  error?: string;
+  details?: string;
 }
 
 export async function generateUniversityContent(
@@ -26,16 +28,28 @@ export async function generateUniversityContent(
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Error response: ${response.status}`, errorText);
-      throw new Error(`Error: ${response.status} - ${errorText}`);
+    console.log("Edge function response status:", response.status);
+
+    const responseText = await response.text();
+    console.log("Response text received, length:", responseText.length);
+    
+    // Try to parse the response as JSON
+    let data: GeneratedContent;
+    try {
+      data = JSON.parse(responseText);
+      console.log("Parsed response data:", data);
+    } catch (parseError) {
+      console.error("Failed to parse JSON response:", parseError);
+      console.error("Raw response:", responseText);
+      throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}`);
     }
 
-    const data = await response.json();
-    console.log("Received data from edge function:", data);
-    
+    // Check for error in the parsed data
     if (data.error) {
+      console.error("Error returned from edge function:", data.error);
+      if (data.details) {
+        console.error("Error details:", data.details);
+      }
       throw new Error(data.error);
     }
     
