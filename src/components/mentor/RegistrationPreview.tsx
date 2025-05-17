@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -159,10 +160,23 @@ const RegistrationPreview = () => {
                       <SelectValue placeholder="Select your degree" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="bachelors">Bachelor's Degree</SelectItem>
-                      <SelectItem value="masters">Master's Degree</SelectItem>
-                      <SelectItem value="phd">PhD</SelectItem>
-                      <SelectItem value="associates">Associate's Degree</SelectItem>
+                      <SelectItem value="ba">BA - Bachelor of Arts</SelectItem>
+                      <SelectItem value="bs">BS - Bachelor of Science</SelectItem>
+                      <SelectItem value="bba">BBA - Bachelor of Business Administration</SelectItem>
+                      <SelectItem value="bfa">BFA - Bachelor of Fine Arts</SelectItem>
+                      <SelectItem value="ma">MA - Master of Arts</SelectItem>
+                      <SelectItem value="ms">MS - Master of Science</SelectItem>
+                      <SelectItem value="mba">MBA - Master of Business Administration</SelectItem>
+                      <SelectItem value="meng">MEng - Master of Engineering</SelectItem>
+                      <SelectItem value="mfa">MFA - Master of Fine Arts</SelectItem>
+                      <SelectItem value="mph">MPH - Master of Public Health</SelectItem>
+                      <SelectItem value="msw">MSW - Master of Social Work</SelectItem>
+                      <SelectItem value="jd">JD - Juris Doctor</SelectItem>
+                      <SelectItem value="md">MD - Doctor of Medicine</SelectItem>
+                      <SelectItem value="phd">PhD - Doctor of Philosophy</SelectItem>
+                      <SelectItem value="edd">EdD - Doctor of Education</SelectItem>
+                      <SelectItem value="dnp">DNP - Doctor of Nursing Practice</SelectItem>
+                      <SelectItem value="llm">LLM - Master of Laws</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
