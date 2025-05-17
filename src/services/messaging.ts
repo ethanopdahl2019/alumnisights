@@ -4,11 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 // Types
 export interface Conversation {
   id: string;
-  student_id: string;
-  mentor_id: string;
+  student_id?: string;
+  mentor_id?: string;
   created_at: string;
   updated_at: string;
-  last_message_at: string;
+  last_message_at?: string;
+  // Legacy fields
+  applicant_id?: string; 
+  alumni_id?: string;
+  product_type?: string;
+  payment_status?: string;
   profile?: {
     name: string;
     image: string | null;
@@ -48,76 +53,105 @@ export const getConversations = async () => {
   
   if (!user) throw new Error("Not authenticated");
 
-  // First check if we're dealing with the new schema (conversations table with student_id and mentor_id)
-  const { data: conversations } = await supabase
-    .from("conversations")
-    .select(`
-      id, student_id, mentor_id, created_at, updated_at, last_message_at,
-      student:profiles!conversations_student_id_fkey(id, name, image),
-      mentor:profiles!conversations_mentor_id_fkey(id, name, image)
-    `)
-    .or(`student_id.eq.${user.id},mentor_id.eq.${user.id}`);
+  try {
+    // First try the new schema (conversations table with student_id and mentor_id)
+    const { data: conversationsNew, error: errorNew } = await supabase
+      .from("conversations")
+      .select(`
+        id, student_id, mentor_id, created_at, updated_at, last_message_at,
+        student:profiles!conversations_student_id_fkey(id, name, image),
+        mentor:profiles!conversations_mentor_id_fkey(id, name, image)
+      `)
+      .or(`student_id.eq.${user.id},mentor_id.eq.${user.id}`);
 
-  if (conversations && conversations.length > 0) {
-    // We have data in the new schema
-    return conversations.map(conv => {
-      // Add profile property based on which side of the conversation the user is on
-      const profile = user.id === conv.student_id ? conv.mentor : conv.student;
-      return {
-        ...conv,
-        profile: {
-          name: profile?.name || "Unknown",
-          image: profile?.image || null
+    if (!errorNew && conversationsNew && conversationsNew.length > 0) {
+      // We have data in the new schema
+      return conversationsNew.map(conv => {
+        // Add profile property based on which side of the conversation the user is on
+        const isStudent = user.id === conv.student_id;
+        const profile = isStudent ? conv.mentor : conv.student;
+        
+        if (!profile) {
+          return {
+            ...conv,
+            profile: {
+              name: isStudent ? "Mentor" : "Student",
+              image: null
+            }
+          };
         }
-      };
-    }) as (Conversation & { profile: { name: string; image: string | null } })[];
+        
+        return {
+          ...conv,
+          profile: {
+            name: profile.name || "Unknown",
+            image: profile.image || null
+          }
+        };
+      });
+    }
+    
+    // Fall back to empty array if no conversations
+    return [];
+    
+  } catch (error) {
+    console.error("Error fetching conversations:", error);
+    return [];
   }
-
-  // Fall back to an empty array if no conversations
-  return [];
 };
 
 // Get a specific conversation
 export const getConversation = async (conversationId: string) => {
-  const { data, error } = await supabase
-    .from("conversations")
-    .select(`
-      *,
-      mentor:profiles!conversations_mentor_id_fkey(id, name, image),
-      student:profiles!conversations_student_id_fkey(id, name, image)
-    `)
-    .eq('id', conversationId)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from("conversations")
+      .select(`
+        *,
+        mentor:profiles!conversations_mentor_id_fkey(id, name, image),
+        student:profiles!conversations_student_id_fkey(id, name, image)
+      `)
+      .eq('id', conversationId)
+      .maybeSingle();
 
-  if (error) {
+    if (error) {
+      console.error("Error fetching conversation:", error);
+      // Return null to indicate error
+      return null;
+    }
+
+    // Ensure we have valid student and mentor objects
+    const result = data ? {
+      ...data,
+      student: data.student || { id: "", name: "Student", image: null },
+      mentor: data.mentor || { id: "", name: "Mentor", image: null }
+    } : null;
+
+    return result;
+  } catch (error) {
     console.error("Error fetching conversation:", error);
-    throw error;
+    return null;
   }
-
-  // Ensure we have valid student and mentor objects
-  const result = data ? {
-    ...data,
-    student: data.student || { id: "", name: "Student", image: null },
-    mentor: data.mentor || { id: "", name: "Mentor", image: null }
-  } : null;
-
-  return result;
 };
 
 // Get messages for a conversation
 export const getMessages = async (conversationId: string) => {
-  const { data, error } = await supabase
-    .from("conversation_messages")
-    .select("*")
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
-
-  if (error) {
+  try {
+    // Check if the messages table exists
+    const { data: messagesData, error: messagesError } = await supabase
+      .from("messages")
+      .select("*")
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+      
+    if (!messagesError && messagesData && messagesData.length > 0) {
+      return messagesData as Message[];
+    }
+    
+    return [];
+  } catch (error) {
     console.error("Error fetching messages:", error);
-    throw error;
+    return [];
   }
-
-  return data as Message[];
 };
 
 // Send a message
@@ -126,37 +160,43 @@ export const sendMessage = async (conversationId: string, content: string, isPre
   
   if (!user) throw new Error("Not authenticated");
 
-  // Check if user is a mentor to apply character limit
-  const { data: conversation } = await supabase
-    .from("conversations")
-    .select("mentor_id")
-    .eq('id', conversationId)
-    .single();
+  try {
+    // Check if user is a mentor to apply character limit
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("mentor_id")
+      .eq('id', conversationId)
+      .single();
 
-  if (conversation && conversation.mentor_id === user.id) {
-    // Apply character limit for mentors (120 chars)
-    if (content.length > 120) {
-      content = content.substring(0, 120);
+    let finalContent = content;
+    if (conversation && conversation.mentor_id === user.id) {
+      // Apply character limit for mentors (120 chars)
+      if (content.length > 120) {
+        finalContent = content.substring(0, 120);
+      }
     }
-  }
 
-  const { data, error } = await supabase
-    .from("conversation_messages")
-    .insert({
-      conversation_id: conversationId,
-      sender_id: user.id,
-      content,
-      is_preset: isPreset
-    })
-    .select()
-    .single();
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content: finalContent,
+        is_preset: isPreset
+      })
+      .select()
+      .single();
 
-  if (error) {
+    if (error) {
+      console.error("Error sending message:", error);
+      throw error;
+    }
+
+    return data as Message;
+  } catch (error) {
     console.error("Error sending message:", error);
     throw error;
   }
-
-  return data as Message;
 };
 
 // Start a new conversation with a mentor
@@ -165,36 +205,46 @@ export const startConversation = async (mentorId: string) => {
   
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
-    .from("conversations")
-    .insert({
-      student_id: user.id,
-      mentor_id: mentorId
-    })
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("conversations")
+      .insert({
+        student_id: user.id,
+        mentor_id: mentorId
+      })
+      .select()
+      .single();
 
-  if (error) {
+    if (error) {
+      console.error("Error creating conversation:", error);
+      throw error;
+    }
+
+    return data as Conversation;
+  } catch (error) {
     console.error("Error creating conversation:", error);
     throw error;
   }
-
-  return data as Conversation;
 };
 
 // Get preset messages
 export const getPresetMessages = async () => {
-  const { data, error } = await supabase
-    .from("preset_messages")
-    .select("*")
-    .order('category', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from("preset_messages")
+      .select("*")
+      .order('category', { ascending: true });
 
-  if (error) {
+    if (error) {
+      console.error("Error fetching preset messages:", error);
+      throw error;
+    }
+
+    return data as PresetMessage[];
+  } catch (error) {
     console.error("Error fetching preset messages:", error);
-    throw error;
+    return [];
   }
-
-  return data as PresetMessage[];
 };
 
 // Mark messages as read
@@ -203,17 +253,22 @@ export const markMessagesAsRead = async (conversationId: string) => {
   
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase
-    .from("conversation_messages")
-    .update({ read_at: new Date().toISOString() })
-    .eq('conversation_id', conversationId)
-    .neq('sender_id', user.id)
-    .is('read_at', null);
+  try {
+    const { error } = await supabase
+      .from("messages")
+      .update({ read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .neq('sender_id', user.id)
+      .is('read_at', null);
 
-  if (error) {
+    if (error) {
+      console.error("Error marking messages as read:", error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
     console.error("Error marking messages as read:", error);
-    throw error;
+    return false;
   }
-
-  return true;
 };

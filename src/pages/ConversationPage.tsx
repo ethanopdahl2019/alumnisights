@@ -105,9 +105,13 @@ const ConversationPage = () => {
     );
   }
 
-  // Safely extract data, ensuring we have student and mentor objects with default values
-  const student = conversation?.student || { id: "", name: "Student", image: null };
-  const mentor = conversation?.mentor || { id: "", name: "Mentor", image: null };
+  // Create default values to avoid null errors
+  const defaultStudent = { id: "", name: "Student", image: null };
+  const defaultMentor = { id: "", name: "Mentor", image: null };
+  
+  // Safely extract data with defaults
+  const student = conversation.student || defaultStudent;
+  const mentor = conversation.mentor || defaultMentor;
 
   // Determine if the current user is the mentor or student
   const isMentor = user?.id === mentor.id;
