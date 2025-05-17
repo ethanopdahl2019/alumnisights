@@ -1,4 +1,3 @@
-
 import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,7 +7,7 @@ import "./App.css";
 // Import pages
 import HomePage from "./pages/Index";
 import BrowsePage from "./pages/Browse";
-import ProfilePage from "./pages/AlumniProfilePage";
+import AlumniProfilePage from "./pages/AlumniProfilePage";
 import MyAccount from "./pages/MyAccount";
 import MentorDashboard from "./pages/MentorDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -43,7 +42,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/profile/:id",
-    element: <ProfilePage />,
+    element: <AlumniProfilePage />,
   },
   {
     path: "/booking/:id/:productId",
