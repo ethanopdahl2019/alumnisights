@@ -1,27 +1,34 @@
+
 import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import "./App.css";
 
-import HomePage from "./pages/HomePage";
-import BrowsePage from "./pages/BrowsePage";
-import ProfilePage from "./pages/ProfilePage";
+// Import pages
+import HomePage from "./pages/Home"; // Update these imports to match your actual file structure
+import BrowsePage from "./pages/Browse";
+import ProfilePage from "./pages/Profile";
 import MyAccount from "./pages/MyAccount";
 import MentorDashboard from "./pages/MentorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import BookingPage from "./pages/BookingPage";
-import AuthPage from "./pages/AuthPage";
-import RegistrationPage from "./pages/RegistrationPage";
-import BlogPage from "./pages/BlogPage";
-import BlogPostPage from "./pages/BlogPostPage";
-import UniversityPage from "./pages/UniversityPage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import TermsOfServicePage from "./pages/TermsOfServicePage";
-import ContactPage from "./pages/ContactPage";
-import AboutUsPage from "./pages/AboutUsPage";
+import AuthPage from "./pages/Auth";
+import RegistrationPage from "./pages/Registration";
+import BlogPage from "./pages/Blog";
+import BlogPostPage from "./pages/BlogPost";
+import UniversityPage from "./pages/University";
+import PrivacyPolicyPage from "./pages/PrivacyPolicy";
+import TermsOfServicePage from "./pages/TermsOfService";
+import ContactPage from "./pages/Contact";
+import AboutUsPage from "./pages/AboutUs";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
+import MessagingPage from "./pages/MessagingPage";
+import ConversationPage from "./pages/ConversationPage";
+
+import AuthProvider from "./components/AuthProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
@@ -98,13 +105,25 @@ const router = createBrowserRouter([
     path: "/payment-canceled",
     element: <PaymentCanceled />,
   },
+  // New messaging routes
+  {
+    path: "/messaging",
+    element: <MessagingPage />,
+  },
+  {
+    path: "/messaging/conversation/:id",
+    element: <ConversationPage />,
+  },
 ]);
 
 function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+          <Toaster />
+        </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );
