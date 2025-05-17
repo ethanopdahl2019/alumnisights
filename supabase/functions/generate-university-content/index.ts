@@ -131,6 +131,8 @@ serve(async (req) => {
       result[contentType] = rawContent;
     }
     
+    console.log("Generated result:", JSON.stringify(result));
+    
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -31,7 +31,7 @@ export async function generateUniversityContent(
       throw new Error(`Error: ${response.status}`);
     }
 
-    const data: GeneratedContent = await response.json();
+    const data = await response.json();
     
     // If we're generating didYouKnow content, ensure it's short and interesting
     if (contentType === "didYouKnow" && data.didYouKnow) {
