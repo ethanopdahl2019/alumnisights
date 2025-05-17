@@ -850,6 +850,33 @@ export type Database = {
         }
         Relationships: []
       }
+      site_images: {
+        Row: {
+          alt_text: string | null
+          caption: string | null
+          category: string
+          created_at: string
+          id: string
+          url: string
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          url: string
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          url?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           created_at: string
@@ -868,6 +895,36 @@ export type Database = {
           id?: string
           name?: string
           type?: Database["public"]["Enums"]["tag_type"]
+        }
+        Relationships: []
+      }
+      universities: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          order_letter: string
+          state: string | null
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name: string
+          order_letter: string
+          state?: string | null
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          order_letter?: string
+          state?: string | null
+          type?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

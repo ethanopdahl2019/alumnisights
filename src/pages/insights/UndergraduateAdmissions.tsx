@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
@@ -12,7 +13,7 @@ import { getUniversityLogo } from "@/services/landing-page";
 import { useAuth } from "@/components/AuthProvider";
 import { generateUniversityContent } from "@/services/ai/generateUniversityContent";
 import { toast } from "sonner";
-import { Wand } from "lucide-react";
+import { Wand, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const UndergraduateAdmissions = () => {
@@ -20,10 +21,28 @@ const UndergraduateAdmissions = () => {
   const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
   const [isLoadingLogos, setIsLoadingLogos] = useState(true);
   const [generatingContentFor, setGeneratingContentFor] = useState<string | null>(null);
+  const [alphabeticalLetters, setAlphabeticalLetters] = useState<string[]>([]);
+  const [universitiesByLetter, setUniversitiesByLetter] = useState<Record<string, any[]>>({});
   const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const alphabeticalLetters = getAlphabeticalLetters();
-  const universitiesByLetter = getUniversitiesByLetter();
   const { isAdmin } = useAuth();
+  
+  // Fetch university data
+  useEffect(() => {
+    const fetchData = async () => {
+      const letters = await getAlphabeticalLetters();
+      const universities = await getUniversitiesByLetter();
+      
+      setAlphabeticalLetters(letters);
+      setUniversitiesByLetter(universities);
+      
+      // Set initial active letter to the first one
+      if (letters.length > 0 && !activeLetter) {
+        setActiveLetter(letters[0]);
+      }
+    };
+    
+    fetchData();
+  }, []);
   
   // Fetch university logos efficiently
   useEffect(() => {
@@ -57,8 +76,10 @@ const UndergraduateAdmissions = () => {
       }
     };
     
-    fetchUniversityLogos();
-  }, []);
+    if (Object.keys(universitiesByLetter).length > 0) {
+      fetchUniversityLogos();
+    }
+  }, [universitiesByLetter]);
   
   const scrollToLetter = (letter: string) => {
     setActiveLetter(letter);
@@ -71,11 +92,6 @@ const UndergraduateAdmissions = () => {
   };
   
   useEffect(() => {
-    // Set initial active letter to the first one
-    if (alphabeticalLetters.length > 0 && !activeLetter) {
-      setActiveLetter(alphabeticalLetters[0]);
-    }
-    
     // Setup intersection observer to update active letter on scroll
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -100,20 +116,47 @@ const UndergraduateAdmissions = () => {
     toast.info(`Generating content for ${universityName}...`);
     
     try {
-      const content = await generateUniversityContent(universityName);
-      if (content) {
+      // Generate overview
+      const overview = await generateUniversityContent(universityName, "overview");
+      
+      if (overview) {
         // Update the content in the database
         const { data, error } = await supabase.from('universities_content').upsert({
           id: universityId,
           name: universityName,
-          overview: content.overview || "",
-          admission_stats: content.admissionStats || "",
-          application_requirements: content.applicationRequirements || "",
-          alumni_insights: content.alumniInsights || ""
+          overview: overview.overview || "",
+          updated_at: new Date().toISOString()
         });
         
         if (error) {
           throw error;
+        }
+        
+        // Generate admission stats
+        const admissionStats = await generateUniversityContent(universityName, "admissionStats");
+        if (admissionStats) {
+          await supabase.from('universities_content').update({
+            admission_stats: admissionStats.admissionStats || "",
+            updated_at: new Date().toISOString()
+          }).eq('id', universityId);
+        }
+        
+        // Generate application requirements
+        const appReqs = await generateUniversityContent(universityName, "applicationRequirements");
+        if (appReqs) {
+          await supabase.from('universities_content').update({
+            application_requirements: appReqs.applicationRequirements || "",
+            updated_at: new Date().toISOString()
+          }).eq('id', universityId);
+        }
+        
+        // Generate alumni insights
+        const alumniInsights = await generateUniversityContent(universityName, "alumniInsights");
+        if (alumniInsights) {
+          await supabase.from('universities_content').update({
+            alumni_insights: alumniInsights.alumniInsights || "",
+            updated_at: new Date().toISOString()
+          }).eq('id', universityId);
         }
         
         toast.success(`Generated and saved content for ${universityName}`);
@@ -216,8 +259,17 @@ const UndergraduateAdmissions = () => {
                                   handleGenerateContent(university.id, university.name);
                                 }}
                               >
-                                <Wand className="h-3 w-3 mr-1" />
-                                {generatingContentFor === university.id ? "Generating..." : "Generate AI Content"}
+                                {generatingContentFor === university.id ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                    Generating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Wand className="h-3 w-3 mr-1" />
+                                    Generate AI Content
+                                  </>
+                                )}
                               </Button>
                             </div>
                           )}

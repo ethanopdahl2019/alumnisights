@@ -1,296 +1,64 @@
-export interface University {
-  id: string;
-  name: string;
-  description?: string;
-  logo?: string;
-}
 
-export const universities: University[] = [
-  { id: "allegheny-college", name: "Allegheny College", logo: "/logos/default-university.png" },
-  { id: "american-university", name: "American University", logo: "/logos/default-university.png" },
-  { id: "amherst-college", name: "Amherst College", logo: "/logos/default-university.png" },
-  { id: "appalachian-state-university", name: "Appalachian State University", logo: "/logos/default-university.png" },
-  { id: "auburn-university", name: "Auburn University", logo: "/logos/default-university.png" },
-  { id: "augustana-college-il", name: "Augustana College (IL)", logo: "/logos/default-university.png" },
-  { id: "australian-national-university", name: "Australian National University", logo: "/logos/default-university.png" },
-  { id: "ball-state-university", name: "Ball State University", logo: "/logos/default-university.png" },
-  { id: "barnard-college", name: "Barnard College", logo: "/logos/default-university.png" },
-  { id: "bates-college", name: "Bates College", logo: "/logos/default-university.png" },
-  { id: "bentley-university", name: "Bentley University", logo: "/logos/default-university.png" },
-  { id: "beloit-college", name: "Beloit College", logo: "/logos/default-university.png" },
-  { id: "boise-state-university", name: "Boise State University", logo: "/logos/default-university.png" },
-  { id: "boston-college", name: "Boston College", logo: "/logos/default-university.png" },
-  { id: "bowdoin-college", name: "Bowdoin College", logo: "/logos/default-university.png" },
-  { id: "brigham-young-university", name: "Brigham Young University", logo: "/logos/default-university.png" },
-  { id: "brown-university", name: "Brown University", logo: "/logos/default-university.png" },
-  { id: "bryn-mawr-college", name: "Bryn Mawr College", logo: "/logos/default-university.png" },
-  { id: "butler-university", name: "Butler University", logo: "/logos/default-university.png" },
-  { id: "california-institute-of-technology-caltech", name: "California Institute of Technology (Caltech)", logo: "/logos/default-university.png" },
-  { id: "california-lutheran-university", name: "California Lutheran University", logo: "/logos/default-university.png" },
-  { id: "california-polytechnic-state-university-san-luis-obispo", name: "California Polytechnic State University, San Luis Obispo", logo: "/logos/default-university.png" },
-  { id: "california-state-university-san-marcos", name: "California State University San Marcos", logo: "/logos/default-university.png" },
-  { id: "carleton-college", name: "Carleton College", logo: "/logos/default-university.png" },
-  { id: "carnegie-mellon-university", name: "Carnegie Mellon University", logo: "/logos/default-university.png" },
-  { id: "centre-college", name: "Centre College", logo: "/logos/default-university.png" },
-  { id: "chapman-university", name: "Chapman University", logo: "/logos/default-university.png" },
-  { id: "clark-atlanta-university", name: "Clark Atlanta University", logo: "/logos/default-university.png" },
-  { id: "clark-university", name: "Clark University", logo: "/logos/default-university.png" },
-  { id: "claremont-mckenna-college", name: "Claremont McKenna College", logo: "/logos/default-university.png" },
-  { id: "clayton-state-university", name: "Clayton State University", logo: "/logos/default-university.png" },
-  { id: "clemson-university", name: "Clemson University", logo: "/logos/default-university.png" },
-  { id: "college-of-wooster", name: "College of Wooster", logo: "/logos/default-university.png" },
-  { id: "colorado-college", name: "Colorado College", logo: "/logos/default-university.png" },
-  { id: "colorado-school-of-mines", name: "Colorado School of Mines", logo: "/logos/default-university.png" },
-  { id: "connecticut-college", name: "Connecticut College", logo: "/logos/default-university.png" },
-  { id: "cornell-university", name: "Cornell University", logo: "/logos/default-university.png" },
-  { id: "dartmouth-college", name: "Dartmouth College", logo: "/logos/default-university.png" },
-  { id: "davidson-college", name: "Davidson College", logo: "/logos/default-university.png" },
-  { id: "depaul-university", name: "DePaul University", logo: "/logos/default-university.png" },
-  { id: "delaware-state-university", name: "Delaware State University", logo: "/logos/default-university.png" },
-  { id: "denison-university", name: "Denison University", logo: "/logos/default-university.png" },
-  { id: "drexel-university", name: "Drexel University", logo: "/logos/default-university.png" },
-  { id: "duke-university", name: "Duke University", logo: "/logos/default-university.png" },
-  { id: "east-carolina-university", name: "East Carolina University", logo: "/logos/default-university.png" },
-  { id: "eastern-washington-university", name: "Eastern Washington University", logo: "/logos/default-university.png" },
-  { id: "elon-university", name: "Elon University", logo: "/logos/default-university.png" },
-  { id: "emerson-college", name: "Emerson College", logo: "/logos/default-university.png" },
-  { id: "emory-university", name: "Emory University", logo: "/logos/default-university.png" },
-  { id: "eth-zurich", name: "ETH Zurich", logo: "/logos/default-university.png" },
-  { id: "fudan-university", name: "Fudan University", logo: "/logos/default-university.png" },
-  { id: "florida-a-m-university-famu", name: "Florida A&M University (FAMU)", logo: "/logos/default-university.png" },
-  { id: "florida-international-university", name: "Florida International University", logo: "/logos/default-university.png" },
-  { id: "florida-state-university", name: "Florida State University", logo: "/logos/default-university.png" },
-  { id: "fordham-university", name: "Fordham University", logo: "/logos/default-university.png" },
-  { id: "franklin-and-marshall-college", name: "Franklin & Marshall College", logo: "/logos/default-university.png" },
-  { id: "georgetown-university", name: "Georgetown University", logo: "/logos/default-university.png" },
-  { id: "georgia-institute-of-technology", name: "Georgia Institute of Technology", logo: "/logos/default-university.png" },
-  { id: "grand-valley-state-university", name: "Grand Valley State University", logo: "/logos/default-university.png" },
-  { id: "grinnell-college", name: "Grinnell College", logo: "/logos/default-university.png" },
-  { id: "gustavus-adolphus-college", name: "Gustavus Adolphus College", logo: "/logos/default-university.png" },
-  { id: "hamilton-college", name: "Hamilton College", logo: "/logos/default-university.png" },
-  { id: "hampton-university", name: "Hampton University", logo: "/logos/default-university.png" },
-  { id: "harvard-university", name: "Harvard University", logo: "/logos/default-university.png" },
-  { id: "harvey-mudd-college", name: "Harvey Mudd College", logo: "/logos/default-university.png" },
-  { id: "haverford-college", name: "Haverford College", logo: "/logos/default-university.png" },
-  { id: "heidelberg-university", name: "Heidelberg University", logo: "/logos/default-university.png" },
-  { id: "howard-university", name: "Howard University", logo: "/logos/default-university.png" },
-  { id: "illinois-institute-of-technology", name: "Illinois Institute of Technology", logo: "/logos/default-university.png" },
-  { id: "indiana-university-bloomington", name: "Indiana University Bloomington", logo: "/logos/default-university.png" },
-  { id: "ithaca-college", name: "Ithaca College", logo: "/logos/default-university.png" },
-  { id: "james-madison-university", name: "James Madison University", logo: "/logos/default-university.png" },
-  { id: "johns-hopkins-university", name: "Johns Hopkins University", logo: "/logos/default-university.png" },
-  { id: "kenyon-college", name: "Kenyon College", logo: "/logos/default-university.png" },
-  { id: "lafayette-college", name: "Lafayette College", logo: "/logos/default-university.png" },
-  { id: "lawrence-university", name: "Lawrence University", logo: "/logos/default-university.png" },
-  { id: "loyola-marymount-university", name: "Loyola Marymount University", logo: "/logos/default-university.png" },
-  { id: "ludwig-maximilian-university-of-munich", name: "Ludwig Maximilian University of Munich", logo: "/logos/default-university.png" },
-  { id: "macalester-college", name: "Macalester College", logo: "/logos/default-university.png" },
-  { id: "marist-college", name: "Marist College", logo: "/logos/default-university.png" },
-  { id: "massachusetts-institute-of-technology-mit", name: "Massachusetts Institute of Technology (MIT)", logo: "/logos/default-university.png" },
-  { id: "mcgill-university", name: "McGill University", logo: "/logos/default-university.png" },
-  { id: "miami-university-ohio", name: "Miami University (Ohio)", logo: "/logos/default-university.png" },
-  { id: "michigan-state-university", name: "Michigan State University", logo: "/logos/default-university.png" },
-  { id: "middlebury-college", name: "Middlebury College", logo: "/logos/default-university.png" },
-  { id: "mississippi-state-university", name: "Mississippi State University", logo: "/logos/default-university.png" },
-  { id: "montana-state-university", name: "Montana State University", logo: "/logos/default-university.png" },
-  { id: "morehouse-college", name: "Morehouse College", logo: "/logos/default-university.png" },
-  { id: "morgan-state-university", name: "Morgan State University", logo: "/logos/default-university.png" },
-  { id: "mount-holyoke-college", name: "Mount Holyoke College", logo: "/logos/default-university.png" },
-  { id: "national-university-of-singapore", name: "National University of Singapore", logo: "/logos/default-university.png" },
-  { id: "new-jersey-institute-of-technology-njit", name: "New Jersey Institute of Technology (NJIT)", logo: "/logos/default-university.png" },
-  { id: "new-york-university-nyu", name: "New York University (NYU)", logo: "/logos/default-university.png" },
-  { id: "northern-arizona-university", name: "Northern Arizona University", logo: "/logos/default-university.png" },
-  { id: "north-carolina-a-t-state-university", name: "North Carolina A&T State University", logo: "/logos/default-university.png" },
-  { id: "northwestern-university", name: "Northwestern University", logo: "/logos/default-university.png" },
-  { id: "occidental-college", name: "Occidental College", logo: "/logos/default-university.png" },
-  { id: "ohio-state-university", name: "Ohio State University", logo: "/logos/default-university.png" },
-  { id: "oberlin-college", name: "Oberlin College", logo: "/logos/default-university.png" },
-  { id: "oregon-state-university", name: "Oregon State University", logo: "/logos/default-university.png" },
-  { id: "peking-university", name: "Peking University", logo: "/logos/default-university.png" },
-  { id: "pennsylvania-state-university", name: "Pennsylvania State University", logo: "/logos/default-university.png" },
-  { id: "pepperdine-university", name: "Pepperdine University", logo: "/logos/default-university.png" },
-  { id: "pomona-college", name: "Pomona College", logo: "/logos/default-university.png" },
-  { id: "princeton-university", name: "Princeton University", logo: "/logos/default-university.png" },
-  { id: "purdue-university", name: "Purdue University", logo: "/logos/default-university.png" },
-  { id: "quinnipiac-university", name: "Quinnipiac University", logo: "/logos/default-university.png" },
-  { id: "reed-college", name: "Reed College", logo: "/logos/default-university.png" },
-  { id: "rensselaer-polytechnic-institute-rpi", name: "Rensselaer Polytechnic Institute (RPI)", logo: "/logos/default-university.png" },
-  { id: "rhodes-college", name: "Rhodes College", logo: "/logos/default-university.png" },
-  { id: "rice-university", name: "Rice University", logo: "/logos/default-university.png" },
-  { id: "rose-hulman-institute-of-technology", name: "Rose-Hulman Institute of Technology", logo: "/logos/default-university.png" },
-  { id: "rutgers-university", name: "Rutgers University", logo: "/logos/default-university.png" },
-  { id: "sam-houston-state-university", name: "Sam Houston State University", logo: "/logos/default-university.png" },
-  { id: "san-diego-state-university", name: "San Diego State University", logo: "/logos/default-university.png" },
-  { id: "san-jose-state-university", name: "San Jose State University", logo: "/logos/default-university.png" },
-  { id: "santa-clara-university", name: "Santa Clara University", logo: "/logos/default-university.png" },
-  { id: "sarah-lawrence-college", name: "Sarah Lawrence College", logo: "/logos/default-university.png" },
-  { id: "sciences-po", name: "Sciences Po", logo: "/logos/default-university.png" },
-  { id: "seattle-university", name: "Seattle University", logo: "/logos/default-university.png" },
-  { id: "seoul-national-university", name: "Seoul National University", logo: "/logos/default-university.png" },
-  { id: "sewanee-the-university-of-the-south", name: "Sewanee: The University of the South", logo: "/logos/default-university.png" },
-  { id: "skidmore-college", name: "Skidmore College", logo: "/logos/default-university.png" },
-  { id: "smith-college", name: "Smith College", logo: "/logos/default-university.png" },
-  { id: "spelman-college", name: "Spelman College", logo: "/logos/default-university.png" },
-  { id: "st-olaf-college", name: "St. Olaf College", logo: "/logos/default-university.png" },
-  { id: "stanford", name: "Stanford University", logo: "/lovable-uploads/05100078-b238-4e77-b931-fc9455a696a9.png" },
-  { id: "stevens-institute-of-technology", name: "Stevens Institute of Technology", logo: "/logos/default-university.png" },
-  { id: "stetson-university", name: "Stetson University", logo: "/logos/default-university.png" },
-  { id: "suny-binghamton", name: "SUNY Binghamton", logo: "/logos/default-university.png" },
-  { id: "suny-geneseo", name: "SUNY Geneseo", logo: "/logos/default-university.png" },
-  { id: "suny-stony-brook", name: "SUNY Stony Brook", logo: "/logos/default-university.png" },
-  { id: "swarthmore-college", name: "Swarthmore College", logo: "/logos/default-university.png" },
-  { id: "texas-a-m-university", name: "Texas A&M University", logo: "/logos/default-university.png" },
-  { id: "texas-state-university", name: "Texas State University", logo: "/logos/default-university.png" },
-  { id: "the-new-school", name: "The New School", logo: "/logos/default-university.png" },
-  { id: "towson-university", name: "Towson University", logo: "/logos/default-university.png" },
-  { id: "trinity-college", name: "Trinity College", logo: "/logos/default-university.png" },
-  { id: "trinity-college-dublin", name: "Trinity College Dublin", logo: "/logos/default-university.png" },
-  { id: "tufts-university", name: "Tufts University", logo: "/logos/default-university.png" },
-  { id: "tuskegee-university", name: "Tuskegee University", logo: "/logos/default-university.png" },
-  { id: "union-college", name: "Union College", logo: "/logos/default-university.png" },
-  { id: "university-college-london-ucl", name: "University College London (UCL)", logo: "/logos/default-university.png" },
-  { id: "university-of-akron", name: "University of Akron", logo: "/logos/default-university.png" },
-  { id: "university-of-alabama", name: "University of Alabama", logo: "/logos/default-university.png" },
-  { id: "university-of-alaska-fairbanks", name: "University of Alaska Fairbanks", logo: "/logos/default-university.png" },
-  { id: "university-of-amsterdam", name: "University of Amsterdam", logo: "/logos/default-university.png" },
-  { id: "university-of-arizona", name: "University of Arizona", logo: "/logos/default-university.png" },
-  { id: "university-of-arkansas", name: "University of Arkansas", logo: "/logos/default-university.png" },
-  { id: "university-of-auckland", name: "University of Auckland", logo: "/logos/default-university.png" },
-  { id: "university-of-barcelona", name: "University of Barcelona", logo: "/logos/default-university.png" },
-  { id: "university-of-berkeley", name: "University of Berkeley", logo: "/logos/default-university.png" },
-  { id: "university-of-british-columbia", name: "University of British Columbia", logo: "/logos/default-university.png" },
-  { id: "university-of-california-berkeley", name: "University of California, Berkeley", logo: "/logos/default-university.png" },
-  { id: "university-of-california-davis", name: "University of California, Davis", logo: "/logos/default-university.png" },
-  { id: "university-of-california-irvine", name: "University of California, Irvine", logo: "/logos/default-university.png" },
-  { id: "university-of-california-los-angeles-ucla", name: "University of California, Los Angeles (UCLA)", logo: "/logos/default-university.png" },
-  { id: "university-of-california-merced", name: "University of California, Merced", logo: "/logos/default-university.png" },
-  { id: "university-of-california-riverside", name: "University of California, Riverside", logo: "/logos/default-university.png" },
-  { id: "university-of-california-san-diego", name: "University of California, San Diego", logo: "/logos/default-university.png" },
-  { id: "university-of-california-san-francisco", name: "University of California, San Francisco", logo: "/logos/default-university.png" },
-  { id: "university-of-california-santa-barbara", name: "University of California, Santa Barbara", logo: "/logos/default-university.png" },
-  { id: "university-of-california-santa-cruz", name: "University of California, Santa Cruz", logo: "/logos/default-university.png" },
-  { id: "university-of-cambridge", name: "University of Cambridge", logo: "/logos/default-university.png" },
-  { id: "university-of-cape-town", name: "University of Cape Town", logo: "/logos/default-university.png" },
-  { id: "university-of-central-florida", name: "University of Central Florida", logo: "/logos/default-university.png" },
-  { id: "university-of-chicago", name: "University of Chicago", logo: "/logos/default-university.png" },
-  { id: "university-of-cincinnati", name: "University of Cincinnati", logo: "/logos/default-university.png" },
-  { id: "university-of-colorado-boulder", name: "University of Colorado Boulder", logo: "/logos/default-university.png" },
-  { id: "university-of-copenhagen", name: "University of Copenhagen", logo: "/logos/default-university.png" },
-  { id: "university-of-delaware", name: "University of Delaware", logo: "/logos/default-university.png" },
-  { id: "university-of-denver", name: "University of Denver", logo: "/logos/default-university.png" },
-  { id: "university-of-edinburgh", name: "University of Edinburgh", logo: "/logos/default-university.png" },
-  { id: "university-of-florida", name: "University of Florida", logo: "/logos/default-university.png" },
-  { id: "university-of-georgia", name: "University of Georgia", logo: "/logos/default-university.png" },
-  { id: "university-of-glasgow", name: "University of Glasgow", logo: "/logos/default-university.png" },
-  { id: "university-of-hawaii-at-manoa", name: "University of Hawaii at Manoa", logo: "/logos/default-university.png" },
-  { id: "university-of-heidelberg", name: "University of Heidelberg", logo: "/logos/default-university.png" },
-  { id: "university-of-helsinki", name: "University of Helsinki", logo: "/logos/default-university.png" },
-  { id: "university-of-hong-kong", name: "University of Hong Kong", logo: "/logos/default-university.png" },
-  { id: "university-of-idaho", name: "University of Idaho", logo: "/logos/default-university.png" },
-  { id: "university-of-illinois-at-urbana-champaign", name: "University of Illinois at Urbana-Champaign", logo: "/logos/default-university.png" },
-  { id: "university-of-iowa", name: "University of Iowa", logo: "/logos/default-university.png" },
-  { id: "university-of-kansas", name: "University of Kansas", logo: "/logos/default-university.png" },
-  { id: "university-of-kentucky", name: "University of Kentucky", logo: "/logos/default-university.png" },
-  { id: "university-of-louisiana-at-lafayette", name: "University of Louisiana at Lafayette", logo: "/logos/default-university.png" },
-  { id: "university-of-maine", name: "University of Maine", logo: "/logos/default-university.png" },
-  { id: "university-of-manchester", name: "University of Manchester", logo: "/logos/default-university.png" },
-  { id: "university-of-maryland-college-park", name: "University of Maryland, College Park", logo: "/logos/default-university.png" },
-  { id: "university-of-massachusetts-amherst", name: "University of Massachusetts Amherst", logo: "/logos/default-university.png" },
-  { id: "university-of-melbourne", name: "University of Melbourne", logo: "/logos/default-university.png" },
-  { id: "university-of-michigan-ann-arbor", name: "University of Michigan, Ann Arbor", logo: "/logos/default-university.png" },
-  { id: "university-of-minnesota-twin-cities", name: "University of Minnesota, Twin Cities", logo: "/logos/default-university.png" },
-  { id: "university-of-mississippi", name: "University of Mississippi", logo: "/logos/default-university.png" },
-  { id: "university-of-missouri", name: "University of Missouri", logo: "/logos/default-university.png" },
-  { id: "university-of-montreal", name: "University of Montreal", logo: "/logos/default-university.png" },
-  { id: "university-of-nebraska-lincoln", name: "University of Nebraska–Lincoln", logo: "/logos/default-university.png" },
-  { id: "university-of-nevada-las-vegas", name: "University of Nevada, Las Vegas", logo: "/logos/default-university.png" },
-  { id: "university-of-nevada-reno", name: "University of Nevada, Reno", logo: "/logos/default-university.png" },
-  { id: "university-of-new-hampshire", name: "University of New Hampshire", logo: "/logos/default-university.png" },
-  { id: "university-of-new-mexico", name: "University of New Mexico", logo: "/logos/default-university.png" },
-  { id: "university-of-north-carolina-at-chapel-hill", name: "University of North Carolina at Chapel Hill", logo: "/logos/default-university.png" },
-  { id: "university-of-north-carolina-wilmington", name: "University of North Carolina Wilmington", logo: "/logos/default-university.png" },
-  { id: "university-of-north-dakota", name: "University of North Dakota", logo: "/logos/default-university.png" },
-  { id: "university-of-northern-colorado", name: "University of Northern Colorado", logo: "/logos/default-university.png" },
-  { id: "university-of-north-texas", name: "University of North Texas", logo: "/logos/default-university.png" },
-  { id: "university-of-notre-dame", name: "University of Notre Dame", logo: "/logos/default-university.png" },
-  { id: "university-of-oklahoma", name: "University of Oklahoma", logo: "/logos/default-university.png" },
-  { id: "university-of-oregon", name: "University of Oregon", logo: "/logos/default-university.png" },
-  { id: "university-of-oslo", name: "University of Oslo", logo: "/logos/default-university.png" },
-  { id: "university-of-oxford", name: "University of Oxford", logo: "/logos/default-university.png" },
-  { id: "university-of-pennsylvania", name: "University of Pennsylvania", logo: "/logos/default-university.png" },
-  { id: "university-of-pittsburgh", name: "University of Pittsburgh", logo: "/logos/default-university.png" },
-  { id: "university-of-portland", name: "University of Portland", logo: "/logos/default-university.png" },
-  { id: "university-of-queensland", name: "University of Queensland", logo: "/logos/default-university.png" },
-  { id: "university-of-rhode-island", name: "University of Rhode Island", logo: "/logos/default-university.png" },
-  { id: "university-of-richmond", name: "University of Richmond", logo: "/logos/default-university.png" },
-  { id: "university-of-rochester", name: "University of Rochester", logo: "/logos/default-university.png" },
-  { id: "university-of-san-diego", name: "University of San Diego", logo: "/logos/default-university.png" },
-  { id: "university-of-sao-paulo", name: "University of São Paulo", logo: "/logos/default-university.png" },
-  { id: "university-of-south-carolina", name: "University of South Carolina", logo: "/logos/default-university.png" },
-  { id: "university-of-south-dakota", name: "University of South Dakota", logo: "/logos/default-university.png" },
-  { id: "university-of-southern-california-usc", name: "University of Southern California (USC)", logo: "/logos/default-university.png" },
-  { id: "university-of-st-andrews", name: "University of St Andrews", logo: "/logos/default-university.png" },
-  { id: "university-of-sydney", name: "University of Sydney", logo: "/logos/default-university.png" },
-  { id: "university-of-tampa", name: "University of Tampa", logo: "/logos/default-university.png" },
-  { id: "university-of-tennessee-knoxville", name: "University of Tennessee, Knoxville", logo: "/logos/default-university.png" },
-  { id: "university-of-texas-at-austin", name: "University of Texas at Austin", logo: "/logos/default-university.png" },
-  { id: "university-of-tokyo", name: "University of Tokyo", logo: "/logos/default-university.png" },
-  { id: "university-of-toronto", name: "University of Toronto", logo: "/logos/default-university.png" },
-  { id: "university-of-utah", name: "University of Utah", logo: "/logos/default-university.png" },
-  { id: "university-of-vermont", name: "University of Vermont", logo: "/logos/default-university.png" },
-  { id: "university-of-vienna", name: "University of Vienna", logo: "/logos/default-university.png" },
-  { id: "university-of-virginia", name: "University of Virginia", logo: "/logos/default-university.png" },
-  { id: "university-of-washington", name: "University of Washington", logo: "/logos/default-university.png" },
-  { id: "university-of-wisconsin-la-crosse", name: "University of Wisconsin–La Crosse", logo: "/logos/default-university.png" },
-  { id: "university-of-wisconsin-madison", name: "University of Wisconsin–Madison", logo: "/logos/default-university.png" },
-  { id: "university-of-wyoming", name: "University of Wyoming", logo: "/logos/default-university.png" },
-  { id: "vanderbilt-university", name: "Vanderbilt University", logo: "/logos/default-university.png" },
-  { id: "vassar-college", name: "Vassar College", logo: "/logos/default-university.png" },
-  { id: "wake-forest-university", name: "Wake Forest University", logo: "/logos/default-university.png" },
-  { id: "washington-and-lee-university", name: "Washington and Lee University", logo: "/logos/default-university.png" },
-  { id: "washington-state-university", name: "Washington State University", logo: "/logos/default-university.png" },
-  { id: "washington-university-in-st-louis", name: "Washington University in St. Louis", logo: "/logos/default-university.png" },
-  { id: "wellesley-college", name: "Wellesley College", logo: "/logos/default-university.png" },
-  { id: "wesleyan-university", name: "Wesleyan University", logo: "/logos/default-university.png" },
-  { id: "west-point-us-military-academy", name: "West Point (US Military Academy)", logo: "/logos/default-university.png" },
-  { id: "western-michigan-university", name: "Western Michigan University", logo: "/logos/default-university.png" },
-  { id: "western-washington-university", name: "Western Washington University", logo: "/logos/default-university.png" },
-  { id: "wheaton-college", name: "Wheaton College", logo: "/logos/default-university.png" },
-  { id: "whitman-college", name: "Whitman College", logo: "/logos/default-university.png" },
-  { id: "williams-college", name: "Williams College", logo: "/logos/default-university.png" },
-  { id: "worcester-polytechnic-institute-wpi", name: "Worcester Polytechnic Institute (WPI)", logo: "/logos/default-university.png" },
-  { id: "xavier-university-of-louisiana", name: "Xavier University of Louisiana", logo: "/logos/default-university.png" },
-  { id: "yale-university", name: "Yale University", logo: "/logos/default-university.png" },
-  { id: "yeshiva-university", name: "Yeshiva University", logo: "/logos/default-university.png" },
-  { id: "york-university", name: "York University", logo: "/logos/default-university.png" }
-];
+import { getUniversitiesByLetter as fetchUniversitiesByLetter, getAlphabeticalLetters as fetchAlphabeticalLetters } from "@/services/universities";
 
-// Helper function to get all unique first letters for alphabetical navigation
-export function getAlphabeticalLetters(): string[] {
-  const letters = universities
-    .map(uni => uni.name.charAt(0).toUpperCase())
-    .filter((letter, index, self) => self.indexOf(letter) === index)
-    .sort();
-  
-  return letters;
-}
+// Static data for fallback and initial rendering
+const staticUniversitiesByLetter: Record<string, { id: string; name: string; logo?: string }[]> = {
+  "A": [
+    { id: "amherst-college", name: "Amherst College" },
+    { id: "arizona-state-university", name: "Arizona State University" },
+    { id: "appalachian-state-university", name: "Appalachian State University" },
+    { id: "allegheny-college", name: "Allegheny College" },
+    { id: "auburn-university", name: "Auburn University" },
+    { id: "american-university", name: "American University" },
+  ],
+  "B": [
+    { id: "ball-state-university", name: "Ball State University" },
+    { id: "brown-university", name: "Brown University" },
+    { id: "boston-college", name: "Boston College" },
+    { id: "boston-university", name: "Boston University" },
+  ],
+  "C": [
+    { id: "carnegie-mellon-university", name: "Carnegie Mellon University" },
+    { id: "columbia-university", name: "Columbia University" },
+    { id: "cornell-university", name: "Cornell University" },
+    { id: "case-western-reserve-university", name: "Case Western Reserve University" },
+    { id: "california-institute-of-technology", name: "California Institute of Technology" },
+  ],
+  "D": [
+    { id: "duke-university", name: "Duke University" },
+    { id: "dartmouth-college", name: "Dartmouth College" },
+  ],
+};
 
-// Helper function to group universities by first letter
-export function getUniversitiesByLetter() {
-  const groupedUniversities: Record<string, University[]> = {};
-  
-  // Sort universities alphabetically by name
-  const sortedUniversities = [...universities].sort((a, b) => 
-    a.name.localeCompare(b.name)
-  );
-  
-  sortedUniversities.forEach(uni => {
-    const firstLetter = uni.name.charAt(0).toUpperCase();
-    if (!groupedUniversities[firstLetter]) {
-      groupedUniversities[firstLetter] = [];
+const staticAlphabeticalLetters = Object.keys(staticUniversitiesByLetter).sort();
+
+// Export the static universities list for reference
+export const universities = Object.values(staticUniversitiesByLetter).flat();
+
+// Function to get universities data by letter - tries DB first, falls back to static data
+export async function getUniversitiesByLetter(): Promise<Record<string, { id: string; name: string; logo?: string }[]>> {
+  try {
+    const data = await fetchUniversitiesByLetter();
+    if (Object.keys(data).length > 0) {
+      return data;
     }
-    groupedUniversities[firstLetter].push(uni);
-  });
-  
-  return groupedUniversities;
+    return staticUniversitiesByLetter;
+  } catch (error) {
+    console.error("Error fetching universities by letter:", error);
+    return staticUniversitiesByLetter;
+  }
+}
+
+// Function to get alphabetical letters - tries DB first, falls back to static data
+export async function getAlphabeticalLetters(): Promise<string[]> {
+  try {
+    const data = await fetchAlphabeticalLetters();
+    if (data.length > 0) {
+      return data;
+    }
+    return staticAlphabeticalLetters;
+  } catch (error) {
+    console.error("Error fetching alphabetical letters:", error);
+    return staticAlphabeticalLetters;
+  }
 }

@@ -1,15 +1,20 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export async function generateUniversityContent(name: string): Promise<{
-  overview: string;
-  admissionStats: string;
-  applicationRequirements: string;
-  alumniInsights: string;
-} | null> {
+export interface UniversityContentResponse {
+  overview?: string;
+  admissionStats?: string;
+  applicationRequirements?: string;
+  alumniInsights?: string;
+}
+
+export async function generateUniversityContent(
+  name: string,
+  section?: "overview" | "admissionStats" | "applicationRequirements" | "alumniInsights" | "all"
+): Promise<UniversityContentResponse | null> {
   try {
     const { data, error } = await supabase.functions.invoke("generate-university-content", {
-      body: { name },
+      body: { name, section: section || "all" },
     });
 
     if (error) {

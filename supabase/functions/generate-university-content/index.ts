@@ -15,7 +15,7 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
   try {
-    const { name } = await req.json();
+    const { name, section } = await req.json();
 
     if (!name) {
       return new Response(JSON.stringify({ error: "University name required" }), {
@@ -24,17 +24,83 @@ serve(async (req: Request) => {
       });
     }
 
-    // Prompt for GPT
-    const prompt = `
-You are an AI specializing in summarizing university information for admissions-focused guides. For "${name}", generate the following as Markdown strings:
+    // Define prompt based on the requested section
+    let prompt = "";
+    
+    if (!section || section === "all") {
+      // If no specific section is requested, generate all content
+      prompt = `
+You are an AI specializing in creating detailed university guides. For "${name}", generate the following as Markdown strings:
 
-1. **Overview:** A professional, brief overview of the university (what it is known for, brief history, unique features).
-2. **Admission Statistics:** Realistic but plausible stats – e.g., acceptance rate, average test scores, and anything else relevant, if unknown, mark as "data unavailable".
-3. **Application Requirements:** Typical undergraduate admissions requirements for top US universities.
-4. **Alumni Insights:** One or two short, original insights or a quote, e.g., about campus life or opportunities (invented, but plausible).
+1. **Overview:** A comprehensive overview of the university (detailed history, background, unique features, campus environment, location description, notable achievements, and what makes it stand out from other institutions).
 
-Respond with a valid JSON object with properties: overview, admissionStats, applicationRequirements, alumniInsights.
+2. **Admission Statistics:** Realistic and detailed admission statistics – acceptance rate trends over recent years, average GPA requirements, typical test score ranges (SAT/ACT), application numbers and yield rates, notable demographic information, and transfer acceptance rates.
+
+3. **Application Requirements:** Detailed undergraduate admissions requirements including application deadlines (regular, early decision, early action), required standardized tests and score ranges, essay prompts, recommendation letter requirements, interview processes, application fees, and any special requirements for specific programs.
+
+4. **Alumni Insights:** Two to three compelling, detailed quotes or insights from alumni about their experiences, including specific benefits of attending, career outcomes, and meaningful campus experiences.
+
+Your response should be detailed (at least 300-400 words for each section) and formatted in valid JSON format with these properties: overview, admissionStats, applicationRequirements, alumniInsights.
 `;
+    } else if (section === "overview") {
+      prompt = `
+You are an AI specializing in creating detailed university guides. For "${name}", generate a comprehensive overview of the university. Include:
+
+- Detailed history and founding
+- Notable achievements and academic reputation
+- Campus environment and facilities
+- Location details and surrounding area
+- Unique features and traditions
+- Student life highlights
+- What makes it stand out from other institutions
+
+Your response should be detailed (at least 400-500 words) and formatted as a valid JSON object with a single property: "overview".
+`;
+    } else if (section === "admissionStats") {
+      prompt = `
+You are an AI specializing in university admission statistics. For "${name}", generate realistic and detailed admission statistics including:
+
+- Acceptance rate trends over recent years
+- Average GPA requirements
+- Typical SAT/ACT score ranges
+- Application volume statistics
+- Yield rates (percentage of admitted students who enroll)
+- Notable demographic information
+- Transfer acceptance rates
+- Early decision/action vs regular admission statistics
+
+Your response should be detailed (at least 400 words) and formatted as a valid JSON object with a single property: "admissionStats".
+`;
+    } else if (section === "applicationRequirements") {
+      prompt = `
+You are an AI specializing in university application requirements. For "${name}", generate detailed undergraduate admission requirements including:
+
+- Application deadlines (regular, early decision, early action)
+- Required standardized tests and score ranges
+- Essay prompts and writing requirements
+- Recommendation letter requirements
+- Interview processes and policies
+- Application fees and fee waiver information
+- Special requirements for specific programs or majors
+- Documentation needed for international students
+
+Your response should be detailed (at least 400 words) and formatted as a valid JSON object with a single property: "applicationRequirements".
+`;
+    } else if (section === "alumniInsights") {
+      prompt = `
+You are an AI specializing in alumni perspectives. For "${name}", generate 2-3 compelling, detailed quotes or insights from alumni about their experiences, including:
+
+- Specific benefits they gained from attending
+- Career outcomes and opportunities
+- Meaningful campus experiences and relationships
+- How their education prepared them for their career
+- Reflections on their college choice after graduation
+
+Create diverse perspectives from alumni in different fields and graduation years. Make the quotes feel authentic and personal.
+
+Your response should be detailed (at least 300 words) and formatted as a valid JSON object with a single property: "alumniInsights".
+`;
+    }
 
     const fetchResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -47,15 +113,15 @@ Respond with a valid JSON object with properties: overview, admissionStats, appl
         messages: [
           {
             role: "system",
-            content: "You are a helpful university admissions expert.",
+            content: "You are a helpful university admissions expert with extensive knowledge of US universities.",
           },
           {
             role: "user",
             content: prompt,
           },
         ],
-        temperature: 0.5,
-        max_tokens: 1200,
+        temperature: 0.7,
+        max_tokens: 2500,
       }),
     });
 
