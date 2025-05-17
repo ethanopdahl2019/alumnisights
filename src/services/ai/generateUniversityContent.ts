@@ -5,7 +5,6 @@ interface GeneratedContent {
   applicationRequirements?: string;
   alumniInsights?: string;
   didYouKnow?: string;
-  chartData?: Array<{ year: number; acceptanceRate: number }>;
   error?: string;
   details?: string;
 }

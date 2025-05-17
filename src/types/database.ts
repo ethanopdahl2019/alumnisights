@@ -165,14 +165,13 @@ export interface LandingPage {
 export interface UniversityContent {
   id: string;
   name: string;
-  overview: string | null;
-  admission_stats: string | null;
-  application_requirements: string | null;
-  alumni_insights: string | null;
-  image: string | null;
-  logo: string | null;
-  did_you_know: string | null;
-  chart_data: string | null;
+  overview: string;
+  admission_stats: string;
+  application_requirements: string;
+  alumni_insights?: string | null;
+  image?: string | null;
+  logo?: string | null;
+  did_you_know?: string | null;
   created_at: string;
   updated_at: string;
 }

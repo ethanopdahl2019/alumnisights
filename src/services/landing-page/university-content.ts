@@ -50,7 +50,6 @@ export async function saveUniversityContent(id: string, content: {
   applicationRequirements?: string;
   alumniInsights?: string;
   didYouKnow?: string;
-  chartData?: string; // Added chartData as JSON string
   image?: string | null;
   logo?: string | null;
 }): Promise<UniversityContent | null> {
@@ -65,7 +64,6 @@ export async function saveUniversityContent(id: string, content: {
         application_requirements: content.applicationRequirements || null,
         alumni_insights: content.alumniInsights || null,
         did_you_know: content.didYouKnow || null,
-        chart_data: content.chartData || null, // Store chart data
         image: content.image || null,
         logo: content.logo || null,
       })
