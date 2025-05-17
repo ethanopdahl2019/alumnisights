@@ -15,6 +15,8 @@ export async function generateUniversityContent(
   contentType: "overview" | "admissionStats" | "applicationRequirements" | "alumniInsights" | "didYouKnow" | "all"
 ): Promise<GeneratedContent> {
   try {
+    console.log(`Generating ${contentType} content for ${universityName}...`);
+    
     // Call the OpenAI API through our Supabase Edge Function
     const response = await fetch("https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/generate-university-content", {
       method: "POST",
@@ -28,10 +30,12 @@ export async function generateUniversityContent(
     });
 
     if (!response.ok) {
+      console.error(`Error response: ${response.status}`, await response.text());
       throw new Error(`Error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log("Received data from edge function:", data);
     
     // If we're generating didYouKnow content, ensure it's short and interesting
     if (contentType === "didYouKnow" && data.didYouKnow) {

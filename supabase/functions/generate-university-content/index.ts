@@ -20,6 +20,7 @@ serve(async (req) => {
   }
   
   try {
+    console.log("Processing content generation request...");
     const { universityName, contentType } = await req.json();
     
     if (!universityName) {
@@ -32,6 +33,7 @@ serve(async (req) => {
     // OpenAI API call configuration
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiApiKey) {
+      console.error("OpenAI API key not configured");
       return new Response(JSON.stringify({ error: "OpenAI API key not configured" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
@@ -61,6 +63,8 @@ serve(async (req) => {
       prompt += `Provide a single interesting and surprising fact about ${universityName} that most people don't know. Keep it brief - just 1-2 sentences maximum. Start with "Did you know that..."\n\n`;
     }
     
+    console.log("Sending prompt to OpenAI:", prompt);
+    
     // Call OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -86,19 +90,27 @@ serve(async (req) => {
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
+      const errorText = await response.text();
+      console.error("OpenAI API error response:", errorText);
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
+      } catch (parseError) {
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText.substring(0, 200)}`);
+      }
     }
     
     const data = await response.json();
     const rawContent = data.choices[0].message.content;
+    
+    console.log("Received content from OpenAI:", rawContent.substring(0, 100) + "...");
     
     // Process the response to extract appropriate sections
     const result: Record<string, string> = {};
     
     if (contentType === "all") {
       // Parse the complete response into sections
-      const sections = rawContent.split("\n\n");
+      const sections = rawContent.split("\n\n").filter(section => section.trim() !== "");
       
       // Assign sections to appropriate keys based on the order requested
       let sectionIndex = 0;

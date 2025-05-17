@@ -69,30 +69,45 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
         break;
     }
     
-    toast.info(`Generating ${section} with AI...`);
+    toast.info(`Generating ${section} content with AI...`);
     
     try {
+      console.log(`Starting generation for ${section}`);
       const aiContent = await generateUniversityContent(form.getValues("name"), section);
+      console.log(`Received content for ${section}:`, aiContent);
       
       if (aiContent) {
+        // Check for the specific field in the response
         if (section === "overview" && aiContent.overview) {
           form.setValue("overview", aiContent.overview);
-        } else if (section === "admissionStats" && aiContent.admissionStats) {
+          toast.success("Overview content generated!");
+        } 
+        else if (section === "admissionStats" && aiContent.admissionStats) {
           form.setValue("admissionStats", aiContent.admissionStats);
-        } else if (section === "applicationRequirements" && aiContent.applicationRequirements) {
+          toast.success("Admission stats content generated!");
+        } 
+        else if (section === "applicationRequirements" && aiContent.applicationRequirements) {
           form.setValue("applicationRequirements", aiContent.applicationRequirements);
-        } else if (section === "alumniInsights" && aiContent.alumniInsights) {
+          toast.success("Application requirements content generated!");
+        } 
+        else if (section === "alumniInsights" && aiContent.alumniInsights) {
           form.setValue("alumniInsights", aiContent.alumniInsights);
-        } else if (section === "didYouKnow" && aiContent.didYouKnow) {
+          toast.success("Alumni insights content generated!");
+        } 
+        else if (section === "didYouKnow" && aiContent.didYouKnow) {
           form.setValue("didYouKnow", aiContent.didYouKnow);
+          toast.success("Did You Know content generated!");
         }
-        toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} content generated!`);
+        else {
+          console.warn(`Expected content for ${section} not found in response:`, aiContent);
+          toast.error(`Failed to generate ${section} content, try again`);
+        }
       } else {
         toast.error(`Failed to generate ${section} content, try again`);
       }
     } catch (e) {
-      toast.error(`Error generating ${section} content`);
-      console.error(e);
+      console.error(`Error generating ${section} content:`, e);
+      toast.error(`Error generating ${section} content: ${e.message || "Unknown error"}`);
     } finally {
       // Reset the loading state for the specific section
       switch (section) {
@@ -124,20 +139,23 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
     setIsGeneratingAll(true);
     toast.info("Generating all content with AI...");
     try {
+      console.log("Starting generation for all content");
       const aiContent = await generateUniversityContent(form.getValues("name"), "all");
+      console.log("Received all content:", aiContent);
+      
       if (aiContent) {
-        form.setValue("overview", aiContent.overview || "");
-        form.setValue("admissionStats", aiContent.admissionStats || "");
-        form.setValue("applicationRequirements", aiContent.applicationRequirements || "");
-        form.setValue("alumniInsights", aiContent.alumniInsights || "");
-        form.setValue("didYouKnow", aiContent.didYouKnow || "");
+        if (aiContent.overview) form.setValue("overview", aiContent.overview);
+        if (aiContent.admissionStats) form.setValue("admissionStats", aiContent.admissionStats);
+        if (aiContent.applicationRequirements) form.setValue("applicationRequirements", aiContent.applicationRequirements);
+        if (aiContent.alumniInsights) form.setValue("alumniInsights", aiContent.alumniInsights);
+        if (aiContent.didYouKnow) form.setValue("didYouKnow", aiContent.didYouKnow);
         toast.success("All content generated!");
       } else {
         toast.error("Failed to generate content, try again");
       }
     } catch (e) {
-      toast.error("Error generating content");
-      console.error(e);
+      console.error("Error generating all content:", e);
+      toast.error(`Error generating content: ${e.message || "Unknown error"}`);
     } finally {
       setIsGeneratingAll(false);
     }
