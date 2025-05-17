@@ -32,7 +32,8 @@ const UniversityPage: React.FC = () => {
             setUniversityData({
               id: university.id,
               name: university.name,
-              description: university.type || undefined
+              type: university.type || undefined,
+              state: university.state || undefined
             });
           }
         } catch (error) {
@@ -101,8 +102,8 @@ const UniversityPage: React.FC = () => {
             </section>
           )}
         </>
-      ) : universityData?.description ? (
-        <p className="mb-4">{universityData.description}</p>
+      ) : universityData?.type ? (
+        <p className="mb-4">{universityData.type}</p>
       ) : (
         <p className="mb-4">No information available for this university.</p>
       )}
