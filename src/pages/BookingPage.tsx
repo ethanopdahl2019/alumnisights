@@ -25,6 +25,7 @@ const BookingPage = () => {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [bookingZoomLink, setBookingZoomLink] = useState<string | null>(null);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -137,7 +138,7 @@ const BookingPage = () => {
       console.log('- Product:', selectedProduct.id);
       
       // Create the booking in the database
-      const { data, error } = await supabase
+      const { data: bookingData, error: bookingError } = await supabase
         .from('bookings')
         .insert({
           user_id: user.id,
@@ -149,13 +150,44 @@ const BookingPage = () => {
         .select()
         .single();
       
-      if (error) {
-        console.error('Database error:', error);
-        throw new Error(error.message);
+      if (bookingError) {
+        console.error('Database error:', bookingError);
+        throw new Error(bookingError.message);
       }
       
-      console.log('Booking created successfully:', data);
-      setIsConfirmationOpen(true);
+      console.log('Booking created successfully:', bookingData);
+
+      // Process payment by calling our payment processing edge function
+      try {
+        const { data: paymentData, error: paymentError } = await supabase.functions.invoke('create-payment', {
+          body: {
+            amount: selectedProduct.price * 100, // Convert to cents for Stripe
+            product_name: `${selectedProduct.title} with ${profile.name}`,
+            booking_id: bookingData.id,
+            success_redirect: window.location.origin + '/payment-success',
+            cancel_redirect: window.location.origin + '/payment-canceled'
+          }
+        });
+
+        if (paymentError) {
+          throw paymentError;
+        }
+
+        console.log('Payment session created:', paymentData);
+        
+        if (paymentData && paymentData.url) {
+          // Redirect to the payment URL
+          window.location.href = paymentData.url;
+        } else {
+          throw new Error('No payment URL returned');
+        }
+      } catch (paymentError) {
+        console.error('Payment error:', paymentError);
+        // If payment creation fails, we should update the booking status or delete it
+        await supabase.from('bookings').update({ status: 'payment_failed' }).eq('id', bookingData.id);
+        throw new Error('Failed to process payment. Please try again.');
+      }
+      
     } catch (error) {
       console.error('Error creating booking:', error);
       toast({
