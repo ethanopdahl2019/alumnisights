@@ -1,9 +1,11 @@
+
 export interface University {
   id: string;
   name: string;
   title: string;
   content: string[];
   image?: string;
+  didYouKnow?: string | null;
 }
 
 export const universities: Record<string, University> = {
