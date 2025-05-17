@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -5,24 +6,24 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'sonner';
 
 import AuthProvider from './components/AuthProvider';
-import HomePage from './pages/HomePage';
-import AlumniDirectoryPage from './pages/AlumniDirectoryPage';
-import SchoolDirectoryPage from './pages/SchoolDirectoryPage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
-import AuthPage from './pages/AuthPage';
-import AccountPage from './pages/AccountPage';
+import HomePage from './pages/Index';
+import AlumniDirectoryPage from './pages/Browse';
+import SchoolDirectoryPage from './pages/Schools';
+import AboutPage from './pages/AboutUs';
+import ContactPage from './pages/Contact';
+import PrivacyPage from './pages/Privacy';
+import TermsPage from './pages/Terms';
+import AuthPage from './pages/Auth';
+import AccountPage from './pages/MyAccount';
 import AlumniProfilePage from './pages/AlumniProfilePage';
 import StudentDashboard from './pages/StudentDashboard';
 import MentorDashboard from './pages/MentorDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import NotFoundPage from './pages/NotFoundPage';
-import BlogPage from './pages/BlogPage';
-import BlogPostPage from './pages/BlogPostPage';
-import PricingPage from "./pages/PricingPage";
-import UniversityPage from "./pages/UniversityPage";
+import AdminDashboard from './pages/admin/AdminDashboard';
+import NotFoundPage from './pages/NotFound';
+import BlogPage from './pages/Blog';
+import BlogPostPage from './pages/Blog';
+import PricingPage from "./pages/LandingPage";
+import UniversityPage from "./pages/insights/universities/UniversityPage";
 import LandingPage from "./pages/LandingPage";
 import MessagesPage from "./pages/MessagesPage";
 
