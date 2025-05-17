@@ -59,7 +59,6 @@ export async function generateUniversityContent(
         !data.overview && 
         !data.admissionStats && 
         !data.applicationRequirements && 
-        !data.alumniInsights && 
         !data.didYouKnow) {
       console.error("No content was generated for any section");
       throw new Error("No content was generated. Please try again.");

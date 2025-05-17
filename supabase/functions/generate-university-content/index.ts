@@ -74,15 +74,14 @@ serve(async (req) => {
         "Application Requirements. Cover deadlines, required documentation, essays, interviews, and any special requirements.";
     }
     
-    if (contentType === "alumniInsights" || contentType === "all") {
-      userPrompt += contentType === "all" ? 
-        "\n\n4. Alumni Insights: Share insights from alumni about their experience at the school, what they valued most, and advice for prospective students." : 
-        "Alumni Insights. Share perspectives from graduates about their experience, what they valued most, and advice for prospective students.";
+    // Only include alumni insights if specifically requested (not for "all")
+    if (contentType === "alumniInsights") {
+      userPrompt += "Alumni Insights. Share perspectives from graduates about their experience, what they valued most, and advice for prospective students.";
     }
     
     if (contentType === "didYouKnow" || contentType === "all") {
       userPrompt += contentType === "all" ? 
-        "\n\n5. Did You Know: Provide a single interesting and surprising fact about this university that most people don't know. Start with 'Did you know that...' and keep it to 1-2 sentences." : 
+        "\n\n4. Did You Know: Provide a single interesting and surprising fact about this university that most people don't know. Start with 'Did you know that...' and keep it to 1-2 sentences." : 
         "Provide an interesting and surprising fact about this university that most people don't know. Start with 'Did you know that...' and keep it brief (1-2 sentences).";
     }
     
@@ -186,7 +185,7 @@ serve(async (req) => {
         // Parse the complete response into sections by splitting on double newlines
         const sections = rawContent.split("\n\n").filter(section => section.trim() !== "");
         
-        // Assign sections to appropriate keys based on the order requested
+        // Assign sections to appropriate keys based on the order requested (now only 3 sections)
         let sectionIndex = 0;
         
         if (sections[sectionIndex]) {
@@ -201,11 +200,6 @@ serve(async (req) => {
         
         if (sections[sectionIndex]) {
           result.applicationRequirements = sections[sectionIndex];
-          sectionIndex++;
-        }
-        
-        if (sections[sectionIndex]) {
-          result.alumniInsights = sections[sectionIndex];
           sectionIndex++;
         }
         
