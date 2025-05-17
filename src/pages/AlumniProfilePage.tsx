@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -8,7 +9,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import ReviewCard from "@/components/ReviewCard";
-import MessageButton from "@/components/messaging/MessageButton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -137,20 +137,11 @@ const AlumniProfilePage = () => {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h1 className="text-3xl font-bold mb-2">{profile.name}</h1>
-                        {profile.headline && (
-                          <p className="text-lg text-gray-600 mb-4">{profile.headline}</p>
-                        )}
-                      </div>
-                      <MessageButton 
-                        profileId={profile.id} 
-                        mentorName={profile.name}
-                        buttonSize="sm"
-                      />
-                    </div>
+                  <div>
+                    <h1 className="text-3xl font-bold mb-2">{profile.name}</h1>
+                    {profile.headline && (
+                      <p className="text-lg text-gray-600 mb-4">{profile.headline}</p>
+                    )}
                     
                     <div className="flex flex-col gap-2 text-gray-600">
                       <div className="flex items-center gap-2">
@@ -359,19 +350,6 @@ const AlumniProfilePage = () => {
                       />
                     )}
                   </motion.div>
-                </div>
-
-                <div className="mt-6 pt-6 border-t">
-                  <h3 className="font-medium mb-3">Quick Connect</h3>
-                  <MessageButton 
-                    profileId={profile.id} 
-                    mentorName={profile.name} 
-                    buttonVariant="secondary"
-                    className="w-full justify-center"
-                  />
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Send a message (120 character limit)
-                  </p>
                 </div>
               </Card>
 
