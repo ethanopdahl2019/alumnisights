@@ -1,14 +1,12 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, MessageSquare } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { insightsItems } from "./InsightsDropdown";
 import { NavbarUserSection } from "./NavbarUserSection";
-import { useAuth } from "@/components/AuthProvider";
 
 export const MobileMenu = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
   
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
@@ -39,17 +37,6 @@ export const MobileMenu = () => {
             >
               Schools
             </Link>
-            
-            {user && (
-              <Link 
-                to="/messaging" 
-                className="text-navy font-medium py-2 hover:bg-gray-50 px-4 rounded flex items-center gap-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <MessageSquare size={18} />
-                Messages
-              </Link>
-            )}
             
             {/* Mobile Insights Dropdown */}
             <div className="flex flex-col gap-2">
