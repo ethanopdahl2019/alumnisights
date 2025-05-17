@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -10,7 +9,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { ShieldAlert, User } from "lucide-react";
+import { ShieldAlert, User, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isMentor, isStudent } from "@/services/auth";
 
@@ -70,6 +69,10 @@ export const NavbarUserSection = () => {
         <DropdownMenuItem onClick={() => navigate('/account')}>
           <User className="mr-2 h-4 w-4" />
           View Account
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/messages')}>
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Messages
         </DropdownMenuItem>
         <DropdownMenuItem onClick={goToDashboard}>
           Dashboard
