@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { getProfileById } from "@/services/profiles";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -111,59 +111,31 @@ const BookingPage = () => {
     setIsProcessing(true);
 
     try {
-      // Combine date and time for scheduled_at
-      const timeMatch = selectedTime.match(/^(\d+):(\d+) (AM|PM)$/);
-      if (!timeMatch) {
-        throw new Error("Invalid time format");
-      }
-      
-      const [_, hours, minutes, period] = timeMatch;
-      const isPM = period === 'PM';
-      const hoursInt = parseInt(hours);
-      
-      // Convert to 24 hour format
-      const adjustedHours = isPM && hoursInt !== 12 
-        ? hoursInt + 12 
-        : (isPM && hoursInt === 12 ? 12 : hoursInt === 12 ? 0 : hoursInt);
-      
-      const scheduledDateTime = new Date(selectedDate);
-      scheduledDateTime.setHours(adjustedHours);
-      scheduledDateTime.setMinutes(parseInt(minutes));
+      // Create a Stripe Checkout session
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          profileId: id,
+          productId: selectedProduct.id,
+          selectedDate: selectedDate.toISOString(),
+          selectedTime: selectedTime,
+          userId: user.id
+        }
+      });
 
-      console.log('Creating booking with:');
-      console.log('- User ID:', user.id);
-      console.log('- Profile ID:', id);
-      console.log('- Scheduled at:', scheduledDateTime.toISOString());
-      console.log('- Product:', selectedProduct.id);
-      
-      // Create the booking in the database
-      const { data, error } = await supabase
-        .from('bookings')
-        .insert({
-          user_id: user.id,
-          profile_id: id,
-          scheduled_at: scheduledDateTime.toISOString(),
-          status: 'pending',
-          booking_option_id: selectedProduct.id === 'quick-chat' ? null : null // Replace with actual booking option ID if needed
-        })
-        .select()
-        .single();
-      
       if (error) {
-        console.error('Database error:', error);
         throw new Error(error.message);
       }
       
-      console.log('Booking created successfully:', data);
-      setIsConfirmationOpen(true);
+      if (!data.checkoutUrl) {
+        throw new Error("No checkout URL returned");
+      }
+      
+      // Redirect to Stripe checkout
+      window.location.href = data.checkoutUrl;
+      
     } catch (error) {
-      console.error('Error creating booking:', error);
-      toast({
-        title: "Booking Failed",
-        description: "There was an issue creating your booking. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
+      console.error('Error creating payment session:', error);
+      toast.error('There was an issue processing your payment. Please try again.');
       setIsProcessing(false);
     }
   };

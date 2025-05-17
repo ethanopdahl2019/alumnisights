@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon, Clock, CreditCard } from "lucide-react";
 
 interface ProductInfo {
   title: string;
@@ -48,10 +48,14 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         )}
         
         <div className="pt-2 border-t">
-          <div className="flex justify-between font-medium">
+          <div className="flex items-center justify-between font-medium">
             <span>Total</span>
             <span>${selectedProduct.price}</span>
           </div>
+          <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+            <CreditCard className="h-3.5 w-3.5" />
+            Payment will be processed securely via Stripe
+          </p>
         </div>
       </CardContent>
     </Card>
