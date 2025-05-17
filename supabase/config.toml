@@ -1,1 +1,5 @@
+
 project_id = "xvnhujckrivhjnaslanm"
+
+[functions.generate-university-content]
+verify_jwt = false

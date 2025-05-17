@@ -1,7 +1,6 @@
 
 // Import required modules for Deno
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.8.0';
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
@@ -21,40 +20,6 @@ serve(async (req) => {
   
   try {
     console.log("Processing content generation request...");
-    
-    // Verify authentication
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization header" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
-    }
-    
-    // Create a Supabase client using the Auth header from the request
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { 
-        global: { headers: { Authorization: authHeader } }
-      }
-    );
-    
-    // Verify the user is authenticated
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
-    
-    if (userError || !user) {
-      return new Response(JSON.stringify({ 
-        error: "Unauthorized request", 
-        details: userError?.message || "Invalid authentication token"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
-    }
     
     // Extract request body
     const { universityName, contentType } = await req.json();
