@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { GraduationCap, MapPin } from 'lucide-react';
@@ -6,7 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AlphabeticalNav from '@/components/AlphabeticalNav';
 import SearchInput from '@/components/SearchInput';
-import { getAlphabeticalLetters, getUniversitiesByLetter } from './insights/universities/universities-data';
+import { getAlphabeticalLetters, getUniversitiesByLetter, UniversityData } from './insights/universities/universities-data';
 import { getUniversityLogo } from '@/services/landing-page';
 
 const Schools = () => {
@@ -16,10 +17,37 @@ const Schools = () => {
   const [isLoadingLogos, setIsLoadingLogos] = useState(true);
   const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
-  // Get the same university list as the insights page
-  const alphabeticalLetters = getAlphabeticalLetters();
-  const universitiesByLetter = getUniversitiesByLetter();
-  const allUniversities = Object.values(universitiesByLetter).flat();
+  // Store fetched data in state
+  const [alphabeticalLetters, setAlphabeticalLetters] = useState<string[]>([]);
+  const [universitiesByLetter, setUniversitiesByLetter] = useState<Record<string, UniversityData[]>>({});
+  const [allUniversities, setAllUniversities] = useState<UniversityData[]>([]);
+  
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const letters = await getAlphabeticalLetters();
+        setAlphabeticalLetters(letters);
+        
+        const universities = await getUniversitiesByLetter();
+        setUniversitiesByLetter(universities);
+        
+        // Get all universities as a flat array
+        const allUnis = Object.values(universities).flat();
+        setAllUniversities(allUnis);
+        
+        // Set initial active letter
+        if (letters.length > 0 && !activeLetter) {
+          setActiveLetter(letters[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch university data:", error);
+        toast.error("Failed to load universities");
+      }
+    };
+    
+    fetchData();
+  }, []);
   
   // Fetch university logos efficiently
   useEffect(() => {
@@ -51,15 +79,10 @@ const Schools = () => {
       }
     };
     
-    fetchUniversityLogos();
-  }, []);
-  
-  useEffect(() => {
-    // Set initial active letter to the first one
-    if (alphabeticalLetters.length > 0 && !activeLetter) {
-      setActiveLetter(alphabeticalLetters[0]);
+    if (allUniversities.length > 0) {
+      fetchUniversityLogos();
     }
-  }, [alphabeticalLetters.length]);
+  }, [allUniversities]);
   
   // Handle letter click in the alphabetical nav
   const handleLetterClick = (letter: string) => {
@@ -74,10 +97,8 @@ const Schools = () => {
   
   // Filter universities based on search term
   const filteredSchools = searchTerm
-    ? alphabeticalLetters.flatMap(letter => 
-        (universitiesByLetter[letter] || []).filter(uni => 
-          uni.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+    ? allUniversities.filter(uni => 
+        uni.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
     

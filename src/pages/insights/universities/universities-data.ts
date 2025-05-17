@@ -1,8 +1,8 @@
 
-import { getUniversitiesByLetter as fetchUniversitiesByLetter, getAlphabeticalLetters as fetchAlphabeticalLetters } from "@/services/universities";
+import { getUniversitiesByLetter as fetchUniversitiesByLetter, getAlphabeticalLetters as fetchAlphabeticalLetters, University } from "@/services/universities";
 
 // Static data for fallback and initial rendering
-const staticUniversitiesByLetter: Record<string, { id: string; name: string; logo?: string }[]> = {
+const staticUniversitiesByLetter: Record<string, { id: string; name: string; logo?: string; description?: string }[]> = {
   "A": [
     { id: "amherst-college", name: "Amherst College" },
     { id: "arizona-state-university", name: "Arizona State University" },
@@ -35,12 +35,29 @@ const staticAlphabeticalLetters = Object.keys(staticUniversitiesByLetter).sort()
 // Export the static universities list for reference
 export const universities = Object.values(staticUniversitiesByLetter).flat();
 
+// Types for university data
+export interface UniversityData {
+  id: string;
+  name: string;
+  logo?: string;
+  description?: string;
+}
+
 // Function to get universities data by letter - tries DB first, falls back to static data
-export async function getUniversitiesByLetter(): Promise<Record<string, { id: string; name: string; logo?: string }[]>> {
+export async function getUniversitiesByLetter(): Promise<Record<string, UniversityData[]>> {
   try {
     const data = await fetchUniversitiesByLetter();
     if (Object.keys(data).length > 0) {
-      return data;
+      // Convert from University type to UniversityData type
+      const convertedData: Record<string, UniversityData[]> = {};
+      Object.keys(data).forEach(letter => {
+        convertedData[letter] = data[letter].map(uni => ({
+          id: uni.id,
+          name: uni.name,
+          description: uni.type || undefined
+        }));
+      });
+      return convertedData;
     }
     return staticUniversitiesByLetter;
   } catch (error) {

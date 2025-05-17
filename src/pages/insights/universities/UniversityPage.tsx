@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import UniversityTemplate from "./UniversityTemplate";
-import { universities } from "./universities-data";
+import { universities, UniversityData } from "./universities-data";
 import { getUniversityContent } from "@/services/landing-page";
 import { UniversityContent } from "@/types/database";
 
@@ -93,7 +93,9 @@ const UniversityPage: React.FC = () => {
         </>
       ) : universityData?.description ? (
         <p className="mb-4">{universityData.description}</p>
-      ) : null}
+      ) : (
+        <p className="mb-4">No information available for this university.</p>
+      )}
     </>
   );
   

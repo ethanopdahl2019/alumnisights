@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AlphabeticalNav from "@/components/AlphabeticalNav";
-import { getAlphabeticalLetters, getUniversitiesByLetter } from "./insights/universities/universities-data";
+import { getAlphabeticalLetters, getUniversitiesByLetter, UniversityData } from "./insights/universities/universities-data";
 import { getUniversityContent } from "@/services/landing-page";
 
 const UndergraduateAdmissions = () => {
@@ -15,16 +15,41 @@ const UndergraduateAdmissions = () => {
   const [universityContents, setUniversityContents] = useState<Record<string, any>>({});
   const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
-  const alphabeticalLetters = getAlphabeticalLetters();
-  const universitiesByLetter = getUniversitiesByLetter();
+  // Store fetched data in state
+  const [alphabeticalLetters, setAlphabeticalLetters] = useState<string[]>([]);
+  const [universitiesByLetter, setUniversitiesByLetter] = useState<Record<string, UniversityData[]>>({});
+  const [allUniversities, setAllUniversities] = useState<UniversityData[]>([]);
+  
+  // Fetch university data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const letters = await getAlphabeticalLetters();
+        setAlphabeticalLetters(letters);
+        
+        const universities = await getUniversitiesByLetter();
+        setUniversitiesByLetter(universities);
+        
+        // Collect all universities in a flat array
+        const allUnis = Object.values(universities).flat();
+        setAllUniversities(allUnis);
+        
+        // Set initial active letter
+        if (letters.length > 0 && !activeLetter) {
+          setActiveLetter(letters[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch university data:", error);
+      }
+    };
+    
+    fetchData();
+  }, []);
   
   // Fetch university content for logos
   useEffect(() => {
     const fetchUniversityContent = async () => {
       const contentMap: Record<string, any> = {};
-      
-      // Get all university IDs
-      const allUniversities = Object.values(universitiesByLetter).flat();
       
       for (const university of allUniversities) {
         try {
@@ -40,15 +65,10 @@ const UndergraduateAdmissions = () => {
       setUniversityContents(contentMap);
     };
     
-    fetchUniversityContent();
-  }, []);
-  
-  useEffect(() => {
-    // Set initial active letter to the first one
-    if (alphabeticalLetters.length > 0 && !activeLetter) {
-      setActiveLetter(alphabeticalLetters[0]);
+    if (allUniversities.length > 0) {
+      fetchUniversityContent();
     }
-  }, [alphabeticalLetters.length]);
+  }, [allUniversities]);
   
   // Handle letter click in the alphabetical nav
   const handleLetterClick = (letter: string) => {
@@ -63,10 +83,8 @@ const UndergraduateAdmissions = () => {
   
   // Filter universities based on search term
   const filteredUniversities = searchTerm
-    ? alphabeticalLetters.flatMap(letter => 
-        (universitiesByLetter[letter] || []).filter(uni => 
-          uni.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+    ? allUniversities.filter(uni => 
+        uni.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
 
