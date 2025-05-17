@@ -15,6 +15,8 @@ import BookingHeader from "@/components/booking/BookingHeader";
 import DateTimePicker from "@/components/booking/DateTimePicker";
 import BookingSummary from "@/components/booking/BookingSummary";
 import BookingConfirmationDialog from "@/components/booking/BookingConfirmationDialog";
+import PaymentMethodSelection from "@/components/booking/PaymentMethodSelection";
+import { Button } from "@/components/ui/button";
 
 const BookingPage = () => {
   const { id, productId } = useParams();
@@ -25,6 +27,8 @@ const BookingPage = () => {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [bookingZoomLink, setBookingZoomLink] = useState<string | null>(null);
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -87,6 +91,75 @@ const BookingPage = () => {
     // Example: Disable weekends (0 is Sunday, 6 is Saturday)
     const day = date.getDay();
     return day === 0 || day === 6;
+  };
+
+  // Handle Confirm Time and Date selection
+  const handleConfirmDateTime = () => {
+    if (!selectedDate || !selectedTime) {
+      toast({
+        title: "Error",
+        description: "Please select a date and time",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to book a session",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Show payment methods after date and time are selected
+    setShowPaymentMethods(true);
+  };
+  
+  // Handle payment with Stripe
+  const handleStripeCheckout = async () => {
+    if (!selectedDate || !selectedTime || !user) {
+      toast({
+        title: "Error",
+        description: "Please select a date and time and ensure you're logged in",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsPaymentProcessing(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          profileId: id,
+          productId: selectedProduct.id,
+          selectedDate: selectedDate.toISOString(),
+          selectedTime: selectedTime
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL received from Stripe");
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      toast({
+        title: "Payment Error",
+        description: "There was an issue starting the checkout process. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsPaymentProcessing(false);
+    }
   };
   
   const handleConfirmBooking = async () => {
@@ -168,6 +241,11 @@ const BookingPage = () => {
     }
   };
   
+  // Return the user back to date/time selection
+  const handleBackToDateSelection = () => {
+    setShowPaymentMethods(false);
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -175,37 +253,75 @@ const BookingPage = () => {
         <div className="max-w-4xl mx-auto">
           <BookingHeader profile={profile} id={id!} />
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <motion.div 
-              className="md:col-span-2"
+          {!showPaymentMethods ? (
+            <div className="grid md:grid-cols-3 gap-8">
+              <motion.div 
+                className="md:col-span-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <DateTimePicker
+                  selectedDate={selectedDate}
+                  setSelectedDate={setSelectedDate}
+                  selectedTime={selectedTime}
+                  setSelectedTime={setSelectedTime}
+                  availableTimes={availableTimes}
+                  isDateDisabled={isDateDisabled}
+                  handleConfirmBooking={handleConfirmDateTime}
+                  isProcessing={isProcessing}
+                />
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <BookingSummary
+                  selectedProduct={selectedProduct}
+                  selectedDate={selectedDate}
+                  selectedTime={selectedTime}
+                />
+              </motion.div>
+            </div>
+          ) : (
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.5 }}
+              className="mt-8"
             >
-              <DateTimePicker
-                selectedDate={selectedDate}
-                setSelectedDate={setSelectedDate}
-                selectedTime={selectedTime}
-                setSelectedTime={setSelectedTime}
-                availableTimes={availableTimes}
-                isDateDisabled={isDateDisabled}
-                handleConfirmBooking={handleConfirmBooking}
-                isProcessing={isProcessing}
-              />
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Payment Methods</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={handleBackToDateSelection}
+                  disabled={isPaymentProcessing}
+                >
+                  Back to Date Selection
+                </Button>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="md:col-span-2">
+                  <PaymentMethodSelection 
+                    onStripeCheckout={handleStripeCheckout} 
+                    onDirectBooking={handleConfirmBooking}
+                    isProcessing={isPaymentProcessing || isProcessing}
+                  />
+                </div>
+
+                <div>
+                  <BookingSummary
+                    selectedProduct={selectedProduct}
+                    selectedDate={selectedDate}
+                    selectedTime={selectedTime}
+                  />
+                </div>
+              </div>
             </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <BookingSummary
-                selectedProduct={selectedProduct}
-                selectedDate={selectedDate}
-                selectedTime={selectedTime}
-              />
-            </motion.div>
-          </div>
+          )}
         </div>
       </main>
       

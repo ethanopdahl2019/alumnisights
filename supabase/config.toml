@@ -3,3 +3,6 @@ project_id = "xvnhujckrivhjnaslanm"
 
 [functions.generate-university-content]
 verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = true

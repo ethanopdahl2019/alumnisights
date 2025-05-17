@@ -1004,6 +1004,7 @@ export type Database = {
           admission_stats: string | null
           alumni_insights: string | null
           application_requirements: string | null
+          chart_data: string | null
           created_at: string
           did_you_know: string | null
           id: string
@@ -1017,6 +1018,7 @@ export type Database = {
           admission_stats?: string | null
           alumni_insights?: string | null
           application_requirements?: string | null
+          chart_data?: string | null
           created_at?: string
           did_you_know?: string | null
           id: string
@@ -1030,6 +1032,7 @@ export type Database = {
           admission_stats?: string | null
           alumni_insights?: string | null
           application_requirements?: string | null
+          chart_data?: string | null
           created_at?: string
           did_you_know?: string | null
           id?: string
