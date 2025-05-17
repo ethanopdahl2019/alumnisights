@@ -61,26 +61,30 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Call our edge function instead of direct API
+      // Call our edge function
       const { data, error } = await fetchAdminUsers();
       
       if (error) {
-        throw error;
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to fetch users from edge function');
       }
       
-      if (data && data.users) {
-        // Format user data
-        const formattedUsers = data.users.map((user: any) => ({
-          id: user.id,
-          email: user.email,
-          first_name: user.user_metadata?.first_name,
-          last_name: user.user_metadata?.last_name,
-          role: user.user_metadata?.role,
-          badges: user.user_metadata?.badges || [],
-          created_at: new Date(user.created_at).toLocaleDateString()
-        }));
-        setUsers(formattedUsers);
+      if (!data || !data.users) {
+        throw new Error('Invalid response from edge function');
       }
+      
+      // Format user data
+      const formattedUsers = data.users.map((user: any) => ({
+        id: user.id,
+        email: user.email,
+        first_name: user.user_metadata?.first_name,
+        last_name: user.user_metadata?.last_name,
+        role: user.user_metadata?.role,
+        badges: user.user_metadata?.badges || [],
+        created_at: new Date(user.created_at).toLocaleDateString()
+      }));
+      
+      setUsers(formattedUsers);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       toast.error("Failed to load users: " + (error.message || "Unknown error"));

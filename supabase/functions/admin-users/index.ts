@@ -25,8 +25,7 @@ serve(async (req) => {
     // Create a Supabase client with the service role key (this has admin privileges)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     // Create a regular supabase client with the user's token
@@ -47,10 +46,10 @@ serve(async (req) => {
     }
 
     // Verify that the user is an admin using user_metadata
-    const { data: { role }, error: roleError } = await supabaseClient.rpc('is_admin');
+    const isAdmin = user?.user_metadata?.role === 'admin';
     
-    if (!role) {
-      console.error('Role verification error:', roleError);
+    if (!isAdmin) {
+      console.error('Access denied: User is not an admin');
       return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), 
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 });
     }
