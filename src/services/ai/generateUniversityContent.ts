@@ -30,6 +30,7 @@ export async function generateUniversityContent(
 
     console.log("Edge function response status:", response.status);
 
+    // Get the full response text first
     const responseText = await response.text();
     console.log("Response text received, length:", responseText.length);
     
@@ -37,11 +38,11 @@ export async function generateUniversityContent(
     let data: GeneratedContent;
     try {
       data = JSON.parse(responseText);
-      console.log("Parsed response data:", data);
+      console.log("Parsed response data successfully");
     } catch (parseError) {
       console.error("Failed to parse JSON response:", parseError);
-      console.error("Raw response:", responseText);
-      throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}`);
+      console.error("Raw response text:", responseText.substring(0, 100));
+      throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}...`);
     }
 
     // Check for error in the parsed data
