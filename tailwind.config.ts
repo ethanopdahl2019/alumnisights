@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,7 +19,6 @@ export default {
 		},
 		fontFamily: {
 			'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-			'garamond': ['EB Garamond', 'serif'],
 		},
 		extend: {
 			colors: {
@@ -81,11 +79,6 @@ export default {
 					'club-text': '#915005',
 					study: '#F5EDFF',
 					'study-text': '#6B2BAD'
-				},
-				beige: {
-					DEFAULT: '#F5F5DC',
-					light: '#F8F8E8',
-					dark: '#EBEBB2'
 				}
 			},
 			borderRadius: {

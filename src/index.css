@@ -1,6 +1,4 @@
 
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -121,10 +119,6 @@
   
   .filter-pill-active {
     @apply bg-navy text-white border-navy;
-  }
-
-  .font-garamond {
-    font-family: 'EB Garamond', serif;
   }
 }
 

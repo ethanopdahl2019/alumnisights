@@ -18,7 +18,7 @@ const UniversityTemplate: React.FC<{
   const { id } = useParams<{ id: string }>();
   
   return (
-    <div className="min-h-screen bg-[#F5F5DC]">
+    <div className="min-h-screen bg-white">
       <Helmet>
         <title>{name} Admissions | AlumniSights</title>
         <meta name="description" content={`Learn about undergraduate admissions at ${name} - statistics, requirements, and insights.`} />
@@ -41,7 +41,7 @@ const UniversityTemplate: React.FC<{
               )}
             </div>
             <div className="flex-grow text-center">
-              <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4 font-garamond">
+              <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4">
                 {name}
               </h1>
               <p className="text-lg text-gray-600 mb-6">
@@ -65,7 +65,7 @@ const UniversityTemplate: React.FC<{
             {content || (
               <>
                 <section className="mb-8">
-                  <h2 className="text-2xl font-semibold mb-4 font-garamond">Overview</h2>
+                  <h2 className="text-2xl font-semibold mb-4">Overview</h2>
                   <p>
                     Welcome to the {name} undergraduate admissions insights page. Here you'll find 
                     valuable information about the application process, admission statistics, 
@@ -74,7 +74,7 @@ const UniversityTemplate: React.FC<{
                 </section>
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-semibold mb-4 font-garamond">Admission Statistics</h2>
+                  <h2 className="text-2xl font-semibold mb-4">Admission Statistics</h2>
                   <p>
                     The acceptance rate, average GPA, and test score information 
                     for {name} would be displayed here.
@@ -82,7 +82,7 @@ const UniversityTemplate: React.FC<{
                 </section>
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-semibold mb-4 font-garamond">Application Requirements</h2>
+                  <h2 className="text-2xl font-semibold mb-4">Application Requirements</h2>
                   <p>
                     Information about required essays, extracurricular activities,
                     and other application components specific to {name} would be listed here.
@@ -90,7 +90,7 @@ const UniversityTemplate: React.FC<{
                 </section>
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-semibold mb-4 font-garamond">Alumni Insights</h2>
+                  <h2 className="text-2xl font-semibold mb-4">Alumni Insights</h2>
                   <p>
                     Advice and insights from {name} alumni about the admissions process
                     and university experience would be featured here.
