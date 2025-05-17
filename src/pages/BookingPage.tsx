@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { getProfileById } from "@/services/profiles";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -47,64 +47,6 @@ const BookingPage = () => {
     ? { title: "Comprehensive Session", price: profile.price_60_min, duration: "60 minutes", id: "comprehensive" }
     : null;
   
-  // Determine which days should be disabled (example: past dates and weekends)
-  const isDateDisabled = (date: Date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Disable past dates
-    if (date < today) return true;
-    
-    // Example: Disable weekends (0 is Sunday, 6 is Saturday)
-    const day = date.getDay();
-    return day === 0 || day === 6;
-  };
-  
-  const handleConfirmBooking = async () => {
-    if (!selectedDate || !selectedTime) {
-      // Fix: Using toast without title property
-      toast.error("Please select a date and time");
-      return;
-    }
-    
-    if (!user) {
-      // Fix: Using toast without title property
-      toast.error("You must be logged in to book a session");
-      return;
-    }
-    
-    setIsProcessing(true);
-
-    try {
-      // Create a Stripe Checkout session
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          profileId: id,
-          productId: selectedProduct?.id,
-          selectedDate: selectedDate.toISOString(),
-          selectedTime: selectedTime,
-          userId: user.id
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      if (!data.checkoutUrl) {
-        throw new Error("No checkout URL returned");
-      }
-      
-      // Redirect to Stripe checkout
-      window.location.href = data.checkoutUrl;
-      
-    } catch (error) {
-      console.error('Error creating payment session:', error);
-      toast.error('There was an issue processing your payment. Please try again.');
-      setIsProcessing(false);
-    }
-  };
-  
   if (isLoading) {
     return (
       <div className="min-h-screen">
@@ -133,6 +75,98 @@ const BookingPage = () => {
       </div>
     );
   }
+  
+  // Determine which days should be disabled (example: past dates and weekends)
+  const isDateDisabled = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Disable past dates
+    if (date < today) return true;
+    
+    // Example: Disable weekends (0 is Sunday, 6 is Saturday)
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
+  
+  const handleConfirmBooking = async () => {
+    if (!selectedDate || !selectedTime) {
+      toast({
+        title: "Error",
+        description: "Please select a date and time",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to book a session",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsProcessing(true);
+
+    try {
+      // Combine date and time for scheduled_at
+      const timeMatch = selectedTime.match(/^(\d+):(\d+) (AM|PM)$/);
+      if (!timeMatch) {
+        throw new Error("Invalid time format");
+      }
+      
+      const [_, hours, minutes, period] = timeMatch;
+      const isPM = period === 'PM';
+      const hoursInt = parseInt(hours);
+      
+      // Convert to 24 hour format
+      const adjustedHours = isPM && hoursInt !== 12 
+        ? hoursInt + 12 
+        : (isPM && hoursInt === 12 ? 12 : hoursInt === 12 ? 0 : hoursInt);
+      
+      const scheduledDateTime = new Date(selectedDate);
+      scheduledDateTime.setHours(adjustedHours);
+      scheduledDateTime.setMinutes(parseInt(minutes));
+
+      console.log('Creating booking with:');
+      console.log('- User ID:', user.id);
+      console.log('- Profile ID:', id);
+      console.log('- Scheduled at:', scheduledDateTime.toISOString());
+      console.log('- Product:', selectedProduct.id);
+      
+      // Create the booking in the database
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert({
+          user_id: user.id,
+          profile_id: id,
+          scheduled_at: scheduledDateTime.toISOString(),
+          status: 'pending',
+          booking_option_id: selectedProduct.id === 'quick-chat' ? null : null // Replace with actual booking option ID if needed
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error(error.message);
+      }
+      
+      console.log('Booking created successfully:', data);
+      setIsConfirmationOpen(true);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      toast({
+        title: "Booking Failed",
+        description: "There was an issue creating your booking. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -175,16 +209,14 @@ const BookingPage = () => {
         </div>
       </main>
       
-      {profile && (
-        <BookingConfirmationDialog
-          isOpen={isConfirmationOpen}
-          setIsOpen={setIsConfirmationOpen}
-          selectedDate={selectedDate}
-          selectedTime={selectedTime}
-          selectedProduct={selectedProduct}
-          profile={profile}
-        />
-      )}
+      <BookingConfirmationDialog
+        isOpen={isConfirmationOpen}
+        setIsOpen={setIsConfirmationOpen}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+        selectedProduct={selectedProduct}
+        profile={profile}
+      />
       
       <Footer />
     </div>

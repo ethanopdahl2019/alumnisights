@@ -1,15 +1,17 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, CreditCard } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DateTimePickerProps {
   selectedDate: Date | undefined;
   setSelectedDate: (date: Date | undefined) => void;
   selectedTime: string | null;
-  setSelectedTime: (time: string | null) => void;
+  setSelectedTime: (time: string) => void;
   availableTimes: string[];
   isDateDisabled: (date: Date) => boolean;
   handleConfirmBooking: () => void;
@@ -27,68 +29,72 @@ const DateTimePicker: React.FC<DateTimePickerProps> = ({
   isProcessing,
 }) => {
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5 text-navy" />
-            Select Date
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            disabled={isDateDisabled}
-            className="rounded-md border"
-          />
-        </CardContent>
-      </Card>
-
-      {selectedDate && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Time</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+    <Card>
+      <CardHeader>
+        <CardTitle>Select a Date & Time</CardTitle>
+        <CardDescription>
+          Choose from available slots in the mentor's calendar
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div>
+          <h3 className="text-sm font-medium mb-2 flex items-center">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            Date
+          </h3>
+          <div className="border rounded-lg overflow-hidden">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              disabled={isDateDisabled}
+              className="rounded-md border"
+            />
+          </div>
+        </div>
+        
+        {selectedDate && (
+          <div>
+            <h3 className="text-sm font-medium mb-2 flex items-center">
+              <Clock className="mr-2 h-4 w-4" />
+              Available Times for {format(selectedDate, "MMMM d, yyyy")}
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {availableTimes.map((time) => (
                 <Button
                   key={time}
-                  variant={time === selectedTime ? "default" : "outline"}
+                  variant={selectedTime === time ? "default" : "outline"}
+                  className={cn(
+                    "justify-center",
+                    selectedTime === time ? "bg-primary text-primary-foreground" : ""
+                  )}
                   onClick={() => setSelectedTime(time)}
-                  className="text-sm"
+                  disabled={isProcessing}
                 >
                   {time}
                 </Button>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedDate && selectedTime && (
-        <Button
+          </div>
+        )}
+      </CardContent>
+      <CardFooter>
+        <Button 
+          className="w-full" 
+          disabled={!selectedDate || !selectedTime || isProcessing}
           onClick={handleConfirmBooking}
-          disabled={isProcessing}
-          className="w-full"
-          size="lg"
         >
           {isProcessing ? (
             <>
-              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></div>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
             </>
           ) : (
-            <>
-              <CreditCard className="mr-2 h-4 w-4" />
-              Proceed to Payment
-            </>
+            "Confirm Booking"
           )}
         </Button>
-      )}
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
 
