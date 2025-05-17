@@ -97,9 +97,9 @@ const UniversityTemplate: React.FC<{
             )}
           </div>
 
-          <div className="md:flex md:gap-8">
-            {/* Main Content */}
-            <div className="md:w-2/3 prose max-w-none">
+          <div>
+            {/* Main Content with integrated Did You Know */}
+            <div className="prose max-w-none">
               {content || (
                 <>
                   <section className="mb-8">
@@ -108,6 +108,17 @@ const UniversityTemplate: React.FC<{
                       Welcome to the {name} undergraduate admissions insights page. Here you'll find 
                       valuable information about the application process, admission statistics, 
                       and tips to improve your chances of acceptance.
+                    </p>
+                    
+                    {didYouKnow && (
+                      <div className="my-6 bg-purple-50 border border-purple-200 rounded-xl p-6 shadow-sm">
+                        <h3 className="text-xl font-bold text-purple-800 mb-3">Did You Know?</h3>
+                        <p className="text-sm text-purple-900">{didYouKnow}</p>
+                      </div>
+                    )}
+                    
+                    <p>
+                      Additional information about {name}'s admissions process would be displayed here.
                     </p>
                   </section>
 
@@ -136,18 +147,6 @@ const UniversityTemplate: React.FC<{
                   </section>
                 </>
               )}
-            </div>
-
-            {/* "Did You Know?" Bubble */}
-            <div className="md:w-1/3 mt-8 md:mt-0">
-              <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 shadow-sm sticky top-24">
-                <h3 className="text-xl font-bold text-purple-800 mb-3">Did You Know?</h3>
-                {didYouKnow ? (
-                  <p className="text-sm text-purple-900">{didYouKnow}</p>
-                ) : (
-                  <p className="text-sm text-purple-900 italic">Interesting facts about {name} would appear here.</p>
-                )}
-              </div>
             </div>
           </div>
         </div>

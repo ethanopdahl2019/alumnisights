@@ -33,6 +33,7 @@ const UniversityAdmissions = () => {
             content={university.content}
             image={university.image}
             name={university.name}
+            didYouKnow={university.didYouKnow}
           />
         </div>
       </main>
