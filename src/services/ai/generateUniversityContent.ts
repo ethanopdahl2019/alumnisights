@@ -1,4 +1,6 @@
 
+import { supabase } from "@/integrations/supabase/client";
+
 interface GeneratedContent {
   overview?: string;
   admissionStats?: string;
@@ -16,11 +18,21 @@ export async function generateUniversityContent(
   try {
     console.log(`Generating ${contentType} content for ${universityName}...`);
     
-    // Call the OpenAI API through our Supabase Edge Function with proper error handling
+    // Get the Supabase auth token for the authenticated user
+    const { data: { session } } = await supabase.auth.getSession();
+    const authToken = session?.access_token;
+    
+    if (!authToken) {
+      console.error("No auth token available. User may not be authenticated.");
+      throw new Error("Authentication required. Please sign in to use this feature.");
+    }
+    
+    // Call the OpenAI API through our Supabase Edge Function with proper auth
     const response = await fetch("https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/generate-university-content", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         universityName,
