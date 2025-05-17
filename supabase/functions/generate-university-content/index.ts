@@ -1,7 +1,6 @@
 
 // Import required modules for Deno
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
@@ -70,7 +69,7 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${openaiApiKey}`,
+        "Authorization": `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
@@ -106,7 +105,7 @@ serve(async (req) => {
     console.log("Received content from OpenAI:", rawContent.substring(0, 100) + "...");
     
     // Process the response to extract appropriate sections
-    const result: Record<string, string> = {};
+    const result = {};
     
     if (contentType === "all") {
       // Parse the complete response into sections

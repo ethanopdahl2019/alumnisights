@@ -1,7 +1,4 @@
 
-// This is a placeholder file path as we don't have this file in the context provided.
-// Replace with the actual file path if it exists, or create it if needed.
-
 interface GeneratedContent {
   overview?: string;
   admissionStats?: string;
@@ -17,7 +14,7 @@ export async function generateUniversityContent(
   try {
     console.log(`Generating ${contentType} content for ${universityName}...`);
     
-    // Call the OpenAI API through our Supabase Edge Function
+    // Call the OpenAI API through our Supabase Edge Function with proper error handling
     const response = await fetch("https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/generate-university-content", {
       method: "POST",
       headers: {
@@ -30,12 +27,17 @@ export async function generateUniversityContent(
     });
 
     if (!response.ok) {
-      console.error(`Error response: ${response.status}`, await response.text());
+      const errorText = await response.text();
+      console.error(`Error response: ${response.status}`, errorText);
       throw new Error(`Error: ${response.status}`);
     }
 
     const data = await response.json();
     console.log("Received data from edge function:", data);
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
     
     // If we're generating didYouKnow content, ensure it's short and interesting
     if (contentType === "didYouKnow" && data.didYouKnow) {
