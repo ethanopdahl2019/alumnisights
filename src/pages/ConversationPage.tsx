@@ -38,7 +38,7 @@ const ConversationPage = () => {
   }, [user, loading, navigate, id]);
 
   // Fetch conversation data
-  const { data: conversation, isLoading: conversationLoading } = useQuery({
+  const { data: conversation, isLoading: conversationLoading, error: conversationError } = useQuery({
     queryKey: ["conversation", id],
     queryFn: () => id ? getConversation(id) : Promise.reject("No conversation ID"),
     enabled: !!id && !!user,
@@ -94,14 +94,16 @@ const ConversationPage = () => {
     );
   }
 
-  // Handle conversation not found
-  if (!conversation) {
+  // Handle conversation not found or error
+  if (conversationError || !conversation) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <Navbar />
         <main className="flex-grow container-custom py-8">
           <div className="max-w-3xl mx-auto text-center py-12">
-            <h2 className="text-xl font-semibold mb-4">Conversation not found</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {conversationError ? "Error loading conversation" : "Conversation not found"}
+            </h2>
             <Button asChild>
               <Link to="/messaging">Back to Messages</Link>
             </Button>
@@ -120,19 +122,32 @@ const ConversationPage = () => {
   const student = conversation.student || defaultStudent;
   const mentor = conversation.mentor || defaultMentor;
   
+  // Ensure we have valid objects for student and mentor
+  const safeStudent = {
+    id: typeof student === 'object' && student && 'id' in student ? student.id : "",
+    name: typeof student === 'object' && student && 'name' in student ? student.name : "Student",
+    image: typeof student === 'object' && student && 'image' in student ? student.image : null
+  };
+  
+  const safeMentor = {
+    id: typeof mentor === 'object' && mentor && 'id' in mentor ? mentor.id : "",
+    name: typeof mentor === 'object' && mentor && 'name' in mentor ? mentor.name : "Mentor",
+    image: typeof mentor === 'object' && mentor && 'image' in mentor ? mentor.image : null
+  };
+  
   // Determine if the current user is the mentor or student
-  const isMentor = user?.id === mentor.id;
-  const otherPerson = isMentor ? student : mentor;
+  const isMentor = user?.id === safeMentor.id;
+  const otherPerson = isMentor ? safeStudent : safeMentor;
 
   // Create profiles object for MessageList
   const profiles = {
-    [mentor.id || "mentor"]: {
-      name: mentor.name || "Mentor",
-      image: mentor.image || null,
+    [safeMentor.id || "mentor"]: {
+      name: safeMentor.name || "Mentor",
+      image: safeMentor.image || null,
     },
-    [student.id || "student"]: {
-      name: student.name || "Student",
-      image: student.image || null,
+    [safeStudent.id || "student"]: {
+      name: safeStudent.name || "Student",
+      image: safeStudent.image || null,
     },
   };
 

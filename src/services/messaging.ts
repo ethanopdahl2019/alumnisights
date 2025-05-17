@@ -54,60 +54,81 @@ export const getConversations = async () => {
   if (!user) throw new Error("Not authenticated");
 
   try {
-    // First, try with new schema (student_id/mentor_id)
-    const { data: newSchemaData, error: newSchemaError } = await supabase
+    // Check for the actual schema structure before making queries
+    const { error: schemaCheckError } = await supabase
       .from("conversations")
-      .select(`
-        *,
-        mentor:profiles!conversations_mentor_id_fkey(*),
-        student:profiles!conversations_student_id_fkey(*)
-      `)
-      .or(`student_id.eq.${user.id},mentor_id.eq.${user.id}`);
-
-    // If new schema worked
-    if (!newSchemaError && newSchemaData && newSchemaData.length > 0) {
-      return newSchemaData.map(conv => {
+      .select("student_id")
+      .limit(1);
+    
+    const hasNewSchema = !schemaCheckError;
+    
+    if (hasNewSchema) {
+      // Use new schema (student_id/mentor_id)
+      const { data, error } = await supabase
+        .from("conversations")
+        .select(`
+          *,
+          student:profiles(id, name, image),
+          mentor:profiles(id, name, image)
+        `)
+        .or(`student_id.eq.${user.id},mentor_id.eq.${user.id}`);
+      
+      if (error) {
+        console.error("Error fetching conversations:", error);
+        return [];
+      }
+      
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
+      return data.map(conv => {
         const isStudent = user.id === conv.student_id;
-        const otherUserProfile = isStudent ? conv.mentor : conv.student;
+        const otherUser = isStudent ? conv.mentor : conv.student;
         
         return {
           ...conv,
-          profile: otherUserProfile ? {
-            name: otherUserProfile.name || "User",
-            image: otherUserProfile.image
+          profile: otherUser ? {
+            name: otherUser.name || "User",
+            image: otherUser.image
           } : {
             name: isStudent ? "Mentor" : "Student",
             image: null
           }
         };
       });
-    }
-
-    // Fallback to legacy schema (applicant_id/alumni_id)
-    const { data: legacyData, error: legacyError } = await supabase
-      .from("conversations")
-      .select(`
-        *,
-        alumni:profiles!conversations_alumni_id_fkey(*),
-        applicant:profiles!conversations_applicant_id_fkey(*)
-      `)
-      .or(`applicant_id.eq.${user.id},alumni_id.eq.${user.id}`);
-
-    if (legacyError) {
-      console.error("Error fetching conversations:", legacyError);
-      return [];
-    }
-
-    if (legacyData && legacyData.length > 0) {
-      return legacyData.map(conv => {
+    } else {
+      // Fallback to legacy schema (applicant_id/alumni_id)
+      const { data, error } = await supabase
+        .from("conversations")
+        .select(`
+          *,
+          applicant:profiles(id, name, image),
+          alumni:profiles(id, name, image)
+        `)
+        .or(`applicant_id.eq.${user.id},alumni_id.eq.${user.id}`);
+      
+      if (error) {
+        console.error("Error fetching conversations:", error);
+        return [];
+      }
+      
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
+      return data.map(conv => {
         const isApplicant = user.id === conv.applicant_id;
-        const otherUserProfile = isApplicant ? conv.alumni : conv.applicant;
+        const otherUser = isApplicant ? conv.alumni : conv.applicant;
         
         return {
           ...conv,
-          profile: otherUserProfile ? {
-            name: otherUserProfile.name || "User",
-            image: otherUserProfile.image
+          // Map the legacy schema to new schema for frontend consistency
+          student: conv.applicant,
+          mentor: conv.alumni,
+          profile: otherUser ? {
+            name: otherUser.name || "User",
+            image: otherUser.image
           } : {
             name: isApplicant ? "Alumni" : "Applicant",
             image: null
@@ -115,8 +136,6 @@ export const getConversations = async () => {
         };
       });
     }
-    
-    return [];
   } catch (error) {
     console.error("Error fetching conversations:", error);
     return [];
@@ -126,51 +145,68 @@ export const getConversations = async () => {
 // Get a specific conversation
 export const getConversation = async (conversationId: string) => {
   try {
-    // Try new schema first
-    const { data: newSchemaData, error: newSchemaError } = await supabase
+    // Check for the actual schema structure before making queries
+    const { error: schemaCheckError } = await supabase
       .from("conversations")
-      .select(`
-        *,
-        mentor:profiles!conversations_mentor_id_fkey(*),
-        student:profiles!conversations_student_id_fkey(*)
-      `)
-      .eq('id', conversationId)
-      .maybeSingle();
-
-    if (!newSchemaError && newSchemaData) {
+      .select("student_id")
+      .limit(1);
+    
+    const hasNewSchema = !schemaCheckError;
+    
+    if (hasNewSchema) {
+      // Try new schema first
+      const { data, error } = await supabase
+        .from("conversations")
+        .select(`
+          *,
+          student:profiles(id, name, image),
+          mentor:profiles(id, name, image)
+        `)
+        .eq('id', conversationId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error fetching conversation:", error);
+        return null;
+      }
+      
+      if (!data) {
+        return null;
+      }
+      
       return {
-        ...newSchemaData,
-        student: newSchemaData.student || { id: "", name: "Student", image: null },
-        mentor: newSchemaData.mentor || { id: "", name: "Mentor", image: null }
+        ...data,
+        student: data.student || { id: "", name: "Student", image: null },
+        mentor: data.mentor || { id: "", name: "Mentor", image: null }
+      };
+    } else {
+      // Try legacy schema as fallback
+      const { data, error } = await supabase
+        .from("conversations")
+        .select(`
+          *,
+          applicant:profiles(id, name, image),
+          alumni:profiles(id, name, image)
+        `)
+        .eq('id', conversationId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error fetching conversation:", error);
+        return null;
+      }
+      
+      if (!data) {
+        return null;
+      }
+      
+      // Map legacy schema to new schema for frontend consistency
+      return {
+        ...data,
+        student: data.applicant || { id: "", name: "Student", image: null },
+        mentor: data.alumni || { id: "", name: "Mentor", image: null }
       };
     }
-
-    // Try legacy schema as fallback
-    const { data: legacyData, error: legacyError } = await supabase
-      .from("conversations")
-      .select(`
-        *,
-        alumni:profiles!conversations_alumni_id_fkey(*),
-        applicant:profiles!conversations_applicant_id_fkey(*)
-      `)
-      .eq('id', conversationId)
-      .maybeSingle();
-
-    if (legacyError) {
-      console.error("Error fetching conversation:", legacyError);
-      return null;
-    }
-
-    if (!legacyData) {
-      return null;
-    }
-
-    // Map legacy schema to expected format
-    return {
-      ...legacyData,
-      student: legacyData.applicant || { id: "", name: "Student", image: null },
-      mentor: legacyData.alumni || { id: "", name: "Mentor", image: null }
-    };
   } catch (error) {
     console.error("Error fetching conversation:", error);
     return null;
@@ -191,7 +227,16 @@ export const getMessages = async (conversationId: string) => {
       return [];
     }
     
-    return data as Message[];
+    // Ensure the returned data matches our Message interface
+    return data.map(msg => ({
+      id: msg.id,
+      conversation_id: msg.conversation_id || conversationId, // Default to passed conversationId if missing
+      sender_id: msg.sender_id,
+      content: msg.content,
+      is_preset: msg.is_preset || false, // Default to false if missing
+      created_at: msg.created_at,
+      read_at: msg.read_at || null
+    })) as Message[];
   } catch (error) {
     console.error("Error fetching messages:", error);
     return [];
@@ -205,17 +250,56 @@ export const sendMessage = async (conversationId: string, content: string, isPre
   if (!user) throw new Error("Not authenticated");
 
   try {
-    // Insert the message
-    const { data, error } = await supabase
-      .from("messages")
-      .insert([{
-        conversation_id: conversationId,
-        sender_id: user.id,
-        content: content,
-        is_preset: isPreset
-      }])
-      .select()
-      .single();
+    // Check if the messages table has conversation_id
+    const { data: columnsData, error: columnsError } = await supabase
+      .rpc('get_column_information', { tablename: 'messages' });
+    
+    const columns = columnsData || [];
+    const hasConversationId = columns.some(col => col.column_name === 'conversation_id');
+    const hasRecipientId = columns.some(col => col.column_name === 'recipient_id');
+    
+    // Insert the message based on available columns
+    let data, error;
+    
+    if (hasConversationId) {
+      // New schema
+      ({ data, error } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          content,
+          is_preset: isPreset
+        })
+        .select()
+        .single());
+    } else if (hasRecipientId) {
+      // Legacy schema - need to determine recipient
+      const { data: convData } = await supabase
+        .from("conversations")
+        .select("*")
+        .eq('id', conversationId)
+        .single();
+        
+      if (!convData) {
+        throw new Error("Conversation not found");
+      }
+      
+      const recipientId = convData.applicant_id === user.id ? convData.alumni_id : convData.applicant_id;
+      
+      ({ data, error } = await supabase
+        .from("messages")
+        .insert({
+          sender_id: user.id,
+          recipient_id: recipientId,
+          content,
+          read: false
+        })
+        .select()
+        .single());
+    } else {
+      throw new Error("Message schema not recognized");
+    }
 
     if (error) {
       console.error("Error sending message:", error);
@@ -231,7 +315,16 @@ export const sendMessage = async (conversationId: string, content: string, isPre
       })
       .eq('id', conversationId);
 
-    return data as Message;
+    // Convert to our Message interface format
+    return {
+      id: data.id,
+      conversation_id: data.conversation_id || conversationId,
+      sender_id: data.sender_id,
+      content: data.content,
+      is_preset: data.is_preset || isPreset,
+      created_at: data.created_at,
+      read_at: data.read_at || data.read === false ? null : new Date().toISOString()
+    } as Message;
   } catch (error) {
     console.error("Error sending message:", error);
     throw error;
@@ -245,27 +338,64 @@ export const startConversation = async (mentorId: string) => {
   if (!user) throw new Error("Not authenticated");
 
   try {
-    // First check if a conversation already exists
-    const { data: existingConv } = await supabase
+    // Check for the actual schema structure before making queries
+    const { error: schemaCheckError } = await supabase
       .from("conversations")
-      .select("id")
-      .eq('student_id', user.id)
-      .eq('mentor_id', mentorId)
-      .maybeSingle();
+      .select("student_id")
+      .limit(1);
+    
+    const hasNewSchema = !schemaCheckError;
+    
+    // First check if a conversation already exists
+    let existingConv;
+    if (hasNewSchema) {
+      const { data } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq('student_id', user.id)
+        .eq('mentor_id', mentorId)
+        .maybeSingle();
+        
+      existingConv = data;
+    } else {
+      const { data } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq('applicant_id', user.id)
+        .eq('alumni_id', mentorId)
+        .maybeSingle();
+        
+      existingConv = data;
+    }
 
     if (existingConv) {
       return existingConv as Conversation;
     }
 
     // Insert a new conversation
-    const { data, error } = await supabase
-      .from("conversations")
-      .insert([{
-        student_id: user.id,
-        mentor_id: mentorId
-      }])
-      .select()
-      .single();
+    let data, error;
+    
+    if (hasNewSchema) {
+      ({ data, error } = await supabase
+        .from("conversations")
+        .insert({
+          student_id: user.id,
+          mentor_id: mentorId
+        })
+        .select()
+        .single());
+    } else {
+      ({ data, error } = await supabase
+        .from("conversations")
+        .insert({
+          applicant_id: user.id,
+          alumni_id: mentorId,
+          product_type: 'chat', // Default value for legacy schema
+          payment_status: 'paid' // Default value for legacy schema
+        })
+        .select()
+        .single());
+    }
 
     if (error) {
       console.error("Error creating conversation:", error);
@@ -282,6 +412,15 @@ export const startConversation = async (mentorId: string) => {
 // Get preset messages
 export const getPresetMessages = async () => {
   try {
+    // Check if preset_messages table exists
+    const { data: tableData, error: tableError } = await supabase
+      .rpc('get_column_information', { tablename: 'preset_messages' });
+      
+    if (tableError || !tableData || tableData.length === 0) {
+      console.error("Preset messages table not found:", tableError);
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from("preset_messages")
       .select("*")
@@ -306,13 +445,48 @@ export const markMessagesAsRead = async (conversationId: string) => {
   if (!user) throw new Error("Not authenticated");
 
   try {
-    // Update messages that are unread and not sent by current user
-    const { error } = await supabase
-      .from("messages")
-      .update({ read_at: new Date().toISOString() })
-      .eq('conversation_id', conversationId)
-      .neq('sender_id', user.id)
-      .is('read_at', null);
+    // Check if the messages table has read_at
+    const { data: columnsData, error: columnsError } = await supabase
+      .rpc('get_column_information', { tablename: 'messages' });
+    
+    const columns = columnsData || [];
+    const hasReadAt = columns.some(col => col.column_name === 'read_at');
+    const hasRead = columns.some(col => col.column_name === 'read');
+    const hasConversationId = columns.some(col => col.column_name === 'conversation_id');
+    
+    let error;
+    
+    if (hasConversationId && hasReadAt) {
+      // New schema
+      ({ error } = await supabase
+        .from("messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id)
+        .is('read_at', null));
+    } else if (hasRead) {
+      // Legacy schema - need to determine related messages
+      const { data: convData } = await supabase
+        .from("conversations")
+        .select("*")
+        .eq('id', conversationId)
+        .single();
+        
+      if (!convData) {
+        throw new Error("Conversation not found");
+      }
+      
+      const recipientId = convData.applicant_id === user.id ? convData.alumni_id : convData.applicant_id;
+      
+      ({ error } = await supabase
+        .from("messages")
+        .update({ read: true })
+        .eq('sender_id', recipientId)
+        .eq('recipient_id', user.id)
+        .eq('read', false));
+    } else {
+      throw new Error("Message schema not recognized");
+    }
 
     if (error) {
       console.error("Error marking messages as read:", error);
