@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
@@ -9,7 +10,6 @@ import { UniversityContent } from "@/types/database";
 import { UniversityData } from "./universities-data";
 import { 
   ChartContainer, 
-  ChartTooltip, 
   ChartTooltipContent 
 } from "@/components/ui/chart";
 import { 
@@ -18,7 +18,7 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip as ChartTooltip, 
+  Tooltip, 
   ResponsiveContainer 
 } from "recharts";
 
@@ -176,7 +176,7 @@ const UniversityPage: React.FC = () => {
                             domain={[0, 'dataMax + 5']} 
                             tickFormatter={(value) => `${value}%`}
                           />
-                          <ChartTooltip 
+                          <Tooltip 
                             content={
                               <ChartTooltipContent 
                                 labelFormatter={(value) => `Year: ${value}`} 
