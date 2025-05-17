@@ -20,9 +20,34 @@ import SearchInput from "@/components/SearchInput";
 
 const RegistrationPreview = () => {
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [universitySearchTerm, setUniversitySearchTerm] = useState<string>("");
+  const [majorSearchTerm, setMajorSearchTerm] = useState<string>("");
   const [universities, setUniversities] = useState<UniversityData[]>([]);
+  const [majors, setMajors] = useState<Array<{ id: string; name: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // Sample major data for preview
+  useEffect(() => {
+    const sampleMajors = [
+      { id: "cs", name: "Computer Science" },
+      { id: "neuro", name: "Neuroscience" },
+      { id: "ph", name: "Public Health" },
+      { id: "mech", name: "Mechanical Engineering" },
+      { id: "bio", name: "Biomedical Engineering" },
+      { id: "econ", name: "Economics" },
+      { id: "psych", name: "Psychology" },
+      { id: "polisci", name: "Political Science" },
+      { id: "biochem", name: "Biochemistry" },
+      { id: "bio", name: "Molecular Biology" },
+      { id: "socio", name: "Sociology" },
+      { id: "env", name: "Environmental Science" },
+      { id: "stats", name: "Statistics" },
+      { id: "phys", name: "Physics" }
+      // More majors would be loaded from API in a real implementation
+    ];
+    
+    setMajors(sampleMajors);
+  }, []);
   
   // Fetch universities from Supabase
   useEffect(() => {
@@ -40,6 +65,11 @@ const RegistrationPreview = () => {
     
     loadUniversities();
   }, []);
+  
+  // Filter majors based on search term
+  const filteredMajors = majors.filter(major => 
+    major.name.toLowerCase().includes(majorSearchTerm.toLowerCase())
+  ).slice(0, 5);
   
   return (
     <Card>
@@ -142,13 +172,13 @@ const RegistrationPreview = () => {
                 <div className="space-y-2">
                   <Label htmlFor="university">University</Label>
                   <SearchInput 
-                    value={searchTerm}
-                    onChange={setSearchTerm}
+                    value={universitySearchTerm}
+                    onChange={setUniversitySearchTerm}
                     placeholder={isLoading ? "Loading universities..." : "Type to search universities..."}
                     options={universities}
                     onOptionSelect={(university) => {
                       setSelectedUniversity(university.id);
-                      setSearchTerm(university.name);
+                      setUniversitySearchTerm(university.name);
                     }}
                   />
                 </div>
@@ -184,18 +214,15 @@ const RegistrationPreview = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="major">Major</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your major" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[200px]">
-                      <SelectItem value="cs">Computer Science</SelectItem>
-                      <SelectItem value="business">Business Administration</SelectItem>
-                      <SelectItem value="engineering">Engineering</SelectItem>
-                      <SelectItem value="biology">Biology</SelectItem>
-                      <SelectItem value="psychology">Psychology</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchInput
+                    value={majorSearchTerm}
+                    onChange={setMajorSearchTerm}
+                    placeholder="Type to search majors..."
+                    options={majors}
+                    onOptionSelect={(major) => {
+                      setMajorSearchTerm(major.name);
+                    }}
+                  />
                 </div>
                 
                 <div className="space-y-3">

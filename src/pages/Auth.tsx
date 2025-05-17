@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -22,6 +21,106 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 
+// Sample major data for registration
+const MAJORS = [
+  { id: "cs", name: "Computer Science" },
+  { id: "neuro", name: "Neuroscience" },
+  { id: "ph", name: "Public Health" },
+  { id: "mech", name: "Mechanical Engineering" },
+  { id: "bio", name: "Biomedical Engineering" },
+  { id: "econ", name: "Economics" },
+  { id: "psych", name: "Psychology" },
+  { id: "polisci", name: "Political Science" },
+  { id: "biochem", name: "Biochemistry" },
+  { id: "molbio", name: "Molecular Biology" },
+  { id: "socio", name: "Sociology" },
+  { id: "env", name: "Environmental Science" },
+  { id: "stats", name: "Statistics" },
+  { id: "phys", name: "Physics" },
+  { id: "chem", name: "Chemistry" },
+  { id: "ee", name: "Electrical Engineering" },
+  { id: "ai", name: "Artificial Intelligence" },
+  { id: "genetics", name: "Genetics" },
+  { id: "anthro", name: "Anthropology" },
+  { id: "edpolicy", name: "Education Policy" },
+  { id: "finance", name: "Finance" },
+  { id: "ling", name: "Linguistics" },
+  { id: "cogsci", name: "Cognitive Science" },
+  { id: "healthinfo", name: "Health Informatics" },
+  { id: "urban", name: "Urban Planning" },
+  { id: "busadmin", name: "Business Administration" },
+  { id: "acct", name: "Accounting" },
+  { id: "mktg", name: "Marketing" },
+  { id: "scm", name: "Supply Chain Management" },
+  { id: "is", name: "Information Systems" },
+  { id: "mgmt", name: "Management Science" },
+  { id: "entrep", name: "Entrepreneurship" },
+  { id: "ir", name: "International Relations" },
+  { id: "phil", name: "Philosophy" },
+  { id: "hist", name: "History" },
+  { id: "eng", name: "English" },
+  { id: "compli", name: "Comparative Literature" },
+  { id: "reli", name: "Religious Studies" },
+  { id: "arthistory", name: "Art History" },
+  { id: "studioart", name: "Studio Art" },
+  { id: "gd", name: "Graphic Design" },
+  { id: "film", name: "Film and Media Studies" },
+  { id: "journ", name: "Journalism" },
+  { id: "comm", name: "Communications" },
+  { id: "theater", name: "Theater and Performance Studies" },
+  { id: "music", name: "Music" },
+  { id: "arch", name: "Architecture" },
+  { id: "ce", name: "Civil Engineering" },
+  { id: "ie", name: "Industrial Engineering" },
+  { id: "cheme", name: "Chemical Engineering" },
+  { id: "aero", name: "Aerospace Engineering" },
+  { id: "mse", name: "Materials Science and Engineering" },
+  { id: "datascience", name: "Data Science" },
+  { id: "cybersec", name: "Cybersecurity" },
+  { id: "robotics", name: "Robotics" },
+  { id: "applied-math", name: "Applied Mathematics" },
+  { id: "pure-math", name: "Pure Mathematics" },
+  { id: "actuary", name: "Actuarial Science" },
+  { id: "marine-bio", name: "Marine Biology" },
+  { id: "eco-evo", name: "Ecology and Evolutionary Biology" },
+  { id: "geo", name: "Geology" },
+  { id: "geog", name: "Geography" },
+  { id: "astro", name: "Astronomy" },
+  { id: "climate", name: "Climate Science" },
+  { id: "ag", name: "Agricultural Science" },
+  { id: "nutrition", name: "Nutrition" },
+  { id: "nursing", name: "Nursing" },
+  { id: "ot", name: "Occupational Therapy" },
+  { id: "pt", name: "Physical Therapy" },
+  { id: "kinesio", name: "Kinesiology" },
+  { id: "sports", name: "Sports Management" },
+  { id: "crim", name: "Criminology" },
+  { id: "law", name: "Law and Society" },
+  { id: "gender", name: "Gender Studies" },
+  { id: "ethnic", name: "Ethnic Studies" },
+  { id: "afam", name: "African American Studies" },
+  { id: "latinx", name: "Latinx Studies" },
+  { id: "asian", name: "Asian American Studies" },
+  { id: "native", name: "Native American Studies" },
+  { id: "mideast", name: "Middle Eastern Studies" },
+  { id: "jewish", name: "Jewish Studies" },
+  { id: "latam", name: "Latin American Studies" },
+  { id: "dev", name: "Development Studies" },
+  { id: "peace", name: "Peace and Conflict Studies" },
+  { id: "globalhealth", name: "Global Health" },
+  { id: "policy", name: "Public Policy" },
+  { id: "socialwork", name: "Social Work" },
+  { id: "humdev", name: "Human Development" },
+  { id: "ed", name: "Education" },
+  { id: "ece", name: "Early Childhood Education" },
+  { id: "sped", name: "Special Education" },
+  { id: "speech", name: "Speech and Hearing Sciences" },
+  { id: "asl", name: "American Sign Language" },
+  { id: "gamedesign", name: "Game Design" },
+  { id: "ixd", name: "Interaction Design" },
+  { id: "hci", name: "Human-Computer Interaction" }
+];
+
 // Define form schemas
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email' }),
@@ -36,6 +135,7 @@ const registerFormSchema = z.object({
   confirmPassword: z.string().min(8, { message: 'Please confirm your password' }),
   userType: z.enum(['student', 'mentor']),
   schoolId: z.string().optional(),
+  majorId: z.string().optional(),
   degree: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -63,7 +163,9 @@ const Auth = () => {
   const [userType, setUserType] = useState<'student' | 'mentor'>('student');
   const [universities, setUniversities] = useState<UniversityData[]>([]);
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedMajor, setSelectedMajor] = useState<string>("");
+  const [universitySearchTerm, setUniversitySearchTerm] = useState<string>("");
+  const [majorSearchTerm, setMajorSearchTerm] = useState<string>("");
   const navigate = useNavigate();
   
   // Login form
@@ -86,6 +188,7 @@ const Auth = () => {
       confirmPassword: '',
       userType: 'student',
       schoolId: '',
+      majorId: '',
       degree: '',
     },
   });
@@ -103,6 +206,11 @@ const Auth = () => {
     
     fetchUniversities();
   }, []);
+
+  // Filter majors based on search term
+  const filteredMajors = MAJORS.filter(major => 
+    major.name.toLowerCase().includes(majorSearchTerm.toLowerCase())
+  ).slice(0, 5);
 
   // Handle login
   const onLoginSubmit = async (values: LoginFormValues) => {
@@ -131,7 +239,7 @@ const Auth = () => {
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const { email, password, firstName, lastName, userType, schoolId, degree } = values;
+      const { email, password, firstName, lastName, userType, schoolId, degree, majorId } = values;
 
       // Map the userType to the correct role
       const role = userType === 'mentor' ? 'mentor' : 'student';
@@ -145,6 +253,7 @@ const Auth = () => {
           user_type: userType,
           role: role,
           school_id: userType === 'mentor' ? schoolId : null,
+          major_id: majorId || null,
           degree: userType === 'mentor' ? degree : null
         }
       });
@@ -318,19 +427,34 @@ const Auth = () => {
                     <div className="space-y-2">
                       <Label htmlFor="university">University</Label>
                       <SearchInput 
-                        value={searchTerm}
-                        onChange={setSearchTerm}
+                        value={universitySearchTerm}
+                        onChange={setUniversitySearchTerm}
                         placeholder="Type to search universities..."
                         options={universities}
                         onOptionSelect={(university) => {
                           setSelectedUniversity(university.id);
-                          setSearchTerm(university.name);
+                          setUniversitySearchTerm(university.name);
                           registerForm.setValue('schoolId', university.id);
                         }}
                       />
                       {registerForm.formState.errors.schoolId && (
                         <p className="text-red-500 text-sm">{registerForm.formState.errors.schoolId.message}</p>
                       )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="major">Major</Label>
+                      <SearchInput 
+                        value={majorSearchTerm}
+                        onChange={setMajorSearchTerm}
+                        placeholder="Type to search majors..."
+                        options={MAJORS}
+                        onOptionSelect={(major) => {
+                          setSelectedMajor(major.id);
+                          setMajorSearchTerm(major.name);
+                          registerForm.setValue('majorId', major.id);
+                        }}
+                      />
                     </div>
                     
                     <div className="space-y-2">

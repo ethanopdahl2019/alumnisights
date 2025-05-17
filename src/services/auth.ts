@@ -92,6 +92,18 @@ export function isAdmin(user: any) {
   return getUserRole(user) === 'admin';
 }
 
+export async function updateUserMetadata(metadata: Record<string, any>) {
+  const { data, error } = await supabase.auth.updateUser({
+    data: metadata
+  });
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data;
+}
+
 // Enhanced function to check admin status using both metadata and database function
 export async function refreshAndCheckAdmin(user: any): Promise<boolean> {
   if (!user) return false;

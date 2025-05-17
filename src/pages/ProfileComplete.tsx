@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -20,6 +21,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getMajors, getActivities } from '@/services/profiles';
 import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
+import SearchInput from '@/components/SearchInput';
 
 const profileSchema = z.object({
   bio: z.string().min(20, { message: "Bio should be at least 20 characters" }),
@@ -40,6 +42,9 @@ const ProfileComplete = () => {
   const [progress, setProgress] = useState(0);
   const [universities, setUniversities] = useState<any[]>([]);
   const [universityOpen, setUniversityOpen] = useState(false);
+  const [majorOpen, setMajorOpen] = useState(false);
+  const [universitySearchTerm, setUniversitySearchTerm] = useState("");
+  const [majorSearchTerm, setMajorSearchTerm] = useState("");
   
   const degrees = [
     { id: "bachelors", name: "Bachelor's Degree" },
@@ -190,6 +195,13 @@ const ProfileComplete = () => {
     }
   };
   
+  // Filter majors based on search
+  const filteredMajors = majorSearchTerm 
+    ? majors.filter(major => 
+        major.name.toLowerCase().includes(majorSearchTerm.toLowerCase())
+      ).slice(0, 10) 
+    : majors.slice(0, 10);
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -243,55 +255,18 @@ const ProfileComplete = () => {
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>University</FormLabel>
-                        <Popover open={universityOpen} onOpenChange={setUniversityOpen}>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={universityOpen}
-                                className={cn(
-                                  "w-full justify-between",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                                onClick={(e) => e.preventDefault()}
-                              >
-                                {field.value
-                                  ? universities.find((university) => university.id === field.value)?.name
-                                  : "Select your university"}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0" align="start">
-                            <Command>
-                              <CommandInput placeholder="Search university..." />
-                              <CommandEmpty>No university found.</CommandEmpty>
-                              <CommandGroup className="max-h-[300px] overflow-y-auto">
-                                {universities.map((university) => (
-                                  <CommandItem
-                                    key={university.id}
-                                    value={university.name}
-                                    onSelect={() => {
-                                      form.setValue("universityId", university.id);
-                                      setUniversityOpen(false);
-                                    }}
-                                  >
-                                    <CheckIcon
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        university.id === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {university.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <FormControl>
+                          <SearchInput
+                            value={universitySearchTerm}
+                            onChange={setUniversitySearchTerm}
+                            placeholder="Type to search universities..."
+                            options={universities}
+                            onOptionSelect={(university) => {
+                              form.setValue("universityId", university.id);
+                              setUniversitySearchTerm(university.name);
+                            }}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -332,24 +307,18 @@ const ProfileComplete = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Major</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          disabled={isLoading}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select your major" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[300px]">
-                            {majors.map((major) => (
-                              <SelectItem key={major.id} value={major.id}>
-                                {major.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SearchInput
+                            value={majorSearchTerm}
+                            onChange={setMajorSearchTerm}
+                            placeholder="Type to search majors..."
+                            options={filteredMajors}
+                            onOptionSelect={(major) => {
+                              form.setValue("majorId", major.id);
+                              setMajorSearchTerm(major.name);
+                            }}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
