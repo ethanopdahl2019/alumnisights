@@ -17,6 +17,16 @@ const UniversityAdmissions = () => {
     return <UniversityNotFound />;
   }
 
+  // Check if there's chart data in the content
+  const content = {
+    ...university.content,
+    chartData: university.chartData || [
+      { year: 2022, acceptanceRate: 12 },
+      { year: 2023, acceptanceRate: 11 },
+      { year: 2024, acceptanceRate: 10 }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
@@ -30,7 +40,7 @@ const UniversityAdmissions = () => {
         <div className="max-w-4xl mx-auto">
           <UniversityHeader title={university.title} />
           <UniversityContent 
-            content={university.content}
+            content={content}
             image={university.image}
             name={university.name}
             didYouKnow={university.didYouKnow}

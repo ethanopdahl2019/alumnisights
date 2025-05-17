@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -14,7 +15,7 @@ import UniversityImageUpload from "./UniversityImageUpload";
 import { useUniversityContentForm } from "../hooks/useUniversityContentForm";
 import { generateUniversityContent } from "@/services/ai/generateUniversityContent";
 import { toast } from "sonner";
-import { Wand, Loader2 } from "lucide-react";
+import { Wand, Loader2, ChartBarIcon } from "lucide-react";
 
 interface UniversityContentFormProps {
   id?: string;
@@ -42,6 +43,9 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
   const [isGeneratingApplicationReqs, setIsGeneratingApplicationReqs] = React.useState(false);
   const [isGeneratingAlumniInsights, setIsGeneratingAlumniInsights] = React.useState(false);
   const [isGeneratingDidYouKnow, setIsGeneratingDidYouKnow] = React.useState(false);
+  
+  // State for chart data
+  const [chartData, setChartData] = React.useState<Array<{ year: number; acceptanceRate: number }> | null>(null);
 
   // Function to generate content for a specific section
   const generateSectionContent = async (section: "overview" | "admissionStats" | "applicationRequirements" | "alumniInsights" | "didYouKnow") => {
@@ -84,7 +88,15 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
         } 
         else if (section === "admissionStats" && aiContent.admissionStats) {
           form.setValue("admissionStats", aiContent.admissionStats);
-          toast.success("Admission stats content generated!");
+          
+          // Store chart data if available
+          if (aiContent.chartData) {
+            setChartData(aiContent.chartData);
+            form.setValue("chartData", JSON.stringify(aiContent.chartData));
+            toast.success("Admission stats content and chart data generated!");
+          } else {
+            toast.success("Admission stats content generated!");
+          }
         } 
         else if (section === "applicationRequirements" && aiContent.applicationRequirements) {
           form.setValue("applicationRequirements", aiContent.applicationRequirements);
@@ -149,6 +161,13 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
         if (aiContent.applicationRequirements) form.setValue("applicationRequirements", aiContent.applicationRequirements);
         if (aiContent.alumniInsights) form.setValue("alumniInsights", aiContent.alumniInsights);
         if (aiContent.didYouKnow) form.setValue("didYouKnow", aiContent.didYouKnow);
+        
+        // Handle chart data
+        if (aiContent.chartData) {
+          setChartData(aiContent.chartData);
+          form.setValue("chartData", JSON.stringify(aiContent.chartData));
+        }
+        
         toast.success("All content generated!");
       } else {
         toast.error("Failed to generate content, try again");
@@ -159,6 +178,27 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
     } finally {
       setIsGeneratingAll(false);
     }
+  };
+
+  // Preview chart data if available
+  const renderChartPreview = () => {
+    if (!chartData || chartData.length === 0) return null;
+    
+    return (
+      <div className="mt-2 p-3 bg-gray-50 border rounded-md">
+        <div className="text-sm font-medium mb-2 flex items-center">
+          <ChartBarIcon className="h-4 w-4 mr-1" />
+          Chart Data Preview:
+        </div>
+        <div className="text-xs bg-gray-100 p-2 rounded font-mono">
+          {chartData.map((item, i) => (
+            <div key={i} className="mb-1">
+              Year: {item.year}, Rate: {item.acceptanceRate}%
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -263,16 +303,24 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
                       ) : (
                         <Wand className="w-3 h-3 mr-1" />
                       )}
-                      Generate
+                      Generate with Chart Data
                     </Button>
                   </div>
                   <FormControl>
                     <Textarea 
-                      placeholder="Enter acceptance rate, GPA range, test scores..."
+                      placeholder="Enter acceptance rate, GPA range, test scores as bullet points..."
                       className="min-h-[150px]"
                       {...field} 
                     />
                   </FormControl>
+                  {renderChartPreview()}
+                  <FormField
+                    control={form.control}
+                    name="chartData"
+                    render={({ field }) => (
+                      <input type="hidden" {...field} />
+                    )}
+                  />
                 </FormItem>
               )}
             />
