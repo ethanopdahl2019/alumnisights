@@ -38,21 +38,30 @@ export const getConversations = async () => {
   
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
+  // First check if we're dealing with the old schema (conversations table with student_id and mentor_id)
+  const { data: newConversations } = await supabase
     .from("conversations")
     .select(`
-      *,
-      profile:profiles(name, image)
+      id, student_id, mentor_id, created_at, updated_at, last_message_at,
+      student:profiles!conversations_student_id_fkey(id, name, image),
+      mentor:profiles!conversations_mentor_id_fkey(id, name, image)
     `)
-    .or(`student_id.eq.${user.id},mentor_id.eq.${user.id}`)
-    .order('last_message_at', { ascending: false });
+    .or(`student_id.eq.${user.id},mentor_id.eq.${user.id}`);
 
-  if (error) {
-    console.error("Error fetching conversations:", error);
-    throw error;
+  if (newConversations && newConversations.length > 0) {
+    // We have data in the new schema
+    return newConversations.map(conv => {
+      // Add profile property based on which side of the conversation the user is on
+      const profile = user.id === conv.student_id ? conv.mentor : conv.student;
+      return {
+        ...conv,
+        profile
+      };
+    });
+  } else {
+    // Fall back to the old schema conversations
+    return [];
   }
-
-  return data as Array<Conversation & { profile: { name: string; image: string | null } }>;
 };
 
 // Get a specific conversation

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from "react";
-import { useInView } from "react-intersection-observer";
 import { formatDistanceToNow } from "date-fns";
+import { useInView } from "react-intersection-observer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/components/AuthProvider";
 import { Message } from "@/services/messaging";
@@ -66,7 +66,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, profiles, on
 
           {messages.map((message) => {
             const isCurrentUser = user?.id === message.sender_id;
-            const profile = profiles[message.sender_id];
+            const profile = profiles[message.sender_id] || { name: "Unknown", image: null };
 
             return (
               <div 

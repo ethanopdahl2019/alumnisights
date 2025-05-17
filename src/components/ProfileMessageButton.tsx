@@ -22,7 +22,7 @@ export const ProfileMessageButton: React.FC<ProfileMessageButtonProps> = ({ prof
     onSuccess: (data) => {
       navigate(`/messaging/conversation/${data.id}`);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error starting conversation:", error);
       toast.error("Failed to start conversation. Please try again.");
     }

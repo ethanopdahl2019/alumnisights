@@ -105,19 +105,23 @@ const ConversationPage = () => {
     );
   }
 
+  // Safely extract data, ensuring we have student and mentor objects
+  const student = conversation.student || { id: "", name: "Student", image: null };
+  const mentor = conversation.mentor || { id: "", name: "Mentor", image: null };
+
   // Determine if the current user is the mentor or student
-  const isMentor = user?.id === conversation.mentor.id;
-  const otherPerson = isMentor ? conversation.student : conversation.mentor;
+  const isMentor = user?.id === mentor.id;
+  const otherPerson = isMentor ? student : mentor;
 
   // Create profiles object for MessageList
   const profiles = {
-    [conversation.mentor.id]: {
-      name: conversation.mentor.name,
-      image: conversation.mentor.image,
+    [mentor.id]: {
+      name: mentor.name,
+      image: mentor.image,
     },
-    [conversation.student.id]: {
-      name: conversation.student.name,
-      image: conversation.student.image,
+    [student.id]: {
+      name: student.name,
+      image: student.image,
     },
   };
 

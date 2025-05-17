@@ -6,20 +6,20 @@ import { HelmetProvider } from "react-helmet-async";
 import "./App.css";
 
 // Import pages
-import HomePage from "./pages/Home"; // Update these imports to match your actual file structure
+import HomePage from "./pages/Index"; // Updated import path
 import BrowsePage from "./pages/Browse";
-import ProfilePage from "./pages/Profile";
+import ProfilePage from "./pages/ProfilePage"; // Updated import path
 import MyAccount from "./pages/MyAccount";
 import MentorDashboard from "./pages/MentorDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard"; // Updated import path
 import BookingPage from "./pages/BookingPage";
 import AuthPage from "./pages/Auth";
-import RegistrationPage from "./pages/Registration";
+import RegistrationPage from "./pages/BecomeMentor"; // Updated import path
 import BlogPage from "./pages/Blog";
-import BlogPostPage from "./pages/BlogPost";
-import UniversityPage from "./pages/University";
-import PrivacyPolicyPage from "./pages/PrivacyPolicy";
-import TermsOfServicePage from "./pages/TermsOfService";
+import BlogPostPage from "./pages/Blog"; // Updated import path
+import UniversityPage from "./pages/SchoolDetail"; // Updated import path
+import PrivacyPolicyPage from "./pages/Privacy"; // Updated import path
+import TermsOfServicePage from "./pages/Terms"; // Updated import path
 import ContactPage from "./pages/Contact";
 import AboutUsPage from "./pages/AboutUs";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -105,7 +105,7 @@ const router = createBrowserRouter([
     path: "/payment-canceled",
     element: <PaymentCanceled />,
   },
-  // New messaging routes
+  // Messaging routes
   {
     path: "/messaging",
     element: <MessagingPage />,

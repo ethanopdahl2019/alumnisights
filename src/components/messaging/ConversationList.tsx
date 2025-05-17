@@ -42,6 +42,7 @@ export const ConversationList = () => {
 
   const getOtherParticipantName = (conversation: Conversation) => {
     if (!user) return "";
+    if (!conversation.student_id || !conversation.mentor_id) return "Unknown";
     return user.id === conversation.student_id ? "Mentor" : "Student";
   };
 
@@ -66,7 +67,7 @@ export const ConversationList = () => {
                   {conversation.profile?.name || getOtherParticipantName(conversation)}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {formatDistanceToNow(new Date(conversation.last_message_at), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(conversation.last_message_at || conversation.created_at), { addSuffix: true })}
                 </p>
               </div>
             </div>
