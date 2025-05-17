@@ -645,6 +645,47 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          author_id: string
+          author_image: string | null
+          author_name: string
+          comment: string
+          created_at: string
+          id: string
+          profile_id: string
+          rating: number
+        }
+        Insert: {
+          author_id: string
+          author_image?: string | null
+          author_name: string
+          comment: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          rating: number
+        }
+        Update: {
+          author_id?: string
+          author_image?: string | null
+          author_name?: string
+          comment?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_activity_paragraphs: {
         Row: {
           activity_id: string | null
