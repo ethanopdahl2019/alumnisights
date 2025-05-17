@@ -6,16 +6,20 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { universities } from "./universities-data";
+import { getAllUniversities, UniversityData } from "./universities-data";
 import DefaultLogo from "./DefaultLogo";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 import AccessDenied from "./components/AccessDenied";
+import { getUniversityLogo } from "@/services/landing-page";
 
 const UniversityContentManager: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading, isAdmin } = useAuth();
+  const [universities, setUniversities] = useState<UniversityData[]>([]);
+  const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     if (!loading && !user) {
@@ -28,6 +32,45 @@ const UniversityContentManager: React.FC = () => {
       navigate('/');
     }
   }, [user, loading, isAdmin, navigate]);
+  
+  // Fetch universities data
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      try {
+        const data = await getAllUniversities();
+        setUniversities(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch universities:", error);
+        toast.error("Failed to load universities");
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUniversities();
+  }, []);
+  
+  // Fetch university logos
+  useEffect(() => {
+    const fetchLogos = async () => {
+      if (universities.length === 0) return;
+      
+      const logos: Record<string, string | null> = {};
+      
+      for (const university of universities) {
+        try {
+          const logo = await getUniversityLogo(university.id);
+          logos[university.id] = logo;
+        } catch (error) {
+          console.error(`Failed to fetch logo for ${university.name}:`, error);
+        }
+      }
+      
+      setUniversityLogos(logos);
+    };
+    
+    fetchLogos();
+  }, [universities]);
 
   const handleDeleteUniversity = (id: string, name: string) => {
     // In a real app, you would delete from the database
@@ -35,7 +78,7 @@ const UniversityContentManager: React.FC = () => {
     toast.success(`Deleted ${name}`);
   };
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -80,9 +123,9 @@ const UniversityContentManager: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
                     <div className="mr-4">
-                      {university.logo && university.logo.startsWith("/lovable-uploads") ? (
+                      {universityLogos[university.id] ? (
                         <img 
-                          src={university.logo} 
+                          src={universityLogos[university.id] || ''} 
                           alt={`${university.name} logo`}
                           className="h-12 w-12 object-contain"
                         />

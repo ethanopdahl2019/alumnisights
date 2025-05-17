@@ -52,8 +52,24 @@ export async function getUniversitiesByLetter(): Promise<Record<string, Universi
 
 // Get all unique first letters of university names
 export async function getAlphabeticalLetters(): Promise<string[]> {
-  const universitiesByLetter = await getUniversitiesByLetter();
-  return Object.keys(universitiesByLetter).sort();
+  try {
+    const { data, error } = await supabase
+      .from('universities')
+      .select('order_letter')
+      .order('order_letter');
+      
+    if (error) {
+      console.error('Error fetching alphabet letters:', error);
+      return [];
+    }
+    
+    // Extract unique letters
+    const uniqueLetters = [...new Set(data.map(item => item.order_letter))];
+    return uniqueLetters;
+  } catch (error) {
+    console.error('Failed to fetch alphabet letters:', error);
+    return [];
+  }
 }
 
 // Get a single university by ID

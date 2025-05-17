@@ -4,36 +4,46 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import UniversityTemplate from "./UniversityTemplate";
-import { universities, UniversityData } from "./universities-data";
+import { getUniversityById } from "@/services/universities"; 
 import { getUniversityContent } from "@/services/landing-page";
 import { UniversityContent } from "@/types/database";
+import { UniversityData } from "./universities-data";
 
 const UniversityPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [content, setContent] = useState<UniversityContent | null>(null);
+  const [universityData, setUniversityData] = useState<UniversityData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user } = useAuth(); // Use auth to check for admin status
   
-  // Find university data from static data
-  const universityData = id ? universities.find(uni => uni.id === id) : null;
-  
   useEffect(() => {
-    const loadContent = async () => {
+    const loadData = async () => {
       if (id) {
         try {
-          const data = await getUniversityContent(id);
-          if (data) {
-            setContent(data);
+          // Fetch university content
+          const contentData = await getUniversityContent(id);
+          if (contentData) {
+            setContent(contentData);
+          }
+          
+          // Fetch university data
+          const university = await getUniversityById(id);
+          if (university) {
+            setUniversityData({
+              id: university.id,
+              name: university.name,
+              description: university.type || undefined
+            });
           }
         } catch (error) {
-          console.error("Error loading university content:", error);
+          console.error("Error loading university data:", error);
         } finally {
           setIsLoading(false);
         }
       }
     };
     
-    loadContent();
+    loadData();
   }, [id]);
   
   if (isLoading) {

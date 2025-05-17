@@ -32,7 +32,7 @@ const staticUniversitiesByLetter: Record<string, { id: string; name: string; log
 
 const staticAlphabeticalLetters = Object.keys(staticUniversitiesByLetter).sort();
 
-// Export the static universities list for reference
+// Export a flattened list of all universities for reference
 export const universities = Object.values(staticUniversitiesByLetter).flat();
 
 // Types for university data
@@ -41,6 +41,8 @@ export interface UniversityData {
   name: string;
   logo?: string;
   description?: string;
+  state?: string;
+  type?: string;
 }
 
 // Function to get universities data by letter - tries DB first, falls back to static data
@@ -54,6 +56,8 @@ export async function getUniversitiesByLetter(): Promise<Record<string, Universi
         convertedData[letter] = data[letter].map(uni => ({
           id: uni.id,
           name: uni.name,
+          state: uni.state || undefined,
+          type: uni.type || undefined,
           description: uni.type || undefined
         }));
       });
@@ -77,5 +81,16 @@ export async function getAlphabeticalLetters(): Promise<string[]> {
   } catch (error) {
     console.error("Error fetching alphabetical letters:", error);
     return staticAlphabeticalLetters;
+  }
+}
+
+// Function to get all universities as a flat list
+export async function getAllUniversities(): Promise<UniversityData[]> {
+  try {
+    const universitiesByLetter = await getUniversitiesByLetter();
+    return Object.values(universitiesByLetter).flat();
+  } catch (error) {
+    console.error("Error fetching all universities:", error);
+    return universities;
   }
 }
