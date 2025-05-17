@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,7 +19,6 @@ export default {
 		},
 		fontFamily: {
 			'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-			'serif': ['EB Garamond', 'Georgia', 'serif'],
 		},
 		extend: {
 			colors: {
@@ -29,13 +27,6 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-				beige: {
-					50: '#FAF7F2',
-					100: '#F5F0E8',
-					200: '#EBE2D3',
-					300: '#DFD3BE',
-					DEFAULT: '#F5F0E8',
-				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'

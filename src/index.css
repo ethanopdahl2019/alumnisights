@@ -52,11 +52,11 @@
   }
 
   body {
-    @apply bg-beige-50 text-navy font-sans;
+    @apply bg-white text-navy font-sans;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif font-bold tracking-tight;
+    @apply font-medium tracking-tight;
   }
 
   h1 {
