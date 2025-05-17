@@ -12,9 +12,10 @@ import { Link, useParams } from "react-router-dom";
 const UniversityTemplate: React.FC<{
   name: string;
   logo?: string;
+  image?: string;
   content?: React.ReactNode;
   showEditButton?: boolean;
-}> = ({ name, logo, content, showEditButton = false }) => {
+}> = ({ name, logo, image, content, showEditButton = false }) => {
   const { id } = useParams<{ id: string }>();
   
   return (
@@ -26,32 +27,66 @@ const UniversityTemplate: React.FC<{
 
       <Navbar />
 
+      {/* Hero Banner with University Image */}
+      <div className="relative w-full h-[40vh] min-h-[300px]">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+        {image ? (
+          <img 
+            src={image} 
+            alt={`${name} campus`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-navy to-navy-light"></div>
+        )}
+        
+        <div className="absolute bottom-0 left-0 p-6 md:p-10 z-20 w-full">
+          <div className="container-custom">
+            <div className="flex items-center gap-4">
+              {logo && (
+                <div className="hidden md:block bg-white p-2 rounded-lg shadow-md w-20 h-20 flex-shrink-0">
+                  <img 
+                    src={logo} 
+                    alt={`${name} logo`}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  {name}
+                </h1>
+                <p className="text-lg text-white/90">
+                  Undergraduate Admissions Insights
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <main className="container-custom py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-10 flex flex-col items-center">
-            <div className="mb-6">
-              {logo ? (
-                <img 
-                  src={logo} 
-                  alt={`${name} logo`}
-                  className="h-32 w-32 object-contain"
-                />
-              ) : (
-                <DefaultLogo name={name} className="h-32 w-32" />
+          <div className="mb-6 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              {logo && (
+                <div className="md:hidden bg-white p-2 rounded-lg shadow-sm w-14 h-14 flex-shrink-0">
+                  <img 
+                    src={logo} 
+                    alt={`${name} logo`}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               )}
-            </div>
-            <div className="flex-grow text-center">
-              <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4">
-                {name}
-              </h1>
-              <p className="text-lg text-gray-600 mb-6">
-                Undergraduate Admissions Insights
-              </p>
-              <div className="w-20 h-1 bg-blue-600 rounded-full mx-auto"></div>
+              {!logo && (
+                <div className="md:hidden">
+                  <DefaultLogo name={name} className="h-14 w-14" />
+                </div>
+              )}
             </div>
             
             {id && showEditButton && (
-              <div className="mt-4">
+              <div>
                 <Link to={`/insights/university-content-editor/${id}`}>
                   <Button variant="outline" size="sm" className="whitespace-nowrap">
                     <Edit className="h-4 w-4 mr-2" /> Edit

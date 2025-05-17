@@ -6,6 +6,7 @@ const StanfordUniversity: React.FC = () => {
   return (
     <UniversityTemplate 
       name="Stanford University" 
+      image="https://images.unsplash.com/photo-1531924442192-29c5c7d952bc?q=80&w=1920&auto=format&fit=crop"
       content={
         <>
           <section className="mb-8">

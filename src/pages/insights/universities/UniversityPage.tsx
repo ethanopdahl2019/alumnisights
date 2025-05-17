@@ -69,20 +69,7 @@ const UniversityPage: React.FC = () => {
         <>
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">Overview</h2>
-            <div className="md:flex">
-              <div className="md:w-2/3 pr-6">
-                <p className="whitespace-pre-line">{content.overview}</p>
-              </div>
-              {universityImage && (
-                <div className="md:w-1/3 mt-4 md:mt-0">
-                  <img 
-                    src={universityImage} 
-                    alt={content.name}
-                    className="w-full rounded-lg shadow-md"
-                  />
-                </div>
-              )}
-            </div>
+            <p className="whitespace-pre-line">{content.overview}</p>
           </section>
           
           <section className="mb-8">
@@ -114,6 +101,7 @@ const UniversityPage: React.FC = () => {
     <UniversityTemplate 
       name={universityName}
       logo={universityLogo}
+      image={universityImage}
       content={contentSections}
       showEditButton={isAdmin} 
     />
