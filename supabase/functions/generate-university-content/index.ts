@@ -64,7 +64,8 @@ serve(async (req) => {
     
     console.log("Sending prompt to OpenAI:", prompt);
     
-    // Call OpenAI API
+    // Call OpenAI API with proper authentication
+    console.log("Calling OpenAI API with proper authentication...");
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -88,6 +89,8 @@ serve(async (req) => {
       }),
     });
     
+    console.log("OpenAI API status code:", response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error("OpenAI API error response:", errorText);
@@ -100,6 +103,7 @@ serve(async (req) => {
     }
     
     const data = await response.json();
+    console.log("OpenAI API response received");
     const rawContent = data.choices[0].message.content;
     
     console.log("Received content from OpenAI:", rawContent.substring(0, 100) + "...");
