@@ -184,7 +184,7 @@ const BookingPage = () => {
       } catch (paymentError) {
         console.error('Payment error:', paymentError);
         // If payment creation fails, we should update the booking status or delete it
-        await supabase.from('bookings').update({ status: 'payment_failed' }).eq('id', bookingData.id);
+        await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', bookingData.id);
         throw new Error('Failed to process payment. Please try again.');
       }
       

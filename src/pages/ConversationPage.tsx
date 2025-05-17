@@ -105,9 +105,9 @@ const ConversationPage = () => {
     );
   }
 
-  // Safely extract data, ensuring we have student and mentor objects
-  const student = conversation.student || { id: "", name: "Student", image: null };
-  const mentor = conversation.mentor || { id: "", name: "Mentor", image: null };
+  // Safely extract data, ensuring we have student and mentor objects with default values
+  const student = conversation?.student || { id: "", name: "Student", image: null };
+  const mentor = conversation?.mentor || { id: "", name: "Mentor", image: null };
 
   // Determine if the current user is the mentor or student
   const isMentor = user?.id === mentor.id;
@@ -115,20 +115,20 @@ const ConversationPage = () => {
 
   // Create profiles object for MessageList
   const profiles = {
-    [mentor.id]: {
-      name: mentor.name,
-      image: mentor.image,
+    [mentor.id || "mentor"]: {
+      name: mentor.name || "Mentor",
+      image: mentor.image || null,
     },
-    [student.id]: {
-      name: student.name,
-      image: student.image,
+    [student.id || "student"]: {
+      name: student.name || "Student",
+      image: student.image || null,
     },
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Helmet>
-        <title>Conversation with {otherPerson.name} | AlumniSights</title>
+        <title>Conversation with {otherPerson?.name || "User"} | AlumniSights</title>
       </Helmet>
       
       <Navbar />
@@ -145,16 +145,16 @@ const ConversationPage = () => {
                 </Button>
                 <div className="flex items-center space-x-3">
                   <Avatar>
-                    {otherPerson.image ? (
-                      <AvatarImage src={otherPerson.image} alt={otherPerson.name} />
+                    {otherPerson?.image ? (
+                      <AvatarImage src={otherPerson.image} alt={otherPerson.name || "User"} />
                     ) : (
                       <AvatarFallback>
-                        {otherPerson.name.substring(0, 2).toUpperCase()}
+                        {(otherPerson?.name || "User").substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     )}
                   </Avatar>
                   <div>
-                    <h2 className="font-semibold text-lg">{otherPerson.name}</h2>
+                    <h2 className="font-semibold text-lg">{otherPerson?.name || "User"}</h2>
                     <p className="text-sm text-gray-500">
                       {isMentor ? "Student" : "Mentor"}
                     </p>

@@ -13,6 +13,16 @@ export interface Conversation {
     name: string;
     image: string | null;
   };
+  student?: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  mentor?: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
 }
 
 export interface Message {
@@ -38,8 +48,8 @@ export const getConversations = async () => {
   
   if (!user) throw new Error("Not authenticated");
 
-  // First check if we're dealing with the old schema (conversations table with student_id and mentor_id)
-  const { data: newConversations } = await supabase
+  // First check if we're dealing with the new schema (conversations table with student_id and mentor_id)
+  const { data: conversations } = await supabase
     .from("conversations")
     .select(`
       id, student_id, mentor_id, created_at, updated_at, last_message_at,
@@ -48,20 +58,23 @@ export const getConversations = async () => {
     `)
     .or(`student_id.eq.${user.id},mentor_id.eq.${user.id}`);
 
-  if (newConversations && newConversations.length > 0) {
+  if (conversations && conversations.length > 0) {
     // We have data in the new schema
-    return newConversations.map(conv => {
+    return conversations.map(conv => {
       // Add profile property based on which side of the conversation the user is on
       const profile = user.id === conv.student_id ? conv.mentor : conv.student;
       return {
         ...conv,
-        profile
+        profile: {
+          name: profile?.name || "Unknown",
+          image: profile?.image || null
+        }
       };
-    });
-  } else {
-    // Fall back to the old schema conversations
-    return [];
+    }) as (Conversation & { profile: { name: string; image: string | null } })[];
   }
+
+  // Fall back to an empty array if no conversations
+  return [];
 };
 
 // Get a specific conversation
@@ -74,14 +87,21 @@ export const getConversation = async (conversationId: string) => {
       student:profiles!conversations_student_id_fkey(id, name, image)
     `)
     .eq('id', conversationId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Error fetching conversation:", error);
     throw error;
   }
 
-  return data;
+  // Ensure we have valid student and mentor objects
+  const result = data ? {
+    ...data,
+    student: data.student || { id: "", name: "Student", image: null },
+    mentor: data.mentor || { id: "", name: "Mentor", image: null }
+  } : null;
+
+  return result;
 };
 
 // Get messages for a conversation

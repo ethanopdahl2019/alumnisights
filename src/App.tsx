@@ -6,20 +6,20 @@ import { HelmetProvider } from "react-helmet-async";
 import "./App.css";
 
 // Import pages
-import HomePage from "./pages/Index"; // Updated import path
+import HomePage from "./pages/Index";
 import BrowsePage from "./pages/Browse";
-import ProfilePage from "./pages/ProfilePage"; // Updated import path
+import ProfilePage from "./pages/ProfilePage";
 import MyAccount from "./pages/MyAccount";
 import MentorDashboard from "./pages/MentorDashboard";
-import AdminDashboard from "./pages/admin/AdminDashboard"; // Updated import path
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import BookingPage from "./pages/BookingPage";
 import AuthPage from "./pages/Auth";
-import RegistrationPage from "./pages/BecomeMentor"; // Updated import path
+import RegistrationPage from "./pages/BecomeMentor";
 import BlogPage from "./pages/Blog";
-import BlogPostPage from "./pages/Blog"; // Updated import path
-import UniversityPage from "./pages/SchoolDetail"; // Updated import path
-import PrivacyPolicyPage from "./pages/Privacy"; // Updated import path
-import TermsOfServicePage from "./pages/Terms"; // Updated import path
+import BlogPostPage from "./pages/Blog";
+import UniversityPage from "./pages/SchoolDetail";
+import PrivacyPolicyPage from "./pages/Privacy";
+import TermsOfServicePage from "./pages/Terms";
 import ContactPage from "./pages/Contact";
 import AboutUsPage from "./pages/AboutUs";
 import PaymentSuccess from "./pages/PaymentSuccess";
