@@ -28,8 +28,8 @@ const UniversityTemplate: React.FC<{
 
       <Navbar />
 
-      {/* Hero Banner with University Image */}
-      <div className="relative w-full h-[40vh] min-h-[300px]">
+      {/* Hero Banner with University Image - Increased height from [40vh] to [50vh] */}
+      <div className="relative w-full h-[50vh] min-h-[400px]">
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
         {image ? (
           <img 
