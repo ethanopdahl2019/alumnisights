@@ -108,11 +108,11 @@ const ConversationPage = () => {
   // Create default values to avoid null errors
   const defaultStudent = { id: "", name: "Student", image: null };
   const defaultMentor = { id: "", name: "Mentor", image: null };
-  
-  // Safely extract data with defaults
-  const student = conversation.student || defaultStudent;
-  const mentor = conversation.mentor || defaultMentor;
 
+  // Safely extract data with defaults and type checking
+  const student = typeof conversation.student === 'object' && conversation.student ? conversation.student : defaultStudent;
+  const mentor = typeof conversation.mentor === 'object' && conversation.mentor ? conversation.mentor : defaultMentor;
+  
   // Determine if the current user is the mentor or student
   const isMentor = user?.id === mentor.id;
   const otherPerson = isMentor ? student : mentor;
