@@ -1,7 +1,9 @@
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from './pages/Index';
 import AuthProvider from '@/components/AuthProvider';
 import Auth from './pages/Auth';
@@ -21,40 +23,42 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import BookingPage from './pages/BookingPage';
 import BookingSuccessPage from './pages/BookingSuccessPage';
 
+// Create a client
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <HelmetProvider>
-          <Toaster />
-          <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/browse" element={<Browse />} />
-              <Route path="/student-dashboard" element={<StudentDashboard />} />
-              <Route path="/mentor-dashboard" element={<MentorDashboard />} />
-              <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
-              <Route path="/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-              <Route path="/my-account" element={<MyAccount />} />
-              <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/mentor-chat" element={<MentorChat />} />
-              <Route path="/alumni/:id" element={<AlumniProfilePage />} />
-              <Route path="/profile-complete" element={<ProfileComplete />} />
-              <Route path="/universities/:id" element={<UndergraduateAdmissions />} />
-              <Route path="/landing" element={<LandingPage />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
-              <Route path="/booking/:id/:productId" element={<BookingPage />} />
-              
-              {/* Add the new route for booking success */}
-              <Route path="/booking-success" element={<BookingSuccessPage />} />
-              
-            </Routes>
-          </AuthProvider>
-        </HelmetProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+          <HelmetProvider>
+            <Toaster />
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/browse" element={<Browse />} />
+                <Route path="/student-dashboard" element={<StudentDashboard />} />
+                <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+                <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
+                <Route path="/undergraduate-admissions" element={<UndergraduateAdmissions />} />
+                <Route path="/my-account" element={<MyAccount />} />
+                <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/mentor-chat" element={<MentorChat />} />
+                <Route path="/alumni/:id" element={<AlumniProfilePage />} />
+                <Route path="/profile-complete" element={<ProfileComplete />} />
+                <Route path="/universities/:id" element={<UndergraduateAdmissions />} />
+                <Route path="/landing" element={<LandingPage />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/booking/:id/:productId" element={<BookingPage />} />
+                <Route path="/booking-success" element={<BookingSuccessPage />} />
+              </Routes>
+            </AuthProvider>
+          </HelmetProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
