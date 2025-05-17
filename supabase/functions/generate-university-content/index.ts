@@ -48,30 +48,48 @@ serve(async (req) => {
       console.log("API key found, length:", openaiApiKey.length);
     }
     
-    // Configure the prompt based on content type
-    let prompt = "";
+    // Build system message to control AI behavior and format
+    const systemMessage = "You are an expert on universities that creates accurate, informative content for prospective students. Generate factual, clear, and concise content without marketing language. Your response should be in paragraph format without headings or bullet points.";
+
+    // Configure user prompt based on content type
+    let userPrompt = `Write detailed content about ${universityName} for the following category: `;
     
     if (contentType === "overview" || contentType === "all") {
-      prompt += `Write a comprehensive overview of ${universityName}, including its history, academic reputation, campus culture, and what makes it unique. Format as a paragraph or two without headers.\n\n`;
+      userPrompt += contentType === "all" ? 
+        "\n\n1. Overview: Provide a comprehensive overview of the university, including its history, academic reputation, campus culture, location advantages, and what makes it unique." : 
+        "University Overview. Cover its history, academic reputation, campus culture, location, and what makes it unique.";
     }
     
     if (contentType === "admissionStats" || contentType === "all") {
-      prompt += `Provide recent admission statistics for ${universityName}, including acceptance rates, average GPAs, standardized test scores, and application trends. Format as a paragraph without headers.\n\n`;
+      userPrompt += contentType === "all" ? 
+        "\n\n2. Admission Statistics: Provide specific admission statistics for this university, including acceptance rates, average GPAs, standardized test scores, and recent application trends." : 
+        "Admission Statistics. Include acceptance rates, average GPAs, standardized test scores, and recent application trends.";
     }
     
     if (contentType === "applicationRequirements" || contentType === "all") {
-      prompt += `Explain the application requirements for ${universityName}, including deadlines, required documentation, essays, interviews, and any special requirements. Format as a paragraph without headers.\n\n`;
+      userPrompt += contentType === "all" ? 
+        "\n\n3. Application Requirements: Explain the specific application requirements for this university, including deadlines, required documentation, essays, interviews, and any special requirements." : 
+        "Application Requirements. Cover deadlines, required documentation, essays, interviews, and any special requirements.";
     }
     
     if (contentType === "alumniInsights" || contentType === "all") {
-      prompt += `Share insights from alumni of ${universityName} about their experience at the school, what they wish they knew before applying, and advice for prospective students. Format as a paragraph without headers.\n\n`;
+      userPrompt += contentType === "all" ? 
+        "\n\n4. Alumni Insights: Share insights from alumni about their experience at the school, what they valued most, and advice for prospective students." : 
+        "Alumni Insights. Share perspectives from graduates about their experience, what they valued most, and advice for prospective students.";
     }
     
     if (contentType === "didYouKnow" || contentType === "all") {
-      prompt += `Provide a single interesting and surprising fact about ${universityName} that most people don't know. Keep it brief - just 1-2 sentences maximum. Start with "Did you know that..."\n\n`;
+      userPrompt += contentType === "all" ? 
+        "\n\n5. Did You Know: Provide a single interesting and surprising fact about this university that most people don't know. Start with 'Did you know that...' and keep it to 1-2 sentences." : 
+        "Provide an interesting and surprising fact about this university that most people don't know. Start with 'Did you know that...' and keep it brief (1-2 sentences).";
+    }
+    
+    if (contentType === "all") {
+      userPrompt += "\n\nSeparate each category with a blank line. Do not include category headers or numbers in your response.";
     }
     
     console.log(`Making OpenAI API request for ${universityName}, content type: ${contentType}...`);
+    console.log("User prompt:", userPrompt.substring(0, 100) + "...");
     
     // Prepare headers with correct Bearer token format
     const headers = {
@@ -81,10 +99,6 @@ serve(async (req) => {
     
     // Log header existence (not values)
     console.log("Request headers prepared with authorization");
-    
-    // Direct log for debugging (should be removed in production)
-    console.log("Request URL:", "https://api.openai.com/v1/chat/completions");
-    console.log("Request method:", "POST");
     
     try {
       // Call OpenAI API
@@ -96,11 +110,11 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: "You are a helpful assistant that generates accurate, concise, and neutral information about universities for prospective students. Provide factual information without marketing language.",
+              content: systemMessage,
             },
             {
               role: "user",
-              content: prompt,
+              content: userPrompt,
             },
           ],
           temperature: 0.7,
@@ -167,7 +181,7 @@ serve(async (req) => {
       const result: any = {};
       
       if (contentType === "all") {
-        // Parse the complete response into sections
+        // Parse the complete response into sections by splitting on double newlines
         const sections = rawContent.split("\n\n").filter(section => section.trim() !== "");
         
         // Assign sections to appropriate keys based on the order requested

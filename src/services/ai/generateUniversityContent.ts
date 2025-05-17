@@ -30,7 +30,7 @@ export async function generateUniversityContent(
 
     console.log("Edge function response status:", response.status);
 
-    // Get the full response text first
+    // Get the full response text first for better error diagnosis
     const responseText = await response.text();
     console.log("Response text received, length:", responseText.length);
     
@@ -38,11 +38,11 @@ export async function generateUniversityContent(
     let data: GeneratedContent;
     try {
       data = JSON.parse(responseText);
-      console.log("Parsed response data successfully");
+      console.log("Parsed response data successfully", data);
     } catch (parseError) {
       console.error("Failed to parse JSON response:", parseError);
-      console.error("Raw response text:", responseText.substring(0, 100));
-      throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}...`);
+      console.error("Raw response text:", responseText.substring(0, 200));
+      throw new Error(`Failed to parse response: ${responseText.substring(0, 200)}...`);
     }
 
     // Check for error in the parsed data
@@ -54,8 +54,29 @@ export async function generateUniversityContent(
       throw new Error(data.error);
     }
     
+    // Check if we received any content at all
+    if (contentType === "all" && 
+        !data.overview && 
+        !data.admissionStats && 
+        !data.applicationRequirements && 
+        !data.alumniInsights && 
+        !data.didYouKnow) {
+      console.error("No content was generated for any section");
+      throw new Error("No content was generated. Please try again.");
+    }
+    
+    if (contentType !== "all" && !data[contentType]) {
+      console.error(`No content was generated for ${contentType}`);
+      throw new Error(`No content was generated for ${contentType}. Please try again.`);
+    }
+    
     // If we're generating didYouKnow content, ensure it's short and interesting
     if (contentType === "didYouKnow" && data.didYouKnow) {
+      // Ensure it starts with "Did you know that..."
+      if (!data.didYouKnow.toLowerCase().startsWith("did you know")) {
+        data.didYouKnow = "Did you know that " + data.didYouKnow;
+      }
+      
       // Limit to approximately 1-2 sentences if it's too long
       const sentences = data.didYouKnow.split('. ');
       if (sentences.length > 2) {
