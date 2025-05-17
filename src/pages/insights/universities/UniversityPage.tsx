@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
@@ -8,6 +7,20 @@ import { getUniversityById } from "@/services/universities";
 import { getUniversityContent } from "@/services/landing-page";
 import { UniversityContent } from "@/types/database";
 import { UniversityData } from "./universities-data";
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent 
+} from "@/components/ui/chart";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as ChartTooltip, 
+  ResponsiveContainer 
+} from "recharts";
 
 const UniversityPage: React.FC = () => {
   // Get ID from params or extract from pathname if needed
@@ -48,7 +61,7 @@ const UniversityPage: React.FC = () => {
           if (contentData) {
             setContent(contentData);
             
-            // Try to parse chart data from admission_stats if it exists
+            // Try to parse chart data from chart_data if it exists
             if (contentData.chart_data) {
               try {
                 const parsed = JSON.parse(contentData.chart_data);
