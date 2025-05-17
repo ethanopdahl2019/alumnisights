@@ -62,20 +62,14 @@ const BookingPage = () => {
   
   const handleConfirmBooking = async () => {
     if (!selectedDate || !selectedTime) {
-      toast({
-        title: "Error",
-        description: "Please select a date and time",
-        variant: "destructive"
-      });
+      // Fix: Using toast without title property
+      toast.error("Please select a date and time");
       return;
     }
     
     if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to book a session",
-        variant: "destructive"
-      });
+      // Fix: Using toast without title property
+      toast.error("You must be logged in to book a session");
       return;
     }
     
