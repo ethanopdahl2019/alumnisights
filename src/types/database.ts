@@ -171,6 +171,7 @@ export interface UniversityContent {
   alumni_insights?: string | null;
   image?: string | null;
   logo?: string | null;
+  did_you_know?: string | null;
   created_at: string;
   updated_at: string;
 }

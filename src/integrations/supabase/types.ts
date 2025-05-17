@@ -975,6 +975,7 @@ export type Database = {
           alumni_insights: string | null
           application_requirements: string | null
           created_at: string
+          did_you_know: string | null
           id: string
           image: string | null
           logo: string | null
@@ -987,6 +988,7 @@ export type Database = {
           alumni_insights?: string | null
           application_requirements?: string | null
           created_at?: string
+          did_you_know?: string | null
           id: string
           image?: string | null
           logo?: string | null
@@ -999,6 +1001,7 @@ export type Database = {
           alumni_insights?: string | null
           application_requirements?: string | null
           created_at?: string
+          did_you_know?: string | null
           id?: string
           image?: string | null
           logo?: string | null
