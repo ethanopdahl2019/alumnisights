@@ -6,10 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import AuthProvider from "@/components/AuthProvider";
-import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
 import Browse from "./pages/Browse";
 import NotFound from "./pages/NotFound";
-import LandingPage from "./pages/LandingPage";
 import Auth from "./pages/Auth";
 import ProfileComplete from "./pages/ProfileComplete";
 import Schools from "./pages/Schools";
@@ -70,6 +69,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import BecomeMentor from "./pages/BecomeMentor";
 import SuccessStories from "./pages/SuccessStories";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -82,7 +82,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/home" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/browse" element={<Browse />} />
               <Route path="/profile/complete" element={<ProfileComplete />} />
