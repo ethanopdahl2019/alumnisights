@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MyReviews from "@/components/MyReviews";
+import ReviewForm from "@/components/ReviewForm";
+import { Button } from "@/components/ui/button";
 
 // Define interface for column check response
 interface ColumnCheckResponse {
@@ -26,6 +28,7 @@ interface Booking {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   zoom_link: string | null;
   mentor: {
+    id: string; // Add id property to mentor
     name: string;
     image: string | null;
   };
@@ -87,7 +90,7 @@ const StudentDashboard = () => {
             status: booking.status,
             zoom_link: booking.zoom_link,
             mentor: {
-              id: booking.profiles.id,
+              id: booking.profiles.id, // Include mentor id
               name: booking.profiles.name || 'Unknown',
               image: booking.profiles.image
             },

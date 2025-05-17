@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { createReview } from '@/services/reviews';
+import { supabase } from '@/integrations/supabase/client';
 
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
