@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -267,8 +266,8 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
               onImageChange={handleImageChange}
               onImageRemove={resetImage}
               id="image-upload"
-              label="University Image"
-              helpText="Upload a feature image for the university"
+              label="University Hero Image"
+              helpText="Upload a feature image for the university banner"
             />
 
             <FormField
