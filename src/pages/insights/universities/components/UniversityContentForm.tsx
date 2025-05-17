@@ -42,9 +42,10 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
   const [isGeneratingAdmissionStats, setIsGeneratingAdmissionStats] = React.useState(false);
   const [isGeneratingApplicationReqs, setIsGeneratingApplicationReqs] = React.useState(false);
   const [isGeneratingAlumniInsights, setIsGeneratingAlumniInsights] = React.useState(false);
+  const [isGeneratingDidYouKnow, setIsGeneratingDidYouKnow] = React.useState(false);
 
   // Function to generate content for a specific section
-  const generateSectionContent = async (section: "overview" | "admissionStats" | "applicationRequirements" | "alumniInsights") => {
+  const generateSectionContent = async (section: "overview" | "admissionStats" | "applicationRequirements" | "alumniInsights" | "didYouKnow") => {
     if (!form.getValues("name")) {
       toast.warning("Please enter the university name first");
       return;
@@ -64,6 +65,9 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
       case "alumniInsights":
         setIsGeneratingAlumniInsights(true);
         break;
+      case "didYouKnow":
+        setIsGeneratingDidYouKnow(true);
+        break;
     }
     
     toast.info(`Generating ${section} with AI...`);
@@ -80,6 +84,8 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
           form.setValue("applicationRequirements", aiContent.applicationRequirements);
         } else if (section === "alumniInsights" && aiContent.alumniInsights) {
           form.setValue("alumniInsights", aiContent.alumniInsights);
+        } else if (section === "didYouKnow" && aiContent.didYouKnow) {
+          form.setValue("didYouKnow", aiContent.didYouKnow);
         }
         toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} content generated!`);
       } else {
@@ -103,6 +109,9 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
         case "alumniInsights":
           setIsGeneratingAlumniInsights(false);
           break;
+        case "didYouKnow":
+          setIsGeneratingDidYouKnow(false);
+          break;
       }
     }
   };
@@ -122,6 +131,7 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
         form.setValue("admissionStats", aiContent.admissionStats || "");
         form.setValue("applicationRequirements", aiContent.applicationRequirements || "");
         form.setValue("alumniInsights", aiContent.alumniInsights || "");
+        form.setValue("didYouKnow", aiContent.didYouKnow || "");
         toast.success("All content generated!");
       } else {
         toast.error("Failed to generate content, try again");
@@ -259,6 +269,40 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
               id="image-upload"
               label="University Image"
               helpText="Upload a feature image for the university"
+            />
+
+            <FormField
+              control={form.control}
+              name="didYouKnow"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex justify-between items-center">
+                    <FormLabel>Did You Know?</FormLabel>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateSectionContent("didYouKnow")}
+                      disabled={isGeneratingDidYouKnow}
+                      className="h-8"
+                    >
+                      {isGeneratingDidYouKnow ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Wand className="w-3 h-3 mr-1" />
+                      )}
+                      Generate
+                    </Button>
+                  </div>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Add an interesting fact about the university..."
+                      className="min-h-[100px]" 
+                      {...field} 
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
             />
 
             <FormField

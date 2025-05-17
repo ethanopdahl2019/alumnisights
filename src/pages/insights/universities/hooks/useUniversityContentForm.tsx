@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +12,7 @@ interface UniversityContentFormValues {
   admissionStats: string;
   applicationRequirements: string;
   alumniInsights: string;
+  didYouKnow: string;
 }
 
 interface UseUniversityContentFormProps {
@@ -35,6 +35,7 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
       admissionStats: '',
       applicationRequirements: '',
       alumniInsights: '',
+      didYouKnow: '',
     }
   });
 
@@ -51,7 +52,8 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
             overview: content.overview || '',
             admissionStats: content.admission_stats || '',
             applicationRequirements: content.application_requirements || '',
-            alumniInsights: content.alumni_insights || ''
+            alumniInsights: content.alumni_insights || '',
+            didYouKnow: content.did_you_know || '',
           });
           
           if (content.image) {
@@ -216,6 +218,7 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
         admissionStats: values.admissionStats,
         applicationRequirements: values.applicationRequirements,
         alumniInsights: values.alumniInsights,
+        didYouKnow: values.didYouKnow,
         image: finalImageUrl,
         logo: finalLogoUrl
       });

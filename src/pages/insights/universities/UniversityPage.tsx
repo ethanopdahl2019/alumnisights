@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
@@ -98,6 +97,7 @@ const UniversityPage: React.FC = () => {
   const universityName = content?.name || universityData?.name || "";
   const universityLogo = content?.logo || null;
   const universityImage = content?.image || null;
+  const universityDidYouKnow = content?.did_you_know || null;
   
   // Check if the user is an admin
   const isAdmin = user?.user_metadata?.role === 'admin';
@@ -149,6 +149,7 @@ const UniversityPage: React.FC = () => {
       content={contentSections}
       showEditButton={isAdmin && universityId ? true : false}
       id={universityId || undefined}
+      didYouKnow={universityDidYouKnow}
     />
   );
 };

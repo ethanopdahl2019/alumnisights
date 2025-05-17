@@ -49,6 +49,7 @@ export async function saveUniversityContent(id: string, content: {
   admissionStats?: string;
   applicationRequirements?: string;
   alumniInsights?: string;
+  didYouKnow?: string;
   image?: string | null;
   logo?: string | null;
 }): Promise<UniversityContent | null> {
@@ -62,6 +63,7 @@ export async function saveUniversityContent(id: string, content: {
         admission_stats: content.admissionStats || null,
         application_requirements: content.applicationRequirements || null,
         alumni_insights: content.alumniInsights || null,
+        did_you_know: content.didYouKnow || null,
         image: content.image || null,
         logo: content.logo || null,
       })

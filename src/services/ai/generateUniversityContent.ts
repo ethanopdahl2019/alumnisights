@@ -6,11 +6,12 @@ export interface UniversityContentResponse {
   admissionStats?: string;
   applicationRequirements?: string;
   alumniInsights?: string;
+  didYouKnow?: string;
 }
 
 export async function generateUniversityContent(
   name: string,
-  section?: "overview" | "admissionStats" | "applicationRequirements" | "alumniInsights" | "all"
+  section?: "overview" | "admissionStats" | "applicationRequirements" | "alumniInsights" | "didYouKnow" | "all"
 ): Promise<UniversityContentResponse | null> {
   try {
     const { data, error } = await supabase.functions.invoke("generate-university-content", {
