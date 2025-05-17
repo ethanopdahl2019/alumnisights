@@ -6,17 +6,17 @@ import Footer from "@/components/Footer";
 import DefaultLogo from "./DefaultLogo";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 // This is a template for university pages
 const UniversityTemplate: React.FC<{
   name: string;
-  logo?: string;
-  image?: string;
+  logo?: string | null;
+  image?: string | null;
   content?: React.ReactNode;
   showEditButton?: boolean;
-}> = ({ name, logo, image, content, showEditButton = false }) => {
-  const { id } = useParams<{ id: string }>();
+  id?: string;
+}> = ({ name, logo, image, content, showEditButton = false, id }) => {
   
   return (
     <div className="min-h-screen bg-white">
