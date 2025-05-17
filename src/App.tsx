@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -46,6 +45,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import RequestManagement from "./pages/admin/RequestManagement";
 import Analytics from "./pages/admin/Analytics";
 import BookingManagement from "./pages/admin/BookingManagement";
+import RegistrationControl from "./pages/admin/RegistrationControl";
 
 // Import specific university pages
 import AlleghenyCollege from "./pages/insights/universities/allegheny-college";
@@ -121,6 +121,7 @@ const App = () => (
               <Route path="/admin/requests" element={<RequestManagement />} />
               <Route path="/admin/analytics" element={<Analytics />} />
               <Route path="/admin/bookings" element={<BookingManagement />} />
+              <Route path="/admin/registration-control" element={<RegistrationControl />} />
               
               {/* Specific university routes for direct access */}
               <Route path="/schools/undergraduate-admissions/allegheny-college" element={<AlleghenyCollege />} />

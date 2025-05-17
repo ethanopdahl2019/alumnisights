@@ -17,7 +17,8 @@ import {
   Bookmark,
   Activity,
   Mail,
-  VideoIcon
+  VideoIcon,
+  UserCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,12 @@ const AdminDashboard = () => {
       description: "Manage user accounts and permissions",
       icon: <Users className="h-5 w-5" />,
       href: "/admin/users"
+    },
+    {
+      title: "Registration Control",
+      description: "Manage student and mentor registration forms",
+      icon: <UserCheck className="h-5 w-5" />,
+      href: "/admin/registration-control"
     },
     {
       title: "Booking Management",

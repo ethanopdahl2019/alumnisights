@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { 
   Select, 
   SelectContent, 
@@ -17,37 +18,20 @@ import {
 } from "@/components/ui/select";
 import { getAllUniversities, UniversityData } from "@/pages/insights/universities/universities-data";
 import SearchInput from "@/components/SearchInput";
+import { useForm } from "react-hook-form";
+import { getMajors, Major } from "@/services/majors";
 
-const RegistrationPreview = () => {
+interface RegistrationPreviewProps {
+  registrationType?: 'student' | 'mentor';
+}
+
+const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPreviewProps) => {
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
   const [universitySearchTerm, setUniversitySearchTerm] = useState<string>("");
   const [majorSearchTerm, setMajorSearchTerm] = useState<string>("");
   const [universities, setUniversities] = useState<UniversityData[]>([]);
-  const [majors, setMajors] = useState<Array<{ id: string; name: string }>>([]);
+  const [majors, setMajors] = useState<Array<Major>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  
-  // Sample major data for preview
-  useEffect(() => {
-    const sampleMajors = [
-      { id: "cs", name: "Computer Science" },
-      { id: "neuro", name: "Neuroscience" },
-      { id: "ph", name: "Public Health" },
-      { id: "mech", name: "Mechanical Engineering" },
-      { id: "bio", name: "Biomedical Engineering" },
-      { id: "econ", name: "Economics" },
-      { id: "psych", name: "Psychology" },
-      { id: "polisci", name: "Political Science" },
-      { id: "biochem", name: "Biochemistry" },
-      { id: "bio", name: "Molecular Biology" },
-      { id: "socio", name: "Sociology" },
-      { id: "env", name: "Environmental Science" },
-      { id: "stats", name: "Statistics" },
-      { id: "phys", name: "Physics" }
-      // More majors would be loaded from API in a real implementation
-    ];
-    
-    setMajors(sampleMajors);
-  }, []);
   
   // Fetch universities from Supabase
   useEffect(() => {
@@ -65,16 +49,76 @@ const RegistrationPreview = () => {
     
     loadUniversities();
   }, []);
+
+  // Fetch majors from Supabase
+  useEffect(() => {
+    const loadMajors = async () => {
+      try {
+        const data = await getMajors();
+        setMajors(data);
+      } catch (error) {
+        console.error("Failed to load majors:", error);
+      }
+    };
+    
+    loadMajors();
+  }, []);
   
   // Filter majors based on search term
   const filteredMajors = majors.filter(major => 
     major.name.toLowerCase().includes(majorSearchTerm.toLowerCase())
   ).slice(0, 5);
+
+  const getMentorSpecificContent = () => (
+    <div className="space-y-4 mt-4">
+      <div className="space-y-2">
+        <Label htmlFor="work-experience">Work Experience (years)</Label>
+        <Select>
+          <SelectTrigger>
+            <SelectValue placeholder="Select years of experience" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1-2">1-2 years</SelectItem>
+            <SelectItem value="3-5">3-5 years</SelectItem>
+            <SelectItem value="6-10">6-10 years</SelectItem>
+            <SelectItem value="10+">10+ years</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="linkedin">LinkedIn Profile</Label>
+        <Input id="linkedin" placeholder="https://linkedin.com/in/yourprofile" />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="expertise">Areas of Expertise</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox id="admissions" />
+            <Label htmlFor="admissions" className="text-sm font-normal">Admissions</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="career" />
+            <Label htmlFor="career" className="text-sm font-normal">Career</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="academic" />
+            <Label htmlFor="academic" className="text-sm font-normal">Academic</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="industry" />
+            <Label htmlFor="industry" className="text-sm font-normal">Industry</Label>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
   
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Registration Preview</CardTitle>
+        <CardTitle>{registrationType === 'mentor' ? 'Mentor' : 'Student'} Registration Preview</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="login" className="w-full">
@@ -129,7 +173,7 @@ const RegistrationPreview = () => {
               
               <div className="space-y-2">
                 <Label>I am a:</Label>
-                <RadioGroup defaultValue="student" className="flex flex-col space-y-1">
+                <RadioGroup defaultValue={registrationType} className="flex flex-col space-y-1">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="student" id="student" />
                     <Label htmlFor="student" className="font-normal">Student</Label>
@@ -225,37 +269,42 @@ const RegistrationPreview = () => {
                   />
                 </div>
                 
-                <div className="space-y-3">
-                  <Label className="text-base">Activities</Label>
-                  <p className="text-sm text-gray-500">Select the activities you're involved in</p>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="sports" />
-                      <Label htmlFor="sports" className="text-sm font-normal">Sports</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="music" />
-                      <Label htmlFor="music" className="text-sm font-normal">Music</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="art" />
-                      <Label htmlFor="art" className="text-sm font-normal">Art</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="tech" />
-                      <Label htmlFor="tech" className="text-sm font-normal">Tech</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="volunteer" />
-                      <Label htmlFor="volunteer" className="text-sm font-normal">Volunteering</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="research" />
-                      <Label htmlFor="research" className="text-sm font-normal">Research</Label>
+                {registrationType === 'student' ? (
+                  <div className="space-y-3">
+                    <Label className="text-base">Activities</Label>
+                    <p className="text-sm text-gray-500">Select the activities you're involved in</p>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="sports" />
+                        <Label htmlFor="sports" className="text-sm font-normal">Sports</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="music" />
+                        <Label htmlFor="music" className="text-sm font-normal">Music</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="art" />
+                        <Label htmlFor="art" className="text-sm font-normal">Art</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="tech" />
+                        <Label htmlFor="tech" className="text-sm font-normal">Tech</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="volunteer" />
+                        <Label htmlFor="volunteer" className="text-sm font-normal">Volunteering</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="research" />
+                        <Label htmlFor="research" className="text-sm font-normal">Research</Label>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  // Special fields for mentors
+                  getMentorSpecificContent()
+                )}
                 
                 <div className="flex justify-end space-x-3 pt-2">
                   <Button variant="outline">Skip for now</Button>
