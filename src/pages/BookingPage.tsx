@@ -47,35 +47,6 @@ const BookingPage = () => {
     ? { title: "Comprehensive Session", price: profile.price_60_min, duration: "60 minutes", id: "comprehensive" }
     : null;
   
-  if (isLoading) {
-    return (
-      <div className="min-h-screen">
-        <Navbar />
-        <main className="container-custom py-8">
-          <div className="animate-pulse">
-            <div className="h-32 bg-gray-200 rounded-lg mb-6"></div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-  
-  if (!profile || !selectedProduct) {
-    return (
-      <div className="min-h-screen">
-        <Navbar />
-        <main className="container-custom py-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Product or Profile Not Found</h1>
-          <Link to="/browse" className="text-blue-600 hover:underline">
-            Browse other profiles
-          </Link>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-  
   // Determine which days should be disabled (example: past dates and weekends)
   const isDateDisabled = (date: Date) => {
     const today = new Date();
@@ -115,7 +86,7 @@ const BookingPage = () => {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           profileId: id,
-          productId: selectedProduct.id,
+          productId: selectedProduct?.id,
           selectedDate: selectedDate.toISOString(),
           selectedTime: selectedTime,
           userId: user.id
@@ -139,6 +110,35 @@ const BookingPage = () => {
       setIsProcessing(false);
     }
   };
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <main className="container-custom py-8">
+          <div className="animate-pulse">
+            <div className="h-32 bg-gray-200 rounded-lg mb-6"></div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (!profile || !selectedProduct) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <main className="container-custom py-8 text-center">
+          <h1 className="text-2xl font-bold mb-4">Product or Profile Not Found</h1>
+          <Link to="/browse" className="text-blue-600 hover:underline">
+            Browse other profiles
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -181,14 +181,16 @@ const BookingPage = () => {
         </div>
       </main>
       
-      <BookingConfirmationDialog
-        isOpen={isConfirmationOpen}
-        setIsOpen={setIsConfirmationOpen}
-        selectedDate={selectedDate}
-        selectedTime={selectedTime}
-        selectedProduct={selectedProduct}
-        profile={profile}
-      />
+      {profile && (
+        <BookingConfirmationDialog
+          isOpen={isConfirmationOpen}
+          setIsOpen={setIsConfirmationOpen}
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          selectedProduct={selectedProduct}
+          profile={profile}
+        />
+      )}
       
       <Footer />
     </div>
