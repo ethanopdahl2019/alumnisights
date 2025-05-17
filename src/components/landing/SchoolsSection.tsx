@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 
 const schools = [
   { name: "Harvard", logo: "/lovable-uploads/ac4ac494-9f39-4376-94ee-435e6eeaad53.png" },
