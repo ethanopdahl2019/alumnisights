@@ -17,7 +17,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SearchInput from '@/components/SearchInput';
 import { getSchools } from '@/services/profiles';
-import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
+import { getAllUniversities, UniversityData } from '@/pages/insights/universities/universities-data';
 import { signIn, signUp } from '@/services/auth';
 
 // Form schemas
@@ -69,10 +69,25 @@ const Auth = () => {
   const [userType, setUserType] = useState<"student" | "mentor">("student");
   const [schoolSearchTerm, setSchoolSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [universities, setUniversities] = useState<UniversityData[]>([]);
+  const [isLoadingUniversities, setIsLoadingUniversities] = useState<boolean>(true);
   
-  // Get universities from the same data source as Schools page
-  const universitiesByLetter = getUniversitiesByLetter();
-  const universities = Object.values(universitiesByLetter).flat();
+  // Fetch universities from Supabase
+  useEffect(() => {
+    const loadUniversities = async () => {
+      try {
+        setIsLoadingUniversities(true);
+        const data = await getAllUniversities();
+        setUniversities(data);
+      } catch (error) {
+        console.error("Failed to load universities:", error);
+      } finally {
+        setIsLoadingUniversities(false);
+      }
+    };
+    
+    loadUniversities();
+  }, []);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -408,7 +423,7 @@ const Auth = () => {
                                     <SearchInput 
                                       value={schoolSearchTerm}
                                       onChange={setSchoolSearchTerm}
-                                      placeholder="Search for your school..."
+                                      placeholder={isLoadingUniversities ? "Loading universities..." : "Search for your school..."}
                                       options={universities}
                                       onOptionSelect={(university) => {
                                         handleUniversitySelect(university);

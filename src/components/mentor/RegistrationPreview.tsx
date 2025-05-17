@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,16 +14,31 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { getUniversitiesByLetter } from "@/pages/insights/universities/universities-data";
+import { getAllUniversities, UniversityData } from "@/pages/insights/universities/universities-data";
 import SearchInput from "@/components/SearchInput";
 
 const RegistrationPreview = () => {
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [universities, setUniversities] = useState<UniversityData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Get universities from the same source as Schools page
-  const universitiesByLetter = getUniversitiesByLetter();
-  const allUniversities = Object.values(universitiesByLetter).flat();
+  // Fetch universities from Supabase
+  useEffect(() => {
+    const loadUniversities = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getAllUniversities();
+        setUniversities(data);
+      } catch (error) {
+        console.error("Failed to load universities:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadUniversities();
+  }, []);
   
   return (
     <Card>
@@ -128,8 +143,8 @@ const RegistrationPreview = () => {
                   <SearchInput 
                     value={searchTerm}
                     onChange={setSearchTerm}
-                    placeholder="Type to search universities..."
-                    options={allUniversities}
+                    placeholder={isLoading ? "Loading universities..." : "Type to search universities..."}
+                    options={universities}
                     onOptionSelect={(university) => {
                       setSelectedUniversity(university.id);
                       setSearchTerm(university.name);
