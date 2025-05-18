@@ -5,7 +5,7 @@ import { MobileMenu } from "@/components/navbar/MobileMenu";
 import { DesktopNavLinks } from "@/components/navbar/DesktopNavLinks";
 
 // Using the uploaded logo
-const logoPath = "/lovable-uploads/03fec107-9aab-4acc-bf64-9241c01fb5b5.png";
+const logoPath = "/lovable-uploads/05100078-b238-4e77-b931-fc9455a696a9.png";
 
 const Navbar = () => {
   const isMobile = useIsMobile();

@@ -1,5 +1,4 @@
 
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Users, Building, Star } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -7,8 +6,11 @@ import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
 import FeaturedSchools from '@/components/FeaturedSchools';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/components/AuthProvider';
 
 const Index = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -16,7 +18,7 @@ const Index = () => {
       <main>
         <Hero />
 
-        {/* Features Section */}
+        {/* Features Section with Added Images */}
         <section className="py-16 px-4 sm:px-6 bg-gray-50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
@@ -25,6 +27,44 @@ const Index = () => {
                 Connect with alumni who've walked the path before you, get insights into universities,
                 and prepare for your academic journey.
               </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              {/* First feature with image */}
+              <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+                <div className="h-64 overflow-hidden">
+                  <img 
+                    src="/lovable-uploads/bdaaf67c-3436-4d56-bf80-25d5b4978254.png" 
+                    alt="Students on campus" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl mb-2">Campus Insights</h3>
+                  <p className="text-gray-600 mb-4">Explore what makes each university unique from current students and alumni</p>
+                  <Link to="/insights/clubs-and-greek-life" className="clickable text-blue-600">
+                    Explore Campus Life <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+              
+              {/* Second feature with image */}
+              <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+                <div className="h-64 overflow-hidden">
+                  <img 
+                    src="/lovable-uploads/ac4ac494-9f39-4376-94ee-435e6eeaad53.png" 
+                    alt="Mentorship connections" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl mb-2">Alumni Connections</h3>
+                  <p className="text-gray-600 mb-4">Build relationships with graduates who can provide personalized guidance</p>
+                  <Link to="/browse" className="clickable text-green-600">
+                    Find a Mentor <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -86,21 +126,23 @@ const Index = () => {
         {/* Feature Schools Section - now using real data */}
         <FeaturedSchools />
         
-        {/* CTA Section */}
-        <section className="py-12 px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl mb-4">Ready to start your journey?</h2>
-            <p className="text-gray-600 mb-6">Create an account today and get personalized guidance for your academic future.</p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="/auth" className="clickable-primary text-lg py-2">
-                Sign Up Now
-              </Link>
-              <Link to="/browse" className="clickable-secondary text-lg py-2">
-                Browse Alumni
-              </Link>
+        {/* CTA Section - only show if not logged in */}
+        {!user && (
+          <section className="py-12 px-4 sm:px-6">
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-2xl mb-4">Ready to start your journey?</h2>
+              <p className="text-gray-600 mb-6">Create an account today and get personalized guidance for your academic future.</p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Link to="/auth" className="clickable-primary text-lg py-2">
+                  Sign Up Now
+                </Link>
+                <Link to="/browse" className="clickable-secondary text-lg py-2">
+                  Browse Alumni
+                </Link>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
       
       <Footer />
