@@ -26,10 +26,10 @@ export const NavbarUserSection = () => {
     } else if (isStudent(user)) {
       navigate('/student-dashboard');
     } else if (isAdmin) {
-      navigate('/admin-dashboard');
+      navigate('/admin/dashboard');
     } else {
       // Default fallback
-      navigate('/my-account');
+      navigate('/account');
     }
   };
 
@@ -44,7 +44,7 @@ export const NavbarUserSection = () => {
 
   if (!user) {
     return (
-      <Link to="/auth" className="text-base ml-2 px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 font-medium transition-colors">
+      <Link to="/auth" className="ml-2 px-4 py-2 rounded-full text-white bg-navy hover:bg-navy/90 font-medium transition-colors">
         Sign In
       </Link>
     );
@@ -67,7 +67,7 @@ export const NavbarUserSection = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/my-account')}>
+        <DropdownMenuItem onClick={() => navigate('/account')}>
           <User className="mr-2 h-4 w-4" />
           View Account
         </DropdownMenuItem>
@@ -78,7 +78,7 @@ export const NavbarUserSection = () => {
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/admin-dashboard')} className="text-blue-600 flex items-center">
+            <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center">
               <ShieldAlert className="mr-2 h-4 w-4" />
               Admin Dashboard
             </DropdownMenuItem>

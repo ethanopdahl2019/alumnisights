@@ -22,11 +22,6 @@ import LandingPage from './pages/LandingPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import BookingPage from './pages/BookingPage';
 import BookingSuccessPage from './pages/BookingSuccessPage';
-import Schools from './pages/Schools';
-import UniversityPage from './pages/insights/universities/UniversityPage';
-import GraduateAdmissions from './pages/insights/GraduateAdmissions';
-import IndustryInsights from './pages/insights/IndustryInsights';
-import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -59,15 +54,11 @@ function App() {
                 <Route path="/booking/:id/:productId" element={<BookingPage />} />
                 <Route path="/booking-success" element={<BookingSuccessPage />} />
                 
-                {/* Updated School Routes */}
-                <Route path="/schools" element={<Schools />} />
-                <Route path="/schools/undergraduate-admissions/:id" element={<UniversityPage />} />
-                
-                {/* Insights Pages Routes */}
-                <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
-                <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
-                <Route path="/insights/industry" element={<IndustryInsights />} />
-                <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
+                {/* Add explicit routes for Schools and Insights */}
+                <Route path="/schools" element={<UndergraduateAdmissions />} />
+                <Route path="/schools/undergraduate-admissions/:id" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/clubs-and-greek-life" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/industry" element={<UndergraduateAdmissions />} />
                 <Route path="/insights/university-content-editor/:id" element={<UndergraduateAdmissions />} />
               </Routes>
             </AuthProvider>
