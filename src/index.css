@@ -56,7 +56,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tight;
+    @apply font-serif font-bold tracking-tight;
   }
 
   h1 {
@@ -105,12 +105,16 @@
     @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col;
   }
   
-  .btn-primary {
-    @apply inline-block border border-navy bg-navy text-white px-6 py-3 rounded-lg transition-all hover:bg-navy/90;
+  .clickable {
+    @apply inline-flex items-center text-navy hover:text-navy/80 font-medium gap-1 transition-colors cursor-pointer;
   }
   
-  .btn-secondary {
-    @apply inline-block border border-navy text-navy px-6 py-3 rounded-lg transition-all hover:bg-gray-50;
+  .clickable-primary {
+    @apply inline-flex items-center border-b border-navy hover:border-navy/50 text-navy hover:text-navy/80 font-medium gap-1 transition-colors cursor-pointer;
+  }
+  
+  .clickable-secondary {
+    @apply inline-flex items-center text-navy/80 hover:text-navy font-medium gap-1 transition-colors cursor-pointer;
   }
   
   .filter-pill {

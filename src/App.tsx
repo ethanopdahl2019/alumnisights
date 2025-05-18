@@ -53,6 +53,13 @@ function App() {
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/booking/:id/:productId" element={<BookingPage />} />
                 <Route path="/booking-success" element={<BookingSuccessPage />} />
+                
+                {/* Add explicit routes for Schools and Insights */}
+                <Route path="/schools" element={<UndergraduateAdmissions />} />
+                <Route path="/schools/undergraduate-admissions/:id" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/clubs-and-greek-life" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/industry" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/university-content-editor/:id" element={<UndergraduateAdmissions />} />
               </Routes>
             </AuthProvider>
           </HelmetProvider>

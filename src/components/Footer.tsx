@@ -1,14 +1,17 @@
 
 import { Link } from 'react-router-dom';
 
+// Using the uploaded logo
+const logoPath = "/lovable-uploads/03fec107-9aab-4acc-bf64-9241c01fb5b5.png";
+
 const Footer = () => {
   return (
     <footer className="bg-gray-50 py-16">
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Link to="/" className="text-xl font-bold text-navy">
-              AlumniSights
+            <Link to="/" className="flex items-center gap-2">
+              <img src={logoPath} alt="AlumniSights Logo" className="h-8" />
             </Link>
             <p className="mt-4 text-gray-600">
               Connecting prospective students with authentic insights from 
@@ -17,7 +20,7 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium mb-4">For Prospective Students</h3>
+            <h3 className="text-lg mb-4">For Prospective Students</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/browse" className="text-gray-600 hover:text-navy">
@@ -43,7 +46,7 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium mb-4">For Students & Alumni</h3>
+            <h3 className="text-lg mb-4">For Students & Alumni</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/become-mentor" className="text-gray-600 hover:text-navy">
@@ -64,7 +67,7 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium mb-4">Company</h3>
+            <h3 className="text-lg mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/about" className="text-gray-600 hover:text-navy">
