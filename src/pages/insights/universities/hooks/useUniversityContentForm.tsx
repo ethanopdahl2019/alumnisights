@@ -151,26 +151,27 @@ export function useUniversityContentForm({ id, universityName, initialImage, ini
     }
 
     try {
-      console.log(`Starting ${prefix} upload...`);
+      console.log(`Starting ${prefix} upload for university ${id}...`);
       
-      // Generate a unique file name
+      // Create a standardized filename format: university-id-type-timestamp.extension
       const fileExt = file.name.split('.').pop();
-      const fileName = `${id || 'new'}-${prefix}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `university-images/${fileName}`;
+      const sanitizedUniversityId = id ? id.replace(/[^a-zA-Z0-9-]/g, '_') : 'new';
+      const fileName = `${sanitizedUniversityId}-${prefix}-${Date.now()}.${fileExt}`;
+      const filePath = `universities/${sanitizedUniversityId}/${prefix}/${fileName}`;
 
       console.log("Uploading to path:", filePath);
 
-      // First check if storage bucket exists, if not, we can't upload
+      // Check if the university-content bucket exists
       const { data: buckets } = await supabase.storage.listBuckets();
       const bucket = buckets?.find(b => b.name === 'university-content');
       
       if (!bucket) {
         console.error("Storage bucket 'university-content' does not exist");
-        toast.error("Storage bucket not found. Please contact administrator.");
+        toast.error("Storage infrastructure not set up correctly. Please contact administrator.");
         return null;
       }
 
-      // Upload the file
+      // Upload the file to the university-content bucket
       const { error: uploadError, data } = await supabase.storage
         .from('university-content')
         .upload(filePath, file, {
@@ -221,9 +222,9 @@ export function useUniversityContentForm({ id, universityName, initialImage, ini
       let finalLogoUrl = logoFile ? null : logoPreview;
       
       if (imageFile) {
-        finalImageUrl = await uploadFile(imageFile, 'image');
+        finalImageUrl = await uploadFile(imageFile, 'hero');
         if (!finalImageUrl) {
-          toast.warning("Failed to upload image, continuing with content save");
+          toast.warning("Failed to upload hero image, continuing with content save");
         }
       }
       
@@ -248,7 +249,7 @@ export function useUniversityContentForm({ id, universityName, initialImage, ini
       
       toast.success("University content saved successfully");
       
-      // Redirect back to the editor page for this university instead of the listing page
+      // Redirect back to the editor page for this university
       navigate(`/insights/university-content-editor/${id}`);
       
     } catch (error: any) {
