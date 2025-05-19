@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap } from 'lucide-react';
 import { getUniversities, University } from '@/services/universities';
 import { getUniversityLogo } from '@/services/landing-page';
 import { supabase } from '@/integrations/supabase/client';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const FeaturedSchools: React.FC = () => {
   const [featuredUniversities, setFeaturedUniversities] = useState<University[]>([]);
@@ -91,69 +91,57 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Completely revised scroll hijacking effect
+  // Completely revised scroll control
   useEffect(() => {
     const section = sectionRef.current;
     const scrollContainer = scrollContainerRef.current;
     
     if (!section || !scrollContainer) {
-      console.log("Section or scroll container not found");
       return;
     }
     
-    const getMaxScrollDistance = () => {
-      return scrollContainer.scrollWidth - scrollContainer.clientWidth;
-    };
+    const maxScrollDistance = scrollContainer.scrollWidth - scrollContainer.clientWidth;
     
-    console.log("Max scroll distance:", getMaxScrollDistance());
-    console.log("Scroll container width:", scrollContainer.scrollWidth);
-    console.log("Container client width:", scrollContainer.clientWidth);
+    // Get initial section dimensions
+    const sectionHeight = section.offsetHeight;
+    const viewportHeight = window.innerHeight;
     
     const handleScroll = () => {
-      // Calculate where the section is relative to the viewport
-      const { top, bottom, height } = section.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
+      // Calculate vertical scroll position relative to section
+      const sectionRect = section.getBoundingClientRect();
+      const sectionTop = sectionRect.top;
+      const sectionBottom = sectionRect.bottom;
       
-      // How much of the section has been scrolled past
-      const scrollProgress = Math.max(0, Math.min(1, -top / (height - viewportHeight)));
-      
-      // Make sure the section is sticky when in the viewport
-      if (top <= 0 && bottom >= viewportHeight) {
+      // Only apply effects when section is in view
+      if (sectionTop <= 0 && sectionBottom >= 0) {
         section.style.position = 'sticky';
         section.style.top = '0';
         
-        // Calculate horizontal scroll based on vertical progress
-        const maxScroll = getMaxScrollDistance();
-        const horizontalScroll = scrollProgress * maxScroll;
+        // Calculate progress through the sticky section (0 to 1)
+        // Effectively measure how far the user has scrolled down while the section is sticky
+        const totalScrollDistance = sectionHeight - viewportHeight;
+        const scrolledDistance = -sectionTop;
+        const scrollProgress = Math.max(0, Math.min(1, scrolledDistance / totalScrollDistance));
         
-        // Apply horizontal scroll
+        // Apply horizontal scroll based on vertical progress
+        const horizontalScroll = scrollProgress * maxScrollDistance;
         scrollContainer.scrollLeft = horizontalScroll;
         
-        // Debug scrolling behavior
-        console.log("Scroll progress:", scrollProgress, "Horizontal scroll:", horizontalScroll);
-        
-        // Prevent normal scrolling while in this section
-        if (scrollProgress < 1 && scrollProgress > 0) {
-          document.body.style.overflow = 'hidden';
-        } else {
-          document.body.style.overflow = '';
-        }
-      } else {
-        // When the section isn't in the right position, allow normal scrolling
-        document.body.style.overflow = '';
+        console.log(`Section in view: progress ${scrollProgress.toFixed(2)}, horizontal scroll: ${horizontalScroll.toFixed(0)}px`);
       }
     };
     
-    // Set up initial state
+    console.log("Setting up scroll effect with max horizontal scroll:", maxScrollDistance, "px");
+    
+    // Set initial state
     handleScroll();
     
     // Add scroll event listener
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll);
     
     // Remove event listener on cleanup
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      document.body.style.overflow = '';
     };
   }, []);
 
@@ -180,7 +168,7 @@ const FeaturedSchools: React.FC = () => {
   return (
     <section 
       ref={sectionRef} 
-      className="relative h-[500vh]" // Increased height for smoother scrolling control
+      className="relative h-[300vh]" // Increased height for smooth scrolling control
       style={{ 
         willChange: 'transform', // Optimize for animations
       }}

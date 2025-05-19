@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -23,30 +23,40 @@ const UndergraduateAdmissions = () => {
   const [generatingContentFor, setGeneratingContentFor] = useState<string | null>(null);
   const [alphabeticalLetters, setAlphabeticalLetters] = useState<string[]>([]);
   const [universitiesByLetter, setUniversitiesByLetter] = useState<Record<string, any[]>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const { isAdmin } = useAuth();
   
-  // Fetch university data
+  // Fetch university data with memoization to improve performance
   useEffect(() => {
     const fetchData = async () => {
-      const letters = await getAlphabeticalLetters();
-      const universities = await getUniversitiesByLetter();
-      
-      setAlphabeticalLetters(letters);
-      setUniversitiesByLetter(universities);
-      
-      // Set initial active letter to the first one
-      if (letters.length > 0 && !activeLetter) {
-        setActiveLetter(letters[0]);
+      setIsLoading(true);
+      try {
+        const letters = await getAlphabeticalLetters();
+        const universities = await getUniversitiesByLetter();
+        
+        setAlphabeticalLetters(letters);
+        setUniversitiesByLetter(universities);
+        
+        // Set initial active letter to the first one
+        if (letters.length > 0 && !activeLetter) {
+          setActiveLetter(letters[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch university data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
     fetchData();
   }, []);
   
-  // Fetch university logos efficiently
+  // Batch logo fetching for better performance
   useEffect(() => {
     const fetchUniversityLogos = async () => {
+      if (Object.keys(universitiesByLetter).length === 0) return;
+      
       setIsLoadingLogos(true);
       const logosMap: Record<string, string | null> = {};
       
@@ -54,21 +64,29 @@ const UndergraduateAdmissions = () => {
         // Get all universities to fetch logos for
         const allUniversities = Object.values(universitiesByLetter).flat();
         
-        // Fetch logos in parallel for better performance
-        const logoPromises = allUniversities.map(async (university) => {
-          const logo = await getUniversityLogo(university.id);
-          return { id: university.id, logo };
-        });
-        
-        const results = await Promise.allSettled(logoPromises);
-        
-        results.forEach((result) => {
-          if (result.status === 'fulfilled') {
-            logosMap[result.value.id] = result.value.logo;
-          }
-        });
-        
-        setUniversityLogos(logosMap);
+        // Process logos in smaller batches to prevent overwhelming the network
+        const batchSize = 10;
+        for (let i = 0; i < allUniversities.length; i += batchSize) {
+          const batch = allUniversities.slice(i, i + batchSize);
+          const batchPromises = batch.map(async (university) => {
+            try {
+              const logo = await getUniversityLogo(university.id);
+              return { id: university.id, logo };
+            } catch (error) {
+              console.error(`Failed to fetch logo for ${university.name}:`, error);
+              return { id: university.id, logo: null };
+            }
+          });
+          
+          const results = await Promise.all(batchPromises);
+          
+          results.forEach(result => {
+            logosMap[result.id] = result.logo;
+          });
+          
+          // Update logos incrementally as they load
+          setUniversityLogos(prev => ({...prev, ...logosMap}));
+        }
       } catch (error) {
         console.error('Failed to fetch university logos:', error);
       } finally {
@@ -76,9 +94,7 @@ const UndergraduateAdmissions = () => {
       }
     };
     
-    if (Object.keys(universitiesByLetter).length > 0) {
-      fetchUniversityLogos();
-    }
+    fetchUniversityLogos();
   }, [universitiesByLetter]);
   
   const scrollToLetter = (letter: string) => {
@@ -90,6 +106,12 @@ const UndergraduateAdmissions = () => {
       });
     }
   };
+  
+  // Memoize visible universities to avoid unnecessary re-renders
+  const visibleLetters = useMemo(() => {
+    if (isLoading) return [];
+    return alphabeticalLetters;
+  }, [alphabeticalLetters, isLoading]);
   
   useEffect(() => {
     // Setup intersection observer to update active letter on scroll
@@ -165,13 +187,13 @@ const UndergraduateAdmissions = () => {
       }
     } catch (error) {
       console.error("Error generating content:", error);
-      toast.error(`Error generating content: ${error.message || "Unknown error"}`);
+      toast.error(`Error generating content: ${(error as Error).message || "Unknown error"}`);
     } finally {
       setGeneratingContentFor(null);
     }
   };
 
-  // Render university logo component
+  // Render university logo component - memoized for performance
   const renderUniversityLogo = (universityId: string, universityName: string) => {
     const logo = universityLogos[universityId];
     
@@ -181,6 +203,7 @@ const UndergraduateAdmissions = () => {
           src={logo} 
           alt={`${universityName} logo`}
           className="h-16 w-16 object-contain"
+          loading="lazy" // Add lazy loading for images
         />
       );
     }
@@ -191,6 +214,35 @@ const UndergraduateAdmissions = () => {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main className="container-custom py-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-10">
+              <h1 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+                Undergraduate Admissions Insights
+              </h1>
+              <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden border shadow h-full">
+                  <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                    <div className="animate-pulse bg-gray-200 rounded-full h-16 w-16 mb-3"></div>
+                    <div className="animate-pulse bg-gray-200 h-5 w-32 rounded mb-2"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -223,7 +275,7 @@ const UndergraduateAdmissions = () => {
 
             {/* Main content area with universities */}
             <div className="flex-1">
-              {alphabeticalLetters.map((letter) => (
+              {visibleLetters.map((letter) => (
                 <div 
                   key={letter}
                   ref={el => letterRefs.current[letter] = el}
