@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import { HelmetProvider } from "react-helmet-async";
@@ -34,6 +33,7 @@ import GraduateAdmissions from './pages/insights/GraduateAdmissions';
 import IndustryInsights from './pages/insights/IndustryInsights';
 import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
 import ContentProgress from './pages/admin/ContentProgress';
+import AdmissionStatsManager from './pages/admin/AdmissionStatsManager';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -81,6 +81,7 @@ function App() {
                 <Route path="/admin/calendar" element={<AdminDashboard />} />
                 <Route path="/admin/settings" element={<AdminDashboard />} />
                 <Route path="/admin/content-progress" element={<ContentProgress />} />
+                <Route path="/admin/admission-stats" element={<AdmissionStatsManager />} />
                 
                 {/* Schools Routes */}
                 <Route path="/schools" element={<UndergraduateAdmissions />} />

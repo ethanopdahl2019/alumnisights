@@ -1,424 +1,173 @@
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { 
-  Form,
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import UniversityImageUpload from "./UniversityImageUpload";
-import { useUniversityContentForm } from "../hooks/useUniversityContentForm";
-import { generateUniversityContent } from "@/services/ai/generateUniversityContent";
 import { toast } from "sonner";
-import { Wand, Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 interface UniversityContentFormProps {
-  id?: string;
-  universityName?: string;
-  initialImage?: string;
-  initialLogo?: string;
+  universityId: string;
+  universityName: string;
+  initialData?: UniversityFormData;
+  onSubmit: (data: UniversityFormData) => Promise<boolean>;
+  handleImageUpload: (file: File, type: "image" | "logo") => Promise<string | null>;
+  logoPreview: string | null;
+  imagePreview: string | null;
 }
 
-const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ 
-  id, 
+export interface UniversityFormData {
+  name: string;
+  overview: string;
+  admissionStats: string;
+  applicationRequirements: string;
+  alumniInsights: string;
+  didYouKnow: string;
+  image?: string | null;
+  logo?: string | null;
+}
+
+const UniversityContentForm: React.FC<UniversityContentFormProps> = ({
+  universityId,
   universityName,
-  initialImage,
-  initialLogo
+  initialData,
+  onSubmit,
+  handleImageUpload,
+  logoPreview,
+  imagePreview
 }) => {
-  const navigate = useNavigate();
-  const {
-    form,
-    isLoading,
-    imagePreview,
-    logoPreview,
-    handleImageChange,
-    handleLogoChange,
-    onSubmit,
-    resetImage,
-    resetLogo
-  } = useUniversityContentForm({ 
-    id, 
-    universityName,
-    initialImage,
-    initialLogo
+  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<UniversityFormData>({
+    defaultValues: initialData || {
+      name: universityName,
+      overview: "",
+      admissionStats: "",
+      applicationRequirements: "",
+      alumniInsights: "",
+      didYouKnow: "",
+    }
   });
-
-  // State for AI generation
-  const [isGeneratingAll, setIsGeneratingAll] = React.useState(false);
-  const [isGeneratingOverview, setIsGeneratingOverview] = React.useState(false);
-  const [isGeneratingAdmissionStats, setIsGeneratingAdmissionStats] = React.useState(false);
-  const [isGeneratingApplicationReqs, setIsGeneratingApplicationReqs] = React.useState(false);
-  const [isGeneratingAlumniInsights, setIsGeneratingAlumniInsights] = React.useState(false);
-  const [isGeneratingDidYouKnow, setIsGeneratingDidYouKnow] = React.useState(false);
-
-  // Function to generate content for a specific section
-  const generateSectionContent = async (section: "overview" | "admissionStats" | "applicationRequirements" | "alumniInsights" | "didYouKnow") => {
-    if (!form.getValues("name")) {
-      toast.warning("Please enter the university name first");
-      return;
-    }
-    
-    // Set the loading state for the specific section
-    switch (section) {
-      case "overview":
-        setIsGeneratingOverview(true);
-        break;
-      case "admissionStats":
-        setIsGeneratingAdmissionStats(true);
-        break;
-      case "applicationRequirements":
-        setIsGeneratingApplicationReqs(true);
-        break;
-      case "alumniInsights":
-        setIsGeneratingAlumniInsights(true);
-        break;
-      case "didYouKnow":
-        setIsGeneratingDidYouKnow(true);
-        break;
-    }
-    
-    toast.info(`Generating ${section} content with AI...`);
-    
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  
+  const onSubmitHandler = async (data: UniversityFormData) => {
+    setIsSubmitting(true);
     try {
-      console.log(`Starting generation for ${section}`);
-      const aiContent = await generateUniversityContent(form.getValues("name"), section);
-      console.log(`Received content for ${section}:`, aiContent);
-      
-      if (aiContent) {
-        // Check for the specific field in the response
-        if (section === "overview" && aiContent.overview) {
-          form.setValue("overview", aiContent.overview);
-          toast.success("Overview content generated!");
-        } 
-        else if (section === "admissionStats" && aiContent.admissionStats) {
-          form.setValue("admissionStats", aiContent.admissionStats);
-          toast.success("Admission stats content generated!");
-        } 
-        else if (section === "applicationRequirements" && aiContent.applicationRequirements) {
-          form.setValue("applicationRequirements", aiContent.applicationRequirements);
-          toast.success("Application requirements content generated!");
-        } 
-        else if (section === "alumniInsights" && aiContent.alumniInsights) {
-          form.setValue("alumniInsights", aiContent.alumniInsights);
-          toast.success("Alumni insights content generated!");
-        } 
-        else if (section === "didYouKnow" && aiContent.didYouKnow) {
-          form.setValue("didYouKnow", aiContent.didYouKnow);
-          toast.success("Did You Know content generated!");
-        }
-        else {
-          console.warn(`Expected content for ${section} not found in response:`, aiContent);
-          toast.error(`Failed to generate ${section} content, try again`);
-        }
-      } else {
-        toast.error(`Failed to generate ${section} content, try again`);
+      const success = await onSubmit(data);
+      if (success) {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+        }, 3000);
       }
-    } catch (e) {
-      console.error(`Error generating ${section} content:`, e);
-      toast.error(`Error generating ${section} content: ${e.message || "Unknown error"}`);
     } finally {
-      // Reset the loading state for the specific section
-      switch (section) {
-        case "overview":
-          setIsGeneratingOverview(false);
-          break;
-        case "admissionStats":
-          setIsGeneratingAdmissionStats(false);
-          break;
-        case "applicationRequirements":
-          setIsGeneratingApplicationReqs(false);
-          break;
-        case "alumniInsights":
-          setIsGeneratingAlumniInsights(false);
-          break;
-        case "didYouKnow":
-          setIsGeneratingDidYouKnow(false);
-          break;
-      }
+      setIsSubmitting(false);
     }
   };
-
-  // Generate all content at once
-  const handleGenerateAllContent = async () => {
-    if (!form.getValues("name")) {
-      toast.warning("Please enter the university name first");
-      return;
-    }
-    setIsGeneratingAll(true);
-    toast.info("Generating all content with AI...");
-    try {
-      console.log("Starting generation for all content");
-      const aiContent = await generateUniversityContent(form.getValues("name"), "all");
-      console.log("Received all content:", aiContent);
-      
-      if (aiContent) {
-        if (aiContent.overview) form.setValue("overview", aiContent.overview);
-        if (aiContent.admissionStats) form.setValue("admissionStats", aiContent.admissionStats);
-        if (aiContent.applicationRequirements) form.setValue("applicationRequirements", aiContent.applicationRequirements);
-        if (aiContent.alumniInsights) form.setValue("alumniInsights", aiContent.alumniInsights);
-        if (aiContent.didYouKnow) form.setValue("didYouKnow", aiContent.didYouKnow);
-        toast.success("All content generated!");
-      } else {
-        toast.error("Failed to generate content, try again");
-      }
-    } catch (e) {
-      console.error("Error generating all content:", e);
-      toast.error(`Error generating content: ${e.message || "Unknown error"}`);
-    } finally {
-      setIsGeneratingAll(false);
-    }
-  };
-
+  
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex justify-between items-center mb-4">
-          <div></div>
+    <form onSubmit={handleSubmit(onSubmitHandler)}>
+      <div className="fixed bottom-4 right-4 z-50">
+        {showSuccess && (
+          <div className="bg-green-600 text-white px-4 py-3 rounded-md shadow-lg flex items-center space-x-2 animate-fade-in">
+            <Check className="h-5 w-5" />
+            <span>Content updated successfully!</span>
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="name">University Name</Label>
+              <Input 
+                id="name" 
+                {...register("name", { required: "Name is required" })} 
+                placeholder="University Name" 
+              />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+            </div>
+            
+            <div>
+              <Label htmlFor="didYouKnow">Did You Know? <span className="text-sm text-gray-500">(Interesting fact about the university)</span></Label>
+              <Textarea 
+                id="didYouKnow"
+                {...register("didYouKnow")}
+                placeholder="Share an interesting fact about this university" 
+                className="min-h-[80px]"
+              />
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Overview</h3>
+          <div>
+            <Textarea 
+              {...register("overview", { required: "Overview is required" })}
+              placeholder="Provide a general overview of the university" 
+              className="min-h-[200px]"
+            />
+            {errors.overview && <p className="text-red-500 text-sm mt-1">{errors.overview.message}</p>}
+          </div>
+        </Card>
+        
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Admission Statistics</h3>
+          <div>
+            <Textarea 
+              {...register("admissionStats")}
+              placeholder="Describe the admission statistics and trends" 
+              className="min-h-[200px]"
+            />
+          </div>
+          <p className="text-sm text-gray-500 mt-2">Note: Numeric statistics (acceptance rate, SAT, ACT) can be managed in the Admin Dashboard.</p>
+        </Card>
+        
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Application Requirements</h3>
+          <div>
+            <Textarea 
+              {...register("applicationRequirements")}
+              placeholder="List and explain application requirements" 
+              className="min-h-[200px]"
+            />
+          </div>
+        </Card>
+        
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Alumni Insights</h3>
+          <div>
+            <Textarea 
+              {...register("alumniInsights")}
+              placeholder="Share insights and advice from alumni" 
+              className="min-h-[200px]"
+            />
+          </div>
+        </Card>
+        
+        <div className="flex justify-end">
           <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={handleGenerateAllContent}
-            disabled={isGeneratingAll}
+            type="submit" 
+            disabled={isSubmitting || !isDirty}
+            className="w-full md:w-auto"
           >
-            {isGeneratingAll ? (
+            {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
               </>
             ) : (
-              <>
-                <Wand className="w-4 h-4 mr-2" />
-                Generate All Content with AI
-              </>
+              'Save Content'
             )}
           </Button>
         </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>University Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Harvard University" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <UniversityImageUpload 
-              imagePreview={logoPreview}
-              onImageChange={handleLogoChange}
-              onImageRemove={resetLogo}
-              id="logo-upload"
-              label="University Logo"
-              helpText="Upload the university logo (square format recommended)"
-            />
-
-            <FormField
-              control={form.control}
-              name="overview"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex justify-between items-center">
-                    <FormLabel>Overview</FormLabel>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateSectionContent("overview")}
-                      disabled={isGeneratingOverview}
-                      className="h-8"
-                    >
-                      {isGeneratingOverview ? (
-                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      ) : (
-                        <Wand className="w-3 h-3 mr-1" />
-                      )}
-                      Generate
-                    </Button>
-                  </div>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Provide an overview of the university..."
-                      className="min-h-[150px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="admissionStats"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex justify-between items-center">
-                    <FormLabel>Admission Statistics</FormLabel>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateSectionContent("admissionStats")}
-                      disabled={isGeneratingAdmissionStats}
-                      className="h-8"
-                    >
-                      {isGeneratingAdmissionStats ? (
-                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      ) : (
-                        <Wand className="w-3 h-3 mr-1" />
-                      )}
-                      Generate
-                    </Button>
-                  </div>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Enter acceptance rate, GPA range, test scores..."
-                      className="min-h-[150px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="space-y-6">
-            <UniversityImageUpload 
-              imagePreview={imagePreview}
-              onImageChange={handleImageChange}
-              onImageRemove={resetImage}
-              id="image-upload"
-              label="University Hero Image"
-              helpText="Upload a feature image for the university banner"
-            />
-
-            <FormField
-              control={form.control}
-              name="didYouKnow"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex justify-between items-center">
-                    <FormLabel>Did You Know?</FormLabel>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateSectionContent("didYouKnow")}
-                      disabled={isGeneratingDidYouKnow}
-                      className="h-8"
-                    >
-                      {isGeneratingDidYouKnow ? (
-                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      ) : (
-                        <Wand className="w-3 h-3 mr-1" />
-                      )}
-                      Generate
-                    </Button>
-                  </div>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Add an interesting fact about the university..."
-                      className="min-h-[100px]" 
-                      {...field} 
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="applicationRequirements"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex justify-between items-center">
-                    <FormLabel>Application Requirements</FormLabel>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateSectionContent("applicationRequirements")}
-                      disabled={isGeneratingApplicationReqs}
-                      className="h-8"
-                    >
-                      {isGeneratingApplicationReqs ? (
-                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      ) : (
-                        <Wand className="w-3 h-3 mr-1" />
-                      )}
-                      Generate
-                    </Button>
-                  </div>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="List required materials, deadlines, essays..."
-                      className="min-h-[150px]" 
-                      {...field} 
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="alumniInsights"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex justify-between items-center">
-                    <FormLabel>Alumni Insights (optional)</FormLabel>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateSectionContent("alumniInsights")}
-                      disabled={isGeneratingAlumniInsights}
-                      className="h-8"
-                    >
-                      {isGeneratingAlumniInsights ? (
-                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      ) : (
-                        <Wand className="w-3 h-3 mr-1" />
-                      )}
-                      Generate
-                    </Button>
-                  </div>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Add any quotes or insights from alumni..."
-                      className="min-h-[100px]" 
-                      {...field} 
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-4 justify-end">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => navigate("/insights/undergraduate-admissions")}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : (id ? "Update" : "Create")}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      </div>
+    </form>
   );
 };
 

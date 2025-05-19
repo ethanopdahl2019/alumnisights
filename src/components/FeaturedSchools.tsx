@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap } from 'lucide-react';
@@ -11,6 +12,8 @@ const FeaturedSchools: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const scrollableDistance = useRef<number>(0);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   useEffect(() => {
     const fetchUniversities = async () => {
@@ -90,7 +93,7 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Completely rewritten scroll control to properly hijack vertical scrolling
+  // Implement improved horizontal scroll functionality
   useEffect(() => {
     const section = sectionRef.current;
     const scrollContainer = scrollContainerRef.current;
@@ -98,67 +101,127 @@ const FeaturedSchools: React.FC = () => {
     if (!section || !scrollContainer) {
       return;
     }
+
+    // Calculate total scrollable distance
+    scrollableDistance.current = scrollContainer.scrollWidth - scrollContainer.clientWidth;
     
-    // Calculate maximum scroll distances
-    const maxHorizontalScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-    
-    // Track if our element is currently being observed
-    let isInView = false;
-    let lastScrollY = 0;
-    let scrollProgress = 0;
-    
-    // Create intersection observer to detect when our section enters/exits the viewport
+    // Create observer to detect when section enters viewport
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      isInView = entry.isIntersecting;
-      
       if (entry.isIntersecting) {
-        lastScrollY = window.scrollY;
-        section.style.position = 'sticky';
-        section.style.top = '0';
-        section.classList.add('in-view');
+        section.classList.add('active-scroll');
+        document.body.style.overflow = 'hidden'; // Prevent body scroll when in view
       } else {
-        section.classList.remove('in-view');
-        
-        // If we've scrolled past the section, make sure it sticks at the end position
-        if (window.scrollY > lastScrollY + section.clientHeight) {
-          scrollProgress = 1;
-          scrollContainer.scrollLeft = maxHorizontalScroll;
-        }
+        section.classList.remove('active-scroll');
+        document.body.style.overflow = ''; // Restore body scroll when out of view
       }
     }, { threshold: 0.1 });
     
     observer.observe(section);
     
-    // Main scroll handler that controls horizontal scrolling
-    const handleScroll = () => {
-      if (!isInView) return;
+    // Handle wheel events to transform vertical scroll into horizontal scroll
+    const handleWheel = (e: WheelEvent) => {
+      // Only process wheel events when our section is active
+      if (!section.classList.contains('active-scroll')) return;
       
-      // Calculate how far we've scrolled through the sticky section
-      const scrollStart = section.offsetTop;
-      const scrollDistance = window.innerHeight * 2; // Use 2x viewport height as the scroll distance
-      const currentScroll = window.scrollY - scrollStart;
+      e.preventDefault();
       
-      // Calculate progress (0 to 1)
-      scrollProgress = Math.max(0, Math.min(1, currentScroll / scrollDistance));
-      
-      // Apply horizontal scroll based on progress
-      const horizontalScrollPosition = scrollProgress * maxHorizontalScroll;
-      scrollContainer.scrollLeft = horizontalScrollPosition;
-      
-      // For debugging
-      // console.log(`Scroll progress: ${scrollProgress.toFixed(2)}, horizontal: ${horizontalScrollPosition.toFixed(0)}px`);
+      if (!isScrolling && scrollContainer) {
+        setIsScrolling(true);
+        
+        // Use delta Y (vertical scroll) to scroll horizontally
+        // Adjust sensitivity as needed
+        const scrollAmount = e.deltaY * 1.5;
+        const currentScroll = scrollContainer.scrollLeft;
+        const targetScroll = Math.max(0, Math.min(scrollableDistance.current, currentScroll + scrollAmount));
+        
+        // Smooth scroll to target position
+        scrollContainer.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth'
+        });
+        
+        // If we've reached the end of scrolling, allow the page to continue
+        if ((scrollAmount > 0 && targetScroll >= scrollableDistance.current) || 
+            (scrollAmount < 0 && targetScroll <= 0)) {
+          setTimeout(() => {
+            document.body.style.overflow = '';
+            section.classList.remove('active-scroll');
+          }, 500);
+        }
+        
+        // Debounce the scroll events
+        setTimeout(() => {
+          setIsScrolling(false);
+        }, 50);
+      }
     };
     
-    // Add scroll event listener
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Alternative touch and pointer event handlers for mobile
+    let startY = 0;
+    let startX = 0;
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      if (!section.classList.contains('active-scroll')) return;
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!section.classList.contains('active-scroll')) return;
+      
+      const deltaY = startY - e.touches[0].clientY;
+      const deltaX = startX - e.touches[0].clientX;
+      
+      // If primarily horizontal swipe, let browser handle it
+      if (Math.abs(deltaX) > Math.abs(deltaY)) return;
+      
+      e.preventDefault();
+      
+      if (!isScrolling && scrollContainer) {
+        setIsScrolling(true);
+        
+        const scrollAmount = deltaY * 2;
+        const currentScroll = scrollContainer.scrollLeft;
+        const targetScroll = Math.max(0, Math.min(scrollableDistance.current, currentScroll + scrollAmount));
+        
+        scrollContainer.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth'
+        });
+        
+        setTimeout(() => {
+          setIsScrolling(false);
+        }, 50);
+        
+        startY = e.touches[0].clientY;
+      }
+    };
+    
+    // Add event listeners
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    
+    // Update scrollable distance on resize
+    const handleResize = () => {
+      if (scrollContainer) {
+        scrollableDistance.current = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
     
     // Cleanup
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('resize', handleResize);
+      document.body.style.overflow = ''; // Ensure body scroll is restored
       observer.disconnect();
     };
-  }, []);
+  }, [isScrolling]);
 
   if (loading) {
     return (
@@ -185,7 +248,7 @@ const FeaturedSchools: React.FC = () => {
       ref={sectionRef} 
       className="relative h-[300vh]" // Keep 300vh to ensure enough scroll room for the effect
       style={{ 
-        willChange: 'transform', // Optimize for animations
+        willChange: 'transform' // Optimize for animations
       }}
     >
       <div className="sticky top-0 h-screen flex items-center bg-white">
@@ -246,6 +309,19 @@ const FeaturedSchools: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <style jsx>{`
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
     </section>
   );
 };
