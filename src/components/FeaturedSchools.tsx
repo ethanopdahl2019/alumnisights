@@ -3,11 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap } from 'lucide-react';
 import { getUniversities, University } from '@/services/universities';
-import { getUniversityLogo } from '@/services/landing-page';
 
 const FeaturedSchools: React.FC = () => {
   const [featuredUniversities, setFeaturedUniversities] = useState<University[]>([]);
-  const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -25,37 +23,6 @@ const FeaturedSchools: React.FC = () => {
 
     fetchUniversities();
   }, []);
-
-  // Fetch logos for the featured universities
-  useEffect(() => {
-    const fetchUniversityLogos = async () => {
-      const logosMap: Record<string, string | null> = {};
-      
-      try {
-        // Fetch logos in parallel for better performance
-        const logoPromises = featuredUniversities.map(async (university) => {
-          const logo = await getUniversityLogo(university.id);
-          return { id: university.id, logo };
-        });
-        
-        const results = await Promise.allSettled(logoPromises);
-        
-        results.forEach((result) => {
-          if (result.status === 'fulfilled') {
-            logosMap[result.value.id] = result.value.logo;
-          }
-        });
-        
-        setUniversityLogos(logosMap);
-      } catch (error) {
-        console.error('Failed to fetch university logos:', error);
-      }
-    };
-    
-    if (featuredUniversities.length > 0) {
-      fetchUniversityLogos();
-    }
-  }, [featuredUniversities]);
 
   if (loading) {
     return (
@@ -91,13 +58,13 @@ const FeaturedSchools: React.FC = () => {
           {featuredUniversities.map((university) => (
             <Link
               key={university.id}
-              to={`/insights/undergraduate-admissions/${university.id}`}
+              to={`/schools/undergraduate-admissions/${university.id}`}
               className="p-6 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-shadow text-center"
             >
               <div className="w-16 h-16 flex items-center justify-center mb-4">
-                {universityLogos[university.id] ? (
+                {university.type ? (
                   <img 
-                    src={universityLogos[university.id] || ''} 
+                    src={`/logos/${university.id}.png`} 
                     alt={university.name} 
                     className="max-w-full max-h-full object-contain"
                     onError={(e) => {

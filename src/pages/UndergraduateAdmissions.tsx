@@ -113,7 +113,7 @@ const UndergraduateAdmissions = () => {
               {filteredUniversities.length > 0 ? filteredUniversities.map((university) => (
                 <div key={university.id}>
                   <Link 
-                    to={`/insights/undergraduate-admissions/${university.id}`}
+                    to={`/schools/undergraduate-admissions/${university.id}`}
                     className="flex flex-col items-center p-4 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
                   >
                     <div className="h-24 flex items-center justify-center mb-3">
@@ -160,7 +160,7 @@ const UndergraduateAdmissions = () => {
                       {universitiesByLetter[letter]?.map((university) => (
                         <Link
                           key={university.id}
-                          to={`/insights/undergraduate-admissions/${university.id}`}
+                          to={`/schools/undergraduate-admissions/${university.id}`}
                           className="flex flex-col items-center p-4 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
                         >
                           <div className="h-16 flex items-center justify-center mb-3">
