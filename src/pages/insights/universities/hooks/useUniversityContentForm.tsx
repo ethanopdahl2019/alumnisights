@@ -161,8 +161,15 @@ export function useUniversityContentForm({ id, universityName, initialImage, ini
 
       console.log("Uploading to path:", filePath);
 
-      // Check if the university-content bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
+      // Verify the bucket exists before attempting upload
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+      
+      if (bucketError) {
+        console.error("Error checking storage buckets:", bucketError);
+        toast.error("Failed to access storage system");
+        return null;
+      }
+      
       const bucket = buckets?.find(b => b.name === 'university-content');
       
       if (!bucket) {
@@ -217,23 +224,40 @@ export function useUniversityContentForm({ id, universityName, initialImage, ini
       setIsLoading(true);
       toast.info("Processing your request...");
       
+      console.log("Current image state:", {
+        imageFile: imageFile ? imageFile.name : "none",
+        logoFile: logoFile ? logoFile.name : "none",
+        imagePreview,
+        logoPreview
+      });
+      
       // Upload image and logo if provided
-      let finalImageUrl = imageFile ? null : imagePreview;
-      let finalLogoUrl = logoFile ? null : logoPreview;
+      let finalImageUrl = imagePreview;
+      let finalLogoUrl = logoPreview;
       
       if (imageFile) {
-        finalImageUrl = await uploadFile(imageFile, 'hero');
-        if (!finalImageUrl) {
+        const uploadedImageUrl = await uploadFile(imageFile, 'hero');
+        if (uploadedImageUrl) {
+          finalImageUrl = uploadedImageUrl;
+          console.log("Successfully uploaded hero image:", finalImageUrl);
+        } else {
+          console.warn("Failed to upload hero image, keeping existing URL if available");
           toast.warning("Failed to upload hero image, continuing with content save");
         }
       }
       
       if (logoFile) {
-        finalLogoUrl = await uploadFile(logoFile, 'logo');
-        if (!finalLogoUrl) {
+        const uploadedLogoUrl = await uploadFile(logoFile, 'logo');
+        if (uploadedLogoUrl) {
+          finalLogoUrl = uploadedLogoUrl;
+          console.log("Successfully uploaded logo:", finalLogoUrl);
+        } else {
+          console.warn("Failed to upload logo, keeping existing URL if available");
           toast.warning("Failed to upload logo, continuing with content save");
         }
       }
+      
+      console.log("Final image URLs:", { finalImageUrl, finalLogoUrl });
       
       // Save university content
       await saveUniversityContent(id, {

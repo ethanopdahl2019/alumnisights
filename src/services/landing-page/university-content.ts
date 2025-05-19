@@ -45,7 +45,6 @@ export async function getUniversityLogo(id: string): Promise<string | null> {
   }
 }
 
-// Add the missing function that's being imported in useUniversityContentForm
 export async function saveUniversityContent(id: string, content: {
   name: string;
   overview?: string;
@@ -58,6 +57,10 @@ export async function saveUniversityContent(id: string, content: {
 }): Promise<UniversityContent | null> {
   try {
     console.log("Saving university content:", content);
+    
+    // Log image/logo URLs for debugging
+    console.log("Image URL to save:", content.image);
+    console.log("Logo URL to save:", content.logo);
     
     const { data, error } = await supabase
       .from('universities_content')
