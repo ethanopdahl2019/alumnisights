@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -57,9 +58,9 @@ const AdmissionStatsManager = () => {
         // Fetch universities
         const allUniversities = await getUniversities();
         
-        // Fetch their statistics - using raw query to access the custom table
+        // Fetch their statistics
         const { data: statsData, error: statsError } = await supabase
-          .rpc('get_admission_stats');
+          .functions.invoke('get_admission_stats');
           
         if (statsError) {
           console.error("Error fetching stats:", statsError);
@@ -108,13 +109,14 @@ const AdmissionStatsManager = () => {
     try {
       setProcessingUniversityId(universityId);
       
-      const { data, error } = await supabase
-        .rpc('update_admission_stats', {
-          p_university_id: universityId,
-          p_acceptance_rate: stats.acceptanceRate,
-          p_average_sat: stats.averageSAT,
-          p_average_act: stats.averageACT
-        });
+      const { data, error } = await supabase.functions.invoke('update_admission_stats', {
+        body: {
+          university_id: universityId,
+          acceptance_rate: stats.acceptanceRate,
+          average_sat: stats.averageSAT,
+          average_act: stats.averageACT
+        }
+      });
         
       if (error) throw error;
       

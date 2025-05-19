@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -153,7 +154,7 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({
               <Label>University Logo</Label>
               <UniversityImageUpload 
                 initialImage={logoUrl}
-                onImageUpload={setLogoUrl}
+                onImageUpload={(url) => setLogoUrl(url)}
                 aspectRatio="1:1"
                 description="Upload a square logo for the university (recommended size: 400x400px)"
               />
@@ -163,7 +164,7 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({
               <Label>Cover Image</Label>
               <UniversityImageUpload 
                 initialImage={imageUrl}
-                onImageUpload={setImageUrl}
+                onImageUpload={(url) => setImageUrl(url)}
                 aspectRatio="16:9"
                 description="Upload a cover image for the university page (recommended size: 1600x900px)"
               />

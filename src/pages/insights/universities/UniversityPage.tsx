@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
@@ -9,6 +10,7 @@ import { UniversityContent } from "@/types/database";
 import { UniversityData } from "./universities-data";
 import { supabase } from "@/integrations/supabase/client";
 import AdmissionStats, { AdmissionStatsType } from "@/components/insights/AdmissionStats";
+import { UniversityAdmissionStats } from "@/types/admission-stats";
 
 const UniversityPage: React.FC = () => {
   // Get ID from params or extract from pathname if needed
@@ -61,11 +63,15 @@ const UniversityPage: React.FC = () => {
             });
           }
           
-          // Fetch admission statistics using RPC function
-          const { data: statsData, error: statsError } = await supabase
-            .rpc('get_university_admission_stats', { 
-              p_university_id: universityId 
-            });
+          // Fetch admission statistics using edge function
+          const { data: statsData, error: statsError } = await supabase.functions.invoke(
+            'get_university_admission_stats', 
+            { 
+              body: { 
+                university_id: universityId 
+              } 
+            }
+          );
             
           if (statsData && !statsError) {
             setAdmissionStats({
