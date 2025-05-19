@@ -90,7 +90,7 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Improved scroll hijacking effect
+  // Fixed scroll hijacking effect to properly translate vertical scrolling to horizontal
   useEffect(() => {
     const section = sectionRef.current;
     const container = scrollContainerRef.current;
@@ -98,39 +98,43 @@ const FeaturedSchools: React.FC = () => {
     if (!section || !container) return;
     
     const handleScroll = () => {
-      const sectionRect = section.getBoundingClientRect();
+      const { top, bottom, height } = section.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
       
       // Check if section is in view
-      if (sectionRect.top <= 0 && sectionRect.bottom >= 0) {
-        // Stop regular scrolling while in this section
-        document.body.style.overflow = 'hidden';
+      if (top < viewportHeight && bottom > 0) {
+        // Only disable normal scrolling when we're in the sticky part
+        if (top <= 0 && bottom >= viewportHeight) {
+          document.body.style.overflow = 'hidden';
+        }
         
-        // Calculate how far through the section we've scrolled (0 to 1)
-        const scrollProgress = Math.min(1, Math.max(0, -sectionRect.top / (sectionRect.height - window.innerHeight)));
+        // Calculate progress through the section (0 to 1)
+        // We start when the section enters the viewport and end when it exits
+        const totalScrollDistance = height;
+        const scrolled = Math.min(totalScrollDistance, Math.max(0, viewportHeight - top));
+        const scrollProgress = scrolled / totalScrollDistance;
         
-        // Apply the horizontal scroll based on scroll progress
+        // Apply horizontal scroll based on vertical scroll progress
         const maxScroll = container.scrollWidth - container.clientWidth;
         container.scrollLeft = scrollProgress * maxScroll;
         
-        // Keep the section in view using transform
-        section.style.transform = `translateY(${Math.min(0, sectionRect.top)}px)`;
-      } else if (sectionRect.bottom < 0) {
-        // We've scrolled past the section
-        document.body.style.overflow = '';
-        section.style.transform = `translateY(${-(sectionRect.height - window.innerHeight)}px)`;
+        // Keep the section fixed in view during the effect
+        if (top <= 0 && bottom >= viewportHeight) {
+          section.style.transform = `translateY(${-top}px)`;
+        }
       } else {
-        // We haven't reached the section yet
+        // Reset scroll behavior when section is not in view
         document.body.style.overflow = '';
         section.style.transform = '';
       }
     };
     
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initialize
+    handleScroll(); // Initialize on mount
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      document.body.style.overflow = ''; // Cleanup
+      document.body.style.overflow = ''; // Ensure normal scrolling is restored
     };
   }, []);
 
