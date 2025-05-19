@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { getUniversities, University } from "@/services/universities";
 import { supabase } from "@/integrations/supabase/client";
 import { Search } from "lucide-react";
+import { SiteSettingsResponse } from "@/types/site-settings";
 
 const FeaturedSchoolsPage = () => {
   const { user, loading } = useAuth();
@@ -53,7 +54,7 @@ const FeaturedSchoolsPage = () => {
         // Fetch currently featured schools
         const { data, error } = await supabase
           .from('site_settings')
-          .select('value')
+          .select('*')
           .eq('key', 'featured_schools')
           .single();
         

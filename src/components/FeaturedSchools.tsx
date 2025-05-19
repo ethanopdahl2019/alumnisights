@@ -5,6 +5,7 @@ import { ArrowRight, GraduationCap } from 'lucide-react';
 import { getUniversities, University } from '@/services/universities';
 import { getUniversityLogo } from '@/services/landing-page';
 import { supabase } from '@/integrations/supabase/client';
+import { SiteSettingsResponse } from '@/types/site-settings';
 
 const FeaturedSchools: React.FC = () => {
   const [featuredUniversities, setFeaturedUniversities] = useState<University[]>([]);
@@ -17,15 +18,14 @@ const FeaturedSchools: React.FC = () => {
         // First, try to get the featured school IDs from site_settings
         const { data: settingsData, error: settingsError } = await supabase
           .from('site_settings')
-          .select('value')
+          .select('*')
           .eq('key', 'featured_schools')
           .single();
         
         const allUniversities = await getUniversities();
         
-        if (settingsData && settingsData.value) {
-          // If we have featured schools configured, use those
-          const featuredSchoolIds = JSON.parse(settingsData.value);
+        if (settingsData) {
+          const featuredSchoolIds = JSON.parse(settingsData.value || '[]');
           
           // Filter universities to only include the featured ones
           const featured = allUniversities.filter(university => 
