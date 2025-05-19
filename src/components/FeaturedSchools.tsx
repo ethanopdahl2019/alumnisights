@@ -91,60 +91,66 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Enhanced scroll hijacking effect that properly translates vertical scroll to horizontal motion
+  // Completely revised scroll hijacking effect
   useEffect(() => {
     const section = sectionRef.current;
     const scrollContainer = scrollContainerRef.current;
     
-    if (!section || !scrollContainer) return;
+    if (!section || !scrollContainer) {
+      console.log("Section or scroll container not found");
+      return;
+    }
     
     const getMaxScrollDistance = () => {
       return scrollContainer.scrollWidth - scrollContainer.clientWidth;
     };
     
+    console.log("Max scroll distance:", getMaxScrollDistance());
+    console.log("Scroll container width:", scrollContainer.scrollWidth);
+    console.log("Container client width:", scrollContainer.clientWidth);
+    
     const handleScroll = () => {
-      const { top, height } = section.getBoundingClientRect();
+      // Calculate where the section is relative to the viewport
+      const { top, bottom, height } = section.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       
-      // Make the section taller than the viewport to allow for complete scroll through
-      const sectionScrollHeight = height - viewportHeight;
+      // How much of the section has been scrolled past
+      const scrollProgress = Math.max(0, Math.min(1, -top / (height - viewportHeight)));
       
-      if (section.getBoundingClientRect().top <= 0) {
-        // When section reaches top of viewport, make it sticky
+      // Make sure the section is sticky when in the viewport
+      if (top <= 0 && bottom >= viewportHeight) {
         section.style.position = 'sticky';
         section.style.top = '0';
         
-        // Calculate scroll progress (0 to 1)
-        const scrolledPixels = Math.abs(Math.min(0, top));
-        const scrollProgress = Math.min(1, scrolledPixels / sectionScrollHeight);
-        
-        // Directly set scrollLeft based on scroll progress
+        // Calculate horizontal scroll based on vertical progress
         const maxScroll = getMaxScrollDistance();
-        scrollContainer.scrollLeft = scrollProgress * maxScroll;
+        const horizontalScroll = scrollProgress * maxScroll;
         
-        // Apply transforms to maintain visual position during scrolling
-        if (scrollProgress < 1) {
-          // Keep body scroll locked while we're in the effect zone
+        // Apply horizontal scroll
+        scrollContainer.scrollLeft = horizontalScroll;
+        
+        // Debug scrolling behavior
+        console.log("Scroll progress:", scrollProgress, "Horizontal scroll:", horizontalScroll);
+        
+        // Prevent normal scrolling while in this section
+        if (scrollProgress < 1 && scrollProgress > 0) {
           document.body.style.overflow = 'hidden';
         } else {
-          // Once we've scrolled through the entire section, restore normal scrolling
           document.body.style.overflow = '';
         }
       } else {
-        // Before the section reaches the top, ensure normal scrolling
+        // When the section isn't in the right position, allow normal scrolling
         document.body.style.overflow = '';
       }
     };
     
-    // Initial calculation and setup
+    // Set up initial state
     handleScroll();
+    
+    // Add scroll event listener
     window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Debug output to help verify scroll behavior
-    console.log("Scroll container width:", scrollContainer.scrollWidth);
-    console.log("Scroll container visible width:", scrollContainer.clientWidth);
-    console.log("Max horizontal scroll distance:", getMaxScrollDistance());
-    
+    // Remove event listener on cleanup
     return () => {
       window.removeEventListener('scroll', handleScroll);
       document.body.style.overflow = '';
@@ -174,7 +180,10 @@ const FeaturedSchools: React.FC = () => {
   return (
     <section 
       ref={sectionRef} 
-      className="relative h-[400vh]" // Increased height for smoother scroll control
+      className="relative h-[500vh]" // Increased height for smoother scrolling control
+      style={{ 
+        willChange: 'transform', // Optimize for animations
+      }}
     >
       <div className="sticky top-0 h-screen flex items-center bg-white">
         <div className="container-custom w-full">
@@ -191,7 +200,9 @@ const FeaturedSchools: React.FC = () => {
             style={{ 
               scrollbarWidth: 'none', 
               msOverflowStyle: 'none',
-              scrollBehavior: 'auto' // Ensure smooth scrolling is disabled for direct control
+              scrollBehavior: 'auto', // Disable smooth scrolling for direct control
+              overflowX: 'auto', // Ensure horizontal scrolling is enabled
+              WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
             }}
           >
             {featuredUniversities.map((university) => (
