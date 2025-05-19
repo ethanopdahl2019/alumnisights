@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap } from 'lucide-react';
@@ -91,7 +90,7 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Scroll hijacking effect - the key improvement
+  // Improved scroll hijacking effect
   useEffect(() => {
     const section = sectionRef.current;
     const container = scrollContainerRef.current;
@@ -101,29 +100,26 @@ const FeaturedSchools: React.FC = () => {
     const handleScroll = () => {
       const sectionRect = section.getBoundingClientRect();
       
-      if (
-        sectionRect.top <= 0 && 
-        sectionRect.bottom >= 0
-      ) {
-        // Prevent default scroll while in the section
+      // Check if section is in view
+      if (sectionRect.top <= 0 && sectionRect.bottom >= 0) {
+        // Stop regular scrolling while in this section
         document.body.style.overflow = 'hidden';
         
-        // Calculate scroll position within section
-        const scrollProgress = -sectionRect.top / (sectionRect.height - window.innerHeight);
-        const clampedProgress = Math.max(0, Math.min(1, scrollProgress));
+        // Calculate how far through the section we've scrolled (0 to 1)
+        const scrollProgress = Math.min(1, Math.max(0, -sectionRect.top / (sectionRect.height - window.innerHeight)));
         
-        // Scroll the container horizontally based on progress
+        // Apply the horizontal scroll based on scroll progress
         const maxScroll = container.scrollWidth - container.clientWidth;
-        container.scrollLeft = clampedProgress * maxScroll;
+        container.scrollLeft = scrollProgress * maxScroll;
         
-        // Use transform to scroll the section into view
+        // Keep the section in view using transform
         section.style.transform = `translateY(${Math.min(0, sectionRect.top)}px)`;
       } else if (sectionRect.bottom < 0) {
-        // After section, allow scrolling again
+        // We've scrolled past the section
         document.body.style.overflow = '';
         section.style.transform = `translateY(${-(sectionRect.height - window.innerHeight)}px)`;
       } else {
-        // Before section, allow scrolling
+        // We haven't reached the section yet
         document.body.style.overflow = '';
         section.style.transform = '';
       }
