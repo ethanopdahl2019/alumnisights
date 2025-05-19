@@ -90,51 +90,63 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Fixed scroll hijacking effect to properly translate vertical scrolling to horizontal
+  // Completely revised scroll hijacking effect for smoother transitions
   useEffect(() => {
     const section = sectionRef.current;
-    const container = scrollContainerRef.current;
+    const scrollContainer = scrollContainerRef.current;
     
-    if (!section || !container) return;
+    if (!section || !scrollContainer) return;
+    
+    // Get the total scrollable width of the container (minus what's visible)
+    const getMaxScrollDistance = () => {
+      if (!scrollContainer) return 0;
+      return scrollContainer.scrollWidth - scrollContainer.clientWidth;
+    };
     
     const handleScroll = () => {
+      // Get the current position and dimensions of the section
       const { top, bottom, height } = section.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       
-      // Check if section is in view
-      if (top < viewportHeight && bottom > 0) {
-        // Only disable normal scrolling when we're in the sticky part
+      // The section is taller than the viewport to allow for the scroll effect
+      const sectionScrollHeight = height - viewportHeight;
+      
+      // Check if the section is currently visible
+      if (bottom > 0 && top < viewportHeight) {
+        // Calculate how far we've scrolled through the section
+        // This value will be between 0 (start) and 1 (end)
+        const scrolledPixels = Math.max(0, -top);
+        const scrollProgress = Math.min(1, scrolledPixels / sectionScrollHeight);
+        
+        // Apply the horizontal scroll based on the vertical scroll progress
+        const maxScroll = getMaxScrollDistance();
+        scrollContainer.scrollLeft = scrollProgress * maxScroll;
+        
+        // When the section is in the "sticky" view (top of viewport)
         if (top <= 0 && bottom >= viewportHeight) {
+          // Make the section sticky at the top
+          section.style.position = 'sticky';
+          section.style.top = '0';
+          // Prevent regular page scrolling while in the sticky section
           document.body.style.overflow = 'hidden';
-        }
-        
-        // Calculate progress through the section (0 to 1)
-        // We start when the section enters the viewport and end when it exits
-        const totalScrollDistance = height;
-        const scrolled = Math.min(totalScrollDistance, Math.max(0, viewportHeight - top));
-        const scrollProgress = scrolled / totalScrollDistance;
-        
-        // Apply horizontal scroll based on vertical scroll progress
-        const maxScroll = container.scrollWidth - container.clientWidth;
-        container.scrollLeft = scrollProgress * maxScroll;
-        
-        // Keep the section fixed in view during the effect
-        if (top <= 0 && bottom >= viewportHeight) {
-          section.style.transform = `translateY(${-top}px)`;
+          
+          // The transform helps maintain visual position during scroll
+          section.style.transform = `translateY(${scrolledPixels}px)`;
         }
       } else {
-        // Reset scroll behavior when section is not in view
+        // Reset styles when the section is not in the viewport
         document.body.style.overflow = '';
         section.style.transform = '';
       }
     };
     
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initialize on mount
+    // Initial calculation and setup
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      document.body.style.overflow = ''; // Ensure normal scrolling is restored
+      document.body.style.overflow = '';
     };
   }, []);
 
@@ -161,7 +173,7 @@ const FeaturedSchools: React.FC = () => {
   return (
     <section 
       ref={sectionRef} 
-      className="relative h-[200vh]" 
+      className="relative h-[300vh]" // Increased height for better scroll control
     >
       <div className="sticky top-0 h-screen flex items-center bg-white">
         <div className="container-custom w-full">
