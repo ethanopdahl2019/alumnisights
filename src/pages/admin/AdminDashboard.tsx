@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -21,7 +22,7 @@ import {
   Star,
   ChevronRight,
   FileCheck,
-  Progress
+  BarChart
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -123,7 +124,7 @@ const adminLinkGroups = {
     {
       title: "Content Progress",
       description: "Track progress of content development",
-      icon: <Progress className="h-5 w-5" />,
+      icon: <BarChart className="h-5 w-5" />,
       href: "/admin/content-progress"
     },
   ]
