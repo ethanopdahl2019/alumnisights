@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export const insightsItems = [
   {
     title: "Undergraduate Admissions",
-    href: "/schools/undergraduate-admissions",
+    href: "/insights/undergraduate-admissions",
     description: "Explore admission requirements for undergraduate programs",
   },
   {
