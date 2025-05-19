@@ -15,6 +15,9 @@ const Index = () => {
       
       <main>
         <Hero />
+        
+        {/* Feature Schools Section with scroll hijack effect */}
+        <FeaturedSchools />
 
         {/* Features Section */}
         <section className="py-16 px-4 sm:px-6 bg-gray-50">
@@ -82,9 +85,6 @@ const Index = () => {
             </div>
           </div>
         </section>
-        
-        {/* Feature Schools Section with scroll hijack effect */}
-        <FeaturedSchools />
         
         {/* CTA Section */}
         <section className="py-12 px-4 sm:px-6">
