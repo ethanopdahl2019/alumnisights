@@ -83,7 +83,7 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Feature Schools Section - using real data from Supabase */}
+        {/* Feature Schools Section with scroll hijack effect */}
         <FeaturedSchools />
         
         {/* CTA Section */}

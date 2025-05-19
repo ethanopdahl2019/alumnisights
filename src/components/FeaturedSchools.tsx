@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap } from 'lucide-react';
 import { getUniversities, University } from '@/services/universities';
@@ -11,6 +11,8 @@ const FeaturedSchools: React.FC = () => {
   const [featuredUniversities, setFeaturedUniversities] = useState<University[]>([]);
   const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const fetchUniversities = async () => {
@@ -90,17 +92,38 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
+  // Scroll hijacking effect
+  useEffect(() => {
+    const section = sectionRef.current;
+    const container = scrollContainerRef.current;
+    
+    if (!section || !container) return;
+    
+    const handleScroll = () => {
+      const rect = section.getBoundingClientRect();
+      const scrollProgress = Math.max(0, Math.min(1, 1 - (rect.bottom / (window.innerHeight + rect.height))));
+      
+      if (rect.top <= window.innerHeight && rect.bottom >= 0) {
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        container.scrollLeft = scrollProgress * maxScroll;
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   if (loading) {
     return (
       <div className="py-12">
         <div className="container-custom">
           <div className="text-center">
             <h2 className="text-3xl mb-4">Featured Schools</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="flex gap-6 overflow-x-auto pb-4">
               {[...Array(8)].map((_, index) => (
                 <div 
                   key={index} 
-                  className="h-24 bg-gray-100 animate-pulse rounded-lg flex items-center justify-center"
+                  className="h-36 w-64 flex-shrink-0 bg-gray-100 animate-pulse rounded-lg flex items-center justify-center"
                 />
               ))}
             </div>
@@ -111,51 +134,57 @@ const FeaturedSchools: React.FC = () => {
   }
 
   return (
-    <section className="py-24">
-      <div className="container-custom">
-        <div className="text-center mb-16">
-          <h2 className="mb-4">Featured Schools</h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Connect with students from top universities across the country
-          </p>
-        </div>
+    <section ref={sectionRef} className="py-24 overflow-hidden" style={{ height: '100vh' }}>
+      <div className="sticky top-0 pt-24 pb-24 bg-white">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="mb-4">Featured Schools</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Connect with students from top universities across the country
+            </p>
+          </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {featuredUniversities.map((university) => (
-            <Link
-              key={university.id}
-              to={`/insights/undergraduate-admissions/${university.id}`}
-              className="p-6 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-shadow text-center"
-            >
-              <div className="w-16 h-16 flex items-center justify-center mb-4">
-                {universityLogos[university.id] ? (
-                  <img 
-                    src={universityLogos[university.id] || ''} 
-                    alt={university.name} 
-                    className="max-w-full max-h-full object-contain"
-                    onError={(e) => {
-                      // If image fails to load, replace with default icon
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null;
-                      target.src = "/logos/default-university.png";
-                    }}
-                  />
-                ) : (
-                  <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center">
-                    <GraduationCap className="h-6 w-6 text-slate-500" />
-                  </div>
-                )}
-              </div>
-              <h3 className="font-medium">{university.name}</h3>
+          <div 
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto scrollbar-hide pb-6 snap-x"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {featuredUniversities.map((university) => (
+              <Link
+                key={university.id}
+                to={`/insights/undergraduate-admissions/${university.id}`}
+                className="p-6 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-shadow text-center min-w-[250px] h-52 mx-3 flex-shrink-0 snap-center"
+              >
+                <div className="w-24 h-24 flex items-center justify-center mb-4">
+                  {universityLogos[university.id] ? (
+                    <img 
+                      src={universityLogos[university.id] || ''} 
+                      alt={university.name} 
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        // If image fails to load, replace with default icon
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = "/logos/default-university.png";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
+                      <GraduationCap className="h-8 w-8 text-slate-500" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="font-medium text-lg">{university.name}</h3>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link to="/schools" className="clickable-primary">
+              View All Schools
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
-          ))}
-        </div>
-
-        <div className="text-center mt-12">
-          <Link to="/schools" className="clickable-primary">
-            View All Schools
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+          </div>
         </div>
       </div>
     </section>
