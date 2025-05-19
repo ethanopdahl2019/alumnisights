@@ -42,7 +42,7 @@ export async function getUniversitiesByLetter(): Promise<Record<string, Universi
             name: uni.name,
             state: uni.state || undefined,
             type: uni.type || undefined,
-            description: uni.description || undefined,
+            // Remove the reference to uni.description since it doesn't exist
             logo: logo || undefined,
             hasContent: !!logo // If we have a logo, likely there's content
           };
