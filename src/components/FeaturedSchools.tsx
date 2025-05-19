@@ -91,7 +91,7 @@ const FeaturedSchools: React.FC = () => {
           {featuredUniversities.map((university) => (
             <Link
               key={university.id}
-              to={`/schools/undergraduate-admissions/${university.id}`}
+              to={`/insights/undergraduate-admissions/${university.id}`}
               className="p-6 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-shadow text-center"
             >
               <div className="w-16 h-16 flex items-center justify-center mb-4">

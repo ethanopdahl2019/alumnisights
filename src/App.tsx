@@ -22,6 +22,7 @@ import LandingPage from './pages/LandingPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import BookingPage from './pages/BookingPage';
 import BookingSuccessPage from './pages/BookingSuccessPage';
+import UniversityPage from './pages/insights/universities/UniversityPage';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -41,22 +42,30 @@ function App() {
                 <Route path="/student-dashboard" element={<StudentDashboard />} />
                 <Route path="/mentor-dashboard" element={<MentorDashboard />} />
                 <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
-                <Route path="/undergraduate-admissions" element={<UndergraduateAdmissions />} />
                 <Route path="/my-account" element={<MyAccount />} />
+                <Route path="/account" element={<MyAccount />} />
                 <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/mentor-chat" element={<MentorChat />} />
                 <Route path="/alumni/:id" element={<AlumniProfilePage />} />
                 <Route path="/profile-complete" element={<ProfileComplete />} />
-                <Route path="/universities/:id" element={<UndergraduateAdmissions />} />
                 <Route path="/landing" element={<LandingPage />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/booking/:id/:productId" element={<BookingPage />} />
                 <Route path="/booking-success" element={<BookingSuccessPage />} />
                 
-                {/* Add explicit routes for Schools and Insights */}
+                {/* Admin Routes */}
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                
+                {/* Schools Routes */}
                 <Route path="/schools" element={<UndergraduateAdmissions />} />
-                <Route path="/schools/undergraduate-admissions/:id" element={<UndergraduateAdmissions />} />
+                <Route path="/undergraduate-admissions" element={<UndergraduateAdmissions />} />
+                <Route path="/schools/undergraduate-admissions" element={<UndergraduateAdmissions />} />
+                <Route path="/schools/undergraduate-admissions/:id" element={<UniversityPage />} />
+                
+                {/* Insights Routes */}
+                <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
                 <Route path="/insights/clubs-and-greek-life" element={<UndergraduateAdmissions />} />
                 <Route path="/insights/industry" element={<UndergraduateAdmissions />} />
                 <Route path="/insights/university-content-editor/:id" element={<UndergraduateAdmissions />} />
