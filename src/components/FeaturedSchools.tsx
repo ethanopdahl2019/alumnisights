@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap } from 'lucide-react';
@@ -91,7 +90,7 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Completely revised scroll control
+  // Completely rewritten scroll control to properly hijack vertical scrolling
   useEffect(() => {
     const section = sectionRef.current;
     const scrollContainer = scrollContainerRef.current;
@@ -100,48 +99,64 @@ const FeaturedSchools: React.FC = () => {
       return;
     }
     
-    const maxScrollDistance = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+    // Calculate maximum scroll distances
+    const maxHorizontalScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
     
-    // Get initial section dimensions
-    const sectionHeight = section.offsetHeight;
-    const viewportHeight = window.innerHeight;
+    // Track if our element is currently being observed
+    let isInView = false;
+    let lastScrollY = 0;
+    let scrollProgress = 0;
     
-    const handleScroll = () => {
-      // Calculate vertical scroll position relative to section
-      const sectionRect = section.getBoundingClientRect();
-      const sectionTop = sectionRect.top;
-      const sectionBottom = sectionRect.bottom;
+    // Create intersection observer to detect when our section enters/exits the viewport
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      isInView = entry.isIntersecting;
       
-      // Only apply effects when section is in view
-      if (sectionTop <= 0 && sectionBottom >= 0) {
+      if (entry.isIntersecting) {
+        lastScrollY = window.scrollY;
         section.style.position = 'sticky';
         section.style.top = '0';
+        section.classList.add('in-view');
+      } else {
+        section.classList.remove('in-view');
         
-        // Calculate progress through the sticky section (0 to 1)
-        // Effectively measure how far the user has scrolled down while the section is sticky
-        const totalScrollDistance = sectionHeight - viewportHeight;
-        const scrolledDistance = -sectionTop;
-        const scrollProgress = Math.max(0, Math.min(1, scrolledDistance / totalScrollDistance));
-        
-        // Apply horizontal scroll based on vertical progress
-        const horizontalScroll = scrollProgress * maxScrollDistance;
-        scrollContainer.scrollLeft = horizontalScroll;
-        
-        console.log(`Section in view: progress ${scrollProgress.toFixed(2)}, horizontal scroll: ${horizontalScroll.toFixed(0)}px`);
+        // If we've scrolled past the section, make sure it sticks at the end position
+        if (window.scrollY > lastScrollY + section.clientHeight) {
+          scrollProgress = 1;
+          scrollContainer.scrollLeft = maxHorizontalScroll;
+        }
       }
+    }, { threshold: 0.1 });
+    
+    observer.observe(section);
+    
+    // Main scroll handler that controls horizontal scrolling
+    const handleScroll = () => {
+      if (!isInView) return;
+      
+      // Calculate how far we've scrolled through the sticky section
+      const scrollStart = section.offsetTop;
+      const scrollDistance = window.innerHeight * 2; // Use 2x viewport height as the scroll distance
+      const currentScroll = window.scrollY - scrollStart;
+      
+      // Calculate progress (0 to 1)
+      scrollProgress = Math.max(0, Math.min(1, currentScroll / scrollDistance));
+      
+      // Apply horizontal scroll based on progress
+      const horizontalScrollPosition = scrollProgress * maxHorizontalScroll;
+      scrollContainer.scrollLeft = horizontalScrollPosition;
+      
+      // For debugging
+      // console.log(`Scroll progress: ${scrollProgress.toFixed(2)}, horizontal: ${horizontalScrollPosition.toFixed(0)}px`);
     };
     
-    console.log("Setting up scroll effect with max horizontal scroll:", maxScrollDistance, "px");
-    
-    // Set initial state
-    handleScroll();
-    
     // Add scroll event listener
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Remove event listener on cleanup
+    // Cleanup
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
     };
   }, []);
 
@@ -168,7 +183,7 @@ const FeaturedSchools: React.FC = () => {
   return (
     <section 
       ref={sectionRef} 
-      className="relative h-[300vh]" // Increased height for smooth scrolling control
+      className="relative h-[300vh]" // Keep 300vh to ensure enough scroll room for the effect
       style={{ 
         willChange: 'transform', // Optimize for animations
       }}
@@ -188,9 +203,9 @@ const FeaturedSchools: React.FC = () => {
             style={{ 
               scrollbarWidth: 'none', 
               msOverflowStyle: 'none',
-              scrollBehavior: 'auto', // Disable smooth scrolling for direct control
-              overflowX: 'auto', // Ensure horizontal scrolling is enabled
-              WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+              scrollBehavior: 'auto',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
             }}
           >
             {featuredUniversities.map((university) => (

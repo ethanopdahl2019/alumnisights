@@ -19,18 +19,123 @@ import {
   Mail,
   VideoIcon,
   UserCheck,
-  Star
+  Star,
+  ChevronRight,
+  Progress,
+  FileCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { isAdmin, refreshAndCheckAdmin } from "@/services/auth";
 import AccessDenied from "../insights/universities/components/AccessDenied";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Group admin links by category
+const adminLinkGroups = {
+  users: [
+    {
+      title: "User Management",
+      description: "Manage user accounts and permissions",
+      icon: <Users className="h-5 w-5" />,
+      href: "/admin/users"
+    },
+    {
+      title: "Registration Control",
+      description: "Manage student and mentor registration forms",
+      icon: <UserCheck className="h-5 w-5" />,
+      href: "/admin/registration-control"
+    },
+    {
+      title: "Request Management",
+      description: "Handle user requests and verification",
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: "/admin/requests"
+    },
+  ],
+  content: [
+    {
+      title: "Content Management",
+      description: "Manage site content and blog posts",
+      icon: <FileText className="h-5 w-5" />,
+      href: "/insights/university-content-manager"
+    },
+    {
+      title: "Featured Schools",
+      description: "Select schools to feature on the homepage",
+      icon: <Star className="h-5 w-5" />,
+      href: "/admin/featured-schools"
+    },
+    {
+      title: "Schools Management",
+      description: "Add and update school information",
+      icon: <School className="h-5 w-5" />,
+      href: "/admin/schools"
+    },
+    {
+      title: "Companies Management",
+      description: "Manage employer and company data",
+      icon: <Building className="h-5 w-5" />,
+      href: "/admin/companies"
+    },
+    {
+      title: "Major Management",
+      description: "Edit and create academic majors",
+      icon: <Bookmark className="h-5 w-5" />,
+      href: "/admin/majors"
+    },
+    {
+      title: "Activities Management",
+      description: "Manage clubs, sports and activities",
+      icon: <Activity className="h-5 w-5" />,
+      href: "/admin/activities"
+    },
+  ],
+  operations: [
+    {
+      title: "Booking Management",
+      description: "Manage session bookings and zoom links",
+      icon: <VideoIcon className="h-5 w-5" />,
+      href: "/admin/bookings"
+    },
+    {
+      title: "Analytics",
+      description: "View site performance and user metrics",
+      icon: <BarChart3 className="h-5 w-5" />,
+      href: "/admin/analytics"
+    },
+    {
+      title: "Email Templates",
+      description: "Manage system email templates",
+      icon: <Mail className="h-5 w-5" />,
+      href: "/admin/emails"
+    },
+    {
+      title: "Calendar Management",
+      description: "Manage important dates and events",
+      icon: <CalendarIcon className="h-5 w-5" />,
+      href: "/admin/calendar"
+    },
+    {
+      title: "System Settings",
+      description: "Configure system settings and parameters",
+      icon: <Settings className="h-5 w-5" />,
+      href: "/admin/settings"
+    },
+    {
+      title: "Content Progress",
+      description: "Track progress of content development",
+      icon: <Progress className="h-5 w-5" />,
+      href: "/admin/content-progress"
+    },
+  ]
+};
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [isAdminUser, setIsAdminUser] = useState<boolean | null>(null);
   const [checkingAdmin, setCheckingAdmin] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -61,91 +166,11 @@ const AdminDashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  const adminLinks = [
-    {
-      title: "User Management",
-      description: "Manage user accounts and permissions",
-      icon: <Users className="h-5 w-5" />,
-      href: "/admin/users"
-    },
-    {
-      title: "Registration Control",
-      description: "Manage student and mentor registration forms",
-      icon: <UserCheck className="h-5 w-5" />,
-      href: "/admin/registration-control"
-    },
-    {
-      title: "Booking Management",
-      description: "Manage session bookings and zoom links",
-      icon: <VideoIcon className="h-5 w-5" />,
-      href: "/admin/bookings"
-    },
-    {
-      title: "Request Management",
-      description: "Handle user requests and verification",
-      icon: <MessageSquare className="h-5 w-5" />,
-      href: "/admin/requests"
-    },
-    {
-      title: "Analytics",
-      description: "View site performance and user metrics",
-      icon: <BarChart3 className="h-5 w-5" />,
-      href: "/admin/analytics"
-    },
-    {
-      title: "Content Management",
-      description: "Manage site content and blog posts",
-      icon: <FileText className="h-5 w-5" />,
-      href: "/insights/university-content-manager"
-    },
-    {
-      title: "Featured Schools",
-      description: "Select schools to feature on the homepage",
-      icon: <Star className="h-5 w-5" />,
-      href: "/admin/featured-schools"
-    },
-    {
-      title: "Email Templates",
-      description: "Manage system email templates",
-      icon: <Mail className="h-5 w-5" />,
-      href: "/admin/emails"
-    },
-    {
-      title: "Schools Management",
-      description: "Add and update school information",
-      icon: <School className="h-5 w-5" />,
-      href: "/admin/schools"
-    },
-    {
-      title: "Companies Management",
-      description: "Manage employer and company data",
-      icon: <Building className="h-5 w-5" />,
-      href: "/admin/companies"
-    },
-    {
-      title: "Major Management",
-      description: "Edit and create academic majors",
-      icon: <Bookmark className="h-5 w-5" />,
-      href: "/admin/majors"
-    },
-    {
-      title: "Activities Management",
-      description: "Manage clubs, sports and activities",
-      icon: <Activity className="h-5 w-5" />,
-      href: "/admin/activities"
-    },
-    {
-      title: "Calendar Management",
-      description: "Manage important dates and events",
-      icon: <CalendarIcon className="h-5 w-5" />,
-      href: "/admin/calendar"
-    },
-    {
-      title: "System Settings",
-      description: "Configure system settings and parameters",
-      icon: <Settings className="h-5 w-5" />,
-      href: "/admin/settings"
-    }
+  // Get all admin links flattened for "All" tab
+  const allAdminLinks = [
+    ...adminLinkGroups.users,
+    ...adminLinkGroups.content,
+    ...adminLinkGroups.operations
   ];
 
   if (loading || checkingAdmin) {
@@ -177,33 +202,137 @@ const AdminDashboard = () => {
             Admin Dashboard
           </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {adminLinks.map((link, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
-                <Button 
-                  variant="ghost" 
-                  className="h-full w-full p-0 items-start"
-                  onClick={() => navigate(link.href)}
-                >
-                  <div className="w-full">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-blue-50 p-2 rounded-lg">
-                          {link.icon}
-                        </div>
-                        <CardTitle className="text-lg">{link.title}</CardTitle>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="users">User Management</TabsTrigger>
+              <TabsTrigger value="content">Content Management</TabsTrigger>
+              <TabsTrigger value="operations">Operations</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allAdminLinks.map((link, index) => (
+                  <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
+                    <Button 
+                      variant="ghost" 
+                      className="h-full w-full p-0 items-start"
+                      onClick={() => navigate(link.href)}
+                    >
+                      <div className="w-full">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-50 p-2 rounded-lg">
+                              {link.icon}
+                            </div>
+                            <CardTitle className="text-lg">{link.title}</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <CardDescription className="text-left">
+                            {link.description}
+                          </CardDescription>
+                        </CardContent>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-left">
-                        {link.description}
-                      </CardDescription>
-                    </CardContent>
-                  </div>
-                </Button>
-              </Card>
-            ))}
-          </div>
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+            
+            {/* User Management Tab */}
+            <TabsContent value="users">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {adminLinkGroups.users.map((link, index) => (
+                  <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
+                    <Button 
+                      variant="ghost" 
+                      className="h-full w-full p-0 items-start"
+                      onClick={() => navigate(link.href)}
+                    >
+                      <div className="w-full">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-50 p-2 rounded-lg">
+                              {link.icon}
+                            </div>
+                            <CardTitle className="text-lg">{link.title}</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <CardDescription className="text-left">
+                            {link.description}
+                          </CardDescription>
+                        </CardContent>
+                      </div>
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+            
+            {/* Content Management Tab */}
+            <TabsContent value="content">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {adminLinkGroups.content.map((link, index) => (
+                  <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
+                    <Button 
+                      variant="ghost" 
+                      className="h-full w-full p-0 items-start"
+                      onClick={() => navigate(link.href)}
+                    >
+                      <div className="w-full">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-50 p-2 rounded-lg">
+                              {link.icon}
+                            </div>
+                            <CardTitle className="text-lg">{link.title}</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <CardDescription className="text-left">
+                            {link.description}
+                          </CardDescription>
+                        </CardContent>
+                      </div>
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+            
+            {/* Operations Tab */}
+            <TabsContent value="operations">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {adminLinkGroups.operations.map((link, index) => (
+                  <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
+                    <Button 
+                      variant="ghost" 
+                      className="h-full w-full p-0 items-start"
+                      onClick={() => navigate(link.href)}
+                    >
+                      <div className="w-full">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-50 p-2 rounded-lg">
+                              {link.icon}
+                            </div>
+                            <CardTitle className="text-lg">{link.title}</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <CardDescription className="text-left">
+                            {link.description}
+                          </CardDescription>
+                        </CardContent>
+                      </div>
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 

@@ -44,7 +44,7 @@ export const InsightsDropdown = () => {
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuTrigger 
-            className="bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent text-navy font-medium hover:text-navy/80 px-0 text-base"
+            className="bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent text-navy font-medium hover:text-navy/80 px-0 text-base" // Matched text-base for consistent sizing
             onClick={() => setOpen(!open)}
             onPointerEnter={(e) => e.preventDefault()} // Disable hover behavior
             onPointerLeave={(e) => e.preventDefault()} // Disable hover behavior

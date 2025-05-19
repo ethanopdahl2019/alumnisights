@@ -30,6 +30,10 @@ import UniversityContentEditor from './pages/insights/universities/UniversityCon
 import UserManagement from './pages/admin/UserManagement';
 import BookingManagement from './pages/admin/BookingManagement';
 import Analytics from './pages/admin/Analytics';
+import GraduateAdmissions from './pages/insights/GraduateAdmissions';
+import IndustryInsights from './pages/insights/IndustryInsights';
+import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
+import ContentProgress from './pages/admin/ContentProgress';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -76,6 +80,7 @@ function App() {
                 <Route path="/admin/activities" element={<AdminDashboard />} />
                 <Route path="/admin/calendar" element={<AdminDashboard />} />
                 <Route path="/admin/settings" element={<AdminDashboard />} />
+                <Route path="/admin/content-progress" element={<ContentProgress />} />
                 
                 {/* Schools Routes */}
                 <Route path="/schools" element={<UndergraduateAdmissions />} />
@@ -86,8 +91,9 @@ function App() {
                 {/* Insights Routes */}
                 <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
                 <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
-                <Route path="/insights/clubs-and-greek-life" element={<UndergraduateAdmissions />} />
-                <Route path="/insights/industry" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
+                <Route path="/insights/industry" element={<IndustryInsights />} />
+                <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
                 <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
                 <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
               </Routes>
