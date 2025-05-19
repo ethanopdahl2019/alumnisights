@@ -1,171 +1,192 @@
-
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Loader2, Check } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
+import { useUniversityContentForm } from "../hooks/useUniversityContentForm";
+import UniversityImageUpload from "./UniversityImageUpload";
 
-interface UniversityContentFormProps {
+export interface UniversityContentFormProps {
   universityId: string;
   universityName: string;
-  initialData?: UniversityFormData;
-  onSubmit: (data: UniversityFormData) => Promise<boolean>;
-  handleImageUpload: (file: File, type: "image" | "logo") => Promise<string | null>;
-  logoPreview: string | null;
-  imagePreview: string | null;
-}
-
-export interface UniversityFormData {
-  name: string;
-  overview: string;
-  admissionStats: string;
-  applicationRequirements: string;
-  alumniInsights: string;
-  didYouKnow: string;
-  image?: string | null;
-  logo?: string | null;
+  initialImage?: string | null;
+  initialLogo?: string | null;
 }
 
 const UniversityContentForm: React.FC<UniversityContentFormProps> = ({
   universityId,
   universityName,
-  initialData,
-  onSubmit,
-  handleImageUpload,
-  logoPreview,
-  imagePreview
+  initialImage,
+  initialLogo
 }) => {
-  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<UniversityFormData>({
-    defaultValues: initialData || {
-      name: universityName,
-      overview: "",
-      admissionStats: "",
-      applicationRequirements: "",
-      alumniInsights: "",
-      didYouKnow: "",
-    }
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  
-  const onSubmitHandler = async (data: UniversityFormData) => {
-    setIsSubmitting(true);
-    try {
-      const success = await onSubmit(data);
-      if (success) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-        }, 3000);
-      }
-    } finally {
-      setIsSubmitting(false);
+  const navigate = useNavigate();
+  const [name, setName] = useState<string>(universityName || "");
+  const [overview, setOverview] = useState<string>("");
+  const [admissionStats, setAdmissionStats] = useState<string>("");
+  const [applicationRequirements, setApplicationRequirements] = useState<string>("");
+  const [alumniInsights, setAlumniInsights] = useState<string>("");
+  const [didYouKnow, setDidYouKnow] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string | null>(initialImage || null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(initialLogo || null);
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  const { handleSubmit, isSubmitting } = useUniversityContentForm(universityId);
+
+  // Handlers for form submission and navigation
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const success = await handleSubmit({
+      name,
+      overview,
+      admissionStats,
+      applicationRequirements,
+      alumniInsights,
+      didYouKnow,
+      image: imageUrl,
+      logo: logoUrl
+    });
+    
+    if (success) {
+      // Navigate back to university page on success
+      navigate(`/insights/undergraduate-admissions/${universityId}`);
     }
   };
   
-  return (
-    <form onSubmit={handleSubmit(onSubmitHandler)}>
-      <div className="fixed bottom-4 right-4 z-50">
-        {showSuccess && (
-          <div className="bg-green-600 text-white px-4 py-3 rounded-md shadow-lg flex items-center space-x-2 animate-fade-in">
-            <Check className="h-5 w-5" />
-            <span>Content updated successfully!</span>
-          </div>
-        )}
-      </div>
+  const handleCancel = () => {
+    navigate(`/insights/undergraduate-admissions/${universityId}`);
+  };
 
-      <div className="grid gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="name">University Name</Label>
-              <Input 
-                id="name" 
-                {...register("name", { required: "Name is required" })} 
-                placeholder="University Name" 
+  return (
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="name">University Name</Label>
+            <Input 
+              id="name" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              required
+            />
+          </div>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+          <TabsList className="grid grid-cols-2 md:grid-cols-6 mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="admissions">Admissions</TabsTrigger>
+            <TabsTrigger value="requirements">Requirements</TabsTrigger>
+            <TabsTrigger value="alumni">Alumni</TabsTrigger>
+            <TabsTrigger value="didYouKnow">Did You Know</TabsTrigger>
+            <TabsTrigger value="images">Images</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="overview">University Overview</Label>
+              <Textarea 
+                id="overview" 
+                value={overview} 
+                onChange={(e) => setOverview(e.target.value)} 
+                rows={10}
+                placeholder="Provide an overview of the university including history, location, campus, and academic reputation."
               />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="admissions" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admissionStats">Admission Statistics & Information</Label>
+              <Textarea 
+                id="admissionStats" 
+                value={admissionStats} 
+                onChange={(e) => setAdmissionStats(e.target.value)} 
+                rows={10}
+                placeholder="Provide details about acceptance rates, average test scores, and other admissions statistics."
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="requirements" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="applicationRequirements">Application Requirements</Label>
+              <Textarea 
+                id="applicationRequirements" 
+                value={applicationRequirements} 
+                onChange={(e) => setApplicationRequirements(e.target.value)} 
+                rows={10}
+                placeholder="List application requirements, deadlines, required documents, and fees."
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="alumni" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="alumniInsights">Alumni Insights</Label>
+              <Textarea 
+                id="alumniInsights" 
+                value={alumniInsights} 
+                onChange={(e) => setAlumniInsights(e.target.value)} 
+                rows={10}
+                placeholder="Share insights from alumni about their experience, career outcomes, and advice."
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="didYouKnow" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="didYouKnow">Did You Know</Label>
+              <Textarea 
+                id="didYouKnow" 
+                value={didYouKnow} 
+                onChange={(e) => setDidYouKnow(e.target.value)} 
+                rows={6}
+                placeholder="Share interesting facts or trivia about the university."
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="images" className="space-y-8">
+            <div className="space-y-4">
+              <Label>University Logo</Label>
+              <UniversityImageUpload 
+                initialImage={logoUrl}
+                onImageUpload={setLogoUrl}
+                aspectRatio="1:1"
+                description="Upload a square logo for the university (recommended size: 400x400px)"
+              />
             </div>
             
-            <div>
-              <Label htmlFor="didYouKnow">Did You Know? <span className="text-sm text-gray-500">(Interesting fact about the university)</span></Label>
-              <Textarea 
-                id="didYouKnow"
-                {...register("didYouKnow")}
-                placeholder="Share an interesting fact about this university" 
-                className="min-h-[80px]"
+            <div className="space-y-4">
+              <Label>Cover Image</Label>
+              <UniversityImageUpload 
+                initialImage={imageUrl}
+                onImageUpload={setImageUrl}
+                aspectRatio="16:9"
+                description="Upload a cover image for the university page (recommended size: 1600x900px)"
               />
             </div>
-          </div>
-        </Card>
-        
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Overview</h3>
-          <div>
-            <Textarea 
-              {...register("overview", { required: "Overview is required" })}
-              placeholder="Provide a general overview of the university" 
-              className="min-h-[200px]"
-            />
-            {errors.overview && <p className="text-red-500 text-sm mt-1">{errors.overview.message}</p>}
-          </div>
-        </Card>
-        
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Admission Statistics</h3>
-          <div>
-            <Textarea 
-              {...register("admissionStats")}
-              placeholder="Describe the admission statistics and trends" 
-              className="min-h-[200px]"
-            />
-          </div>
-          <p className="text-sm text-gray-500 mt-2">Note: Numeric statistics (acceptance rate, SAT, ACT) can be managed in the Admin Dashboard.</p>
-        </Card>
-        
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Application Requirements</h3>
-          <div>
-            <Textarea 
-              {...register("applicationRequirements")}
-              placeholder="List and explain application requirements" 
-              className="min-h-[200px]"
-            />
-          </div>
-        </Card>
-        
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Alumni Insights</h3>
-          <div>
-            <Textarea 
-              {...register("alumniInsights")}
-              placeholder="Share insights and advice from alumni" 
-              className="min-h-[200px]"
-            />
-          </div>
-        </Card>
-        
-        <div className="flex justify-end">
-          <Button 
-            type="submit" 
-            disabled={isSubmitting || !isDirty}
-            className="w-full md:w-auto"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save Content'
-            )}
-          </Button>
-        </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={handleCancel}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Save Changes"}
+        </Button>
       </div>
     </form>
   );

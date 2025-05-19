@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
@@ -62,12 +61,11 @@ const UniversityPage: React.FC = () => {
             });
           }
           
-          // Fetch admission statistics
+          // Fetch admission statistics using RPC function
           const { data: statsData, error: statsError } = await supabase
-            .from('universities_admission_stats')
-            .select('*')
-            .eq('university_id', universityId)
-            .single();
+            .rpc('get_university_admission_stats', { 
+              p_university_id: universityId 
+            });
             
           if (statsData && !statsError) {
             setAdmissionStats({

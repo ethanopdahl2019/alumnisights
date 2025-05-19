@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import { getUniversities, University } from "@/services/universities";
 import { supabase } from "@/integrations/supabase/client";
 import { AdmissionStatsType } from "@/components/insights/AdmissionStats";
+import { UniversityAdmissionStats } from "@/types/admission-stats";
 
 interface UniversityWithStats extends University {
   acceptanceRate: number | null;
@@ -57,10 +57,9 @@ const AdmissionStatsManager = () => {
         // Fetch universities
         const allUniversities = await getUniversities();
         
-        // Fetch their statistics
+        // Fetch their statistics - using raw query to access the custom table
         const { data: statsData, error: statsError } = await supabase
-          .from('universities_admission_stats')
-          .select('*');
+          .rpc('get_admission_stats');
           
         if (statsError) {
           console.error("Error fetching stats:", statsError);
@@ -70,7 +69,7 @@ const AdmissionStatsManager = () => {
         // Map stats to universities
         const statsMap: Record<string, AdmissionStatsType> = {};
         if (statsData) {
-          statsData.forEach(stat => {
+          statsData.forEach((stat: UniversityAdmissionStats) => {
             statsMap[stat.university_id] = {
               acceptanceRate: stat.acceptance_rate,
               averageSAT: stat.average_sat,
@@ -110,15 +109,12 @@ const AdmissionStatsManager = () => {
       setProcessingUniversityId(universityId);
       
       const { data, error } = await supabase
-        .from('universities_admission_stats')
-        .upsert({
-          university_id: universityId,
-          acceptance_rate: stats.acceptanceRate,
-          average_sat: stats.averageSAT,
-          average_act: stats.averageACT,
-          updated_at: new Date().toISOString()
-        })
-        .select();
+        .rpc('update_admission_stats', {
+          p_university_id: universityId,
+          p_acceptance_rate: stats.acceptanceRate,
+          p_average_sat: stats.averageSAT,
+          p_average_act: stats.averageACT
+        });
         
       if (error) throw error;
       
