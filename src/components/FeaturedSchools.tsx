@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap } from 'lucide-react';
 import { getUniversities, University } from '@/services/universities';
 import { getUniversityLogo } from '@/services/landing-page';
+import { supabase } from '@/integrations/supabase/client';
 
 const FeaturedSchools: React.FC = () => {
   const [featuredUniversities, setFeaturedUniversities] = useState<University[]>([]);
@@ -13,9 +14,41 @@ const FeaturedSchools: React.FC = () => {
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
+        // First, try to get the featured school IDs from site_settings
+        const { data: settingsData, error: settingsError } = await supabase
+          .from('site_settings')
+          .select('value')
+          .eq('key', 'featured_schools')
+          .single();
+        
         const allUniversities = await getUniversities();
-        // Take the first 8 universities to display as featured
-        setFeaturedUniversities(allUniversities.slice(0, 8));
+        
+        if (settingsData && settingsData.value) {
+          // If we have featured schools configured, use those
+          const featuredSchoolIds = JSON.parse(settingsData.value);
+          
+          // Filter universities to only include the featured ones
+          const featured = allUniversities.filter(university => 
+            featuredSchoolIds.includes(university.id)
+          );
+          
+          // If we have featured schools, use them in the order specified
+          if (featured.length > 0) {
+            // Order by the original featured array order
+            const orderedFeatured = featuredSchoolIds
+              .map(id => featured.find(uni => uni.id === id))
+              .filter(Boolean);
+              
+            setFeaturedUniversities(orderedFeatured);
+          } else {
+            // Fallback to first 8 if no matches found
+            setFeaturedUniversities(allUniversities.slice(0, 8));
+          }
+        } else {
+          // Fallback to first 8 universities if no featured settings
+          setFeaturedUniversities(allUniversities.slice(0, 8));
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error("Failed to fetch universities:", error);

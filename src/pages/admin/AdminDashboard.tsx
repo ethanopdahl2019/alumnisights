@@ -18,7 +18,8 @@ import {
   Activity,
   Mail,
   VideoIcon,
-  UserCheck
+  UserCheck,
+  Star
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,12 @@ const AdminDashboard = () => {
       description: "Manage site content and blog posts",
       icon: <FileText className="h-5 w-5" />,
       href: "/insights/university-content-manager"
+    },
+    {
+      title: "Featured Schools",
+      description: "Select schools to feature on the homepage",
+      icon: <Star className="h-5 w-5" />,
+      href: "/admin/featured-schools"
     },
     {
       title: "Email Templates",

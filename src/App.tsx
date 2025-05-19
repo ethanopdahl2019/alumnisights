@@ -20,6 +20,7 @@ import AlumniProfilePage from './pages/AlumniProfilePage';
 import ProfileComplete from './pages/ProfileComplete';
 import LandingPage from './pages/LandingPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import FeaturedSchoolsPage from './pages/admin/FeaturedSchools';
 import BookingPage from './pages/BookingPage';
 import BookingSuccessPage from './pages/BookingSuccessPage';
 import UniversityPage from './pages/insights/universities/UniversityPage';
@@ -62,6 +63,7 @@ function App() {
                 {/* Admin Routes */}
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/featured-schools" element={<FeaturedSchoolsPage />} />
                 <Route path="/admin/registration-control" element={<RegistrationControl />} />
                 <Route path="/admin/users" element={<UserManagement />} />
                 <Route path="/admin/bookings" element={<BookingManagement />} />
