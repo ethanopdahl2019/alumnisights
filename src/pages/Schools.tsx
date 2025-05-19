@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { GraduationCap, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,7 +22,7 @@ const Schools = () => {
   const [universitiesByLetter, setUniversitiesByLetter] = useState<Record<string, UniversityData[]>>({});
   const [allUniversities, setAllUniversities] = useState<UniversityData[]>([]);
   
-  // Fetch data on component mount
+  // Fetch data on component mount with improved error handling
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -49,40 +49,51 @@ const Schools = () => {
     fetchData();
   }, []);
   
-  // Fetch university logos efficiently
+  // Fetch university logos with optimization for faster loading
   useEffect(() => {
-    const fetchUniversityLogos = async () => {
-      setIsLoadingLogos(true);
-      const logosMap: Record<string, string | null> = {};
-      
+    if (allUniversities.length === 0) return;
+    
+    setIsLoadingLogos(true);
+    
+    // Only load logos for currently visible universities or searched results
+    const visibleUniversities = searchTerm 
+      ? allUniversities.filter(uni => uni.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      : activeLetter 
+        ? universitiesByLetter[activeLetter] || []
+        : allUniversities.slice(0, 12); // Load just first few for initial view
+    
+    const fetchLogos = async () => {
       try {
-        // Fetch logos in parallel for better performance
-        const logoPromises = allUniversities.map(async (university) => {
-          const logo = await getUniversityLogo(university.id);
-          return { id: university.id, logo };
-        });
-        
-        const results = await Promise.allSettled(logoPromises);
-        
-        results.forEach((result) => {
-          if (result.status === 'fulfilled') {
-            logosMap[result.value.id] = result.value.logo;
-          }
-        });
-        
-        setUniversityLogos(logosMap);
-      } catch (error) {
-        console.error('Failed to fetch university logos:', error);
-        toast.error('Failed to load some university logos');
+        // Process logos in smaller batches to prevent overwhelming the network
+        const batchSize = 8;
+        for (let i = 0; i < visibleUniversities.length; i += batchSize) {
+          const batch = visibleUniversities.slice(i, i + batchSize);
+          const batchPromises = batch.map(async (university) => {
+            try {
+              const logo = await getUniversityLogo(university.id);
+              return { id: university.id, logo };
+            } catch (error) {
+              return { id: university.id, logo: null };
+            }
+          });
+          
+          const results = await Promise.all(batchPromises);
+          
+          setUniversityLogos(prev => {
+            const updated = { ...prev };
+            results.forEach(result => {
+              updated[result.id] = result.logo;
+            });
+            return updated;
+          });
+        }
       } finally {
         setIsLoadingLogos(false);
       }
     };
     
-    if (allUniversities.length > 0) {
-      fetchUniversityLogos();
-    }
-  }, [allUniversities]);
+    fetchLogos();
+  }, [allUniversities, activeLetter, searchTerm, universitiesByLetter]);
   
   // Handle letter click in the alphabetical nav
   const handleLetterClick = (letter: string) => {
@@ -96,11 +107,13 @@ const Schools = () => {
   };
   
   // Filter universities based on search term
-  const filteredSchools = searchTerm
-    ? allUniversities.filter(uni => 
-        uni.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  const filteredSchools = useMemo(() => {
+    if (!searchTerm) return [];
+    
+    return allUniversities.filter(uni => 
+      uni.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm, allUniversities]);
     
   const getUniversityLocation = (university: any) => {
     // If we have location data in university, use it
@@ -110,7 +123,7 @@ const Schools = () => {
     return "United States";
   };
   
-  // Render university logo component
+  // Render university logo component with lazy loading
   const renderUniversityLogo = (universityId: string, universityName: string) => {
     const logo = universityLogos[universityId];
     
@@ -120,6 +133,7 @@ const Schools = () => {
           src={logo} 
           alt={`${universityName} logo`}
           className="max-h-full max-w-full object-contain"
+          loading="lazy"
         />
       );
     }

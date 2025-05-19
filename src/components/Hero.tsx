@@ -162,7 +162,7 @@ const Hero = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section with image */}
       <section className="py-24">
         <div className="container-custom">
           <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -218,7 +218,11 @@ const Hero = () => {
               viewport={{ once: true, margin: "-100px" }}
             >
               <div className="relative z-10 rounded-lg overflow-hidden shadow-xl">
-                <img src="/placeholder.svg" alt="Students on campus" className="w-full h-auto" />
+                <img 
+                  src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=1000" 
+                  alt="Students collaborating on campus" 
+                  className="w-full h-auto"
+                />
               </div>
               <div className="absolute -bottom-6 -right-6 w-64 h-64 bg-blue-100 rounded-lg -z-10"></div>
               <div className="absolute -top-6 -left-6 w-32 h-32 bg-green-100 rounded-lg -z-10"></div>
@@ -297,27 +301,6 @@ const Hero = () => {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </motion.div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-navy text-white">
-        <div className="container-custom">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-medium mb-6">Ready to find your college mentor?</h2>
-            <p className="text-xl mb-10 opacity-90">
-              Get personalized insights that can transform your college experience.
-              Start your journey today!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/browse" className="btn-primary bg-white text-navy hover:bg-gray-100">
-                Browse Alumni
-              </Link>
-              <Link to="/sign-up" className="btn-outline text-white border-white hover:bg-white/10">
-                Join as a Mentor
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
     </>
