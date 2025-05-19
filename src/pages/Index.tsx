@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, GraduationCap, Users, Building, Star } from 'lucide-react';
+import { ArrowRight, GraduationCap, Users, Building, Star, Quote } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
@@ -18,6 +18,56 @@ const Index = () => {
         
         {/* Feature Schools Section with scroll hijack effect */}
         <FeaturedSchools />
+
+        {/* Testimonials Section */}
+        <section className="py-16 px-4 sm:px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="mb-4">What Students Say</h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Real stories from students who found their path through alumni connections
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <Card className="border border-gray-200 hover:shadow-lg transition-all">
+                <CardContent className="pt-6 flex flex-col items-center text-center">
+                  <div className="rounded-full bg-blue-100 p-3 w-12 h-12 flex items-center justify-center mb-4">
+                    <Quote className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <p className="text-gray-700 italic mb-4">
+                    "Speaking with someone who had just been through the exact application process I was facing gave me insights that no guidebook could. I got accepted to my dream school!"
+                  </p>
+                  <div className="mt-auto font-medium">Taylor R., High School Senior</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border border-gray-200 hover:shadow-lg transition-all">
+                <CardContent className="pt-6 flex flex-col items-center text-center">
+                  <div className="rounded-full bg-green-100 p-3 w-12 h-12 flex items-center justify-center mb-4">
+                    <Quote className="h-6 w-6 text-green-600" />
+                  </div>
+                  <p className="text-gray-700 italic mb-4">
+                    "My mentor helped me understand what classes to prioritize and which professors to seek out. This insider knowledge made my freshman year so much smoother."
+                  </p>
+                  <div className="mt-auto font-medium">Jordan L., Freshman</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border border-gray-200 hover:shadow-lg transition-all">
+                <CardContent className="pt-6 flex flex-col items-center text-center">
+                  <div className="rounded-full bg-purple-100 p-3 w-12 h-12 flex items-center justify-center mb-4">
+                    <Quote className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <p className="text-gray-700 italic mb-4">
+                    "I was torn between two great schools until I spoke with alumni from both. Their perspectives on campus culture helped me make the best decision for me."
+                  </p>
+                  <div className="mt-auto font-medium">Alex K., Transfer Student</div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
 
         {/* Features Section */}
         <section className="py-16 px-4 sm:px-6 bg-gray-50">
