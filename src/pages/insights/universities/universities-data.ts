@@ -1,5 +1,6 @@
 
 import { getUniversitiesByLetter as fetchUniversitiesByLetter, getAlphabeticalLetters as fetchAlphabeticalLetters, University } from "@/services/universities";
+import { getUniversityLogo } from "@/services/landing-page";
 
 // Types for university data
 export interface UniversityData {
@@ -10,6 +11,7 @@ export interface UniversityData {
   state?: string;
   type?: string;
   hasContent?: boolean;
+  image?: string;
 }
 
 // Static data for fallback during loading states
@@ -28,16 +30,25 @@ export async function getUniversitiesByLetter(): Promise<Record<string, Universi
     if (Object.keys(data).length > 0) {
       // Convert from University type to UniversityData type
       const convertedData: Record<string, UniversityData[]> = {};
-      Object.keys(data).forEach(letter => {
-        convertedData[letter] = data[letter].map(uni => ({
-          id: uni.id,
-          name: uni.name,
-          state: uni.state || undefined,
-          type: uni.type || undefined,
-          description: uni.type || undefined,
-          hasContent: false // Default to false for now
+      
+      // Process each letter
+      for (const letter in data) {
+        convertedData[letter] = await Promise.all(data[letter].map(async (uni) => {
+          // Try to get logo for this university
+          const logo = await getUniversityLogo(uni.id);
+          
+          return {
+            id: uni.id,
+            name: uni.name,
+            state: uni.state || undefined,
+            type: uni.type || undefined,
+            description: uni.description || undefined,
+            logo: logo || undefined,
+            hasContent: !!logo // If we have a logo, likely there's content
+          };
         }));
-      });
+      }
+      
       return convertedData;
     }
     

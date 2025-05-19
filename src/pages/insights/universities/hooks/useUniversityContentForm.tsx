@@ -1,11 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { saveUniversityContent, getUniversityContent } from "@/services/landing-page";
-import { useEffect } from "react";
 
 interface UniversityContentFormValues {
   name: string;
@@ -19,14 +18,16 @@ interface UniversityContentFormValues {
 interface UseUniversityContentFormProps {
   id?: string;
   universityName?: string;
+  initialImage?: string;
+  initialLogo?: string;
 }
 
-export function useUniversityContentForm({ id, universityName }: UseUniversityContentFormProps) {
+export function useUniversityContentForm({ id, universityName, initialImage, initialLogo }: UseUniversityContentFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(initialImage || null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(initialLogo || null);
   const navigate = useNavigate();
 
   const form = useForm<UniversityContentFormValues>({
@@ -73,6 +74,17 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
     
     loadContent();
   }, [id, form]);
+
+  // Also update previews when initialImage or initialLogo change
+  useEffect(() => {
+    if (initialImage && !imagePreview) {
+      setImagePreview(initialImage);
+    }
+    
+    if (initialLogo && !logoPreview) {
+      setLogoPreview(initialLogo);
+    }
+  }, [initialImage, initialLogo, imagePreview, logoPreview]);
   
   const resetImage = () => {
     setImageFile(null);
@@ -148,6 +160,16 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
 
       console.log("Uploading to path:", filePath);
 
+      // First check if storage bucket exists, if not, we can't upload
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucket = buckets?.find(b => b.name === 'university-content');
+      
+      if (!bucket) {
+        console.error("Storage bucket 'university-content' does not exist");
+        toast.error("Storage bucket not found. Please contact administrator.");
+        return null;
+      }
+
       // Upload the file
       const { error: uploadError, data } = await supabase.storage
         .from('university-content')
@@ -195,8 +217,8 @@ export function useUniversityContentForm({ id, universityName }: UseUniversityCo
       toast.info("Processing your request...");
       
       // Upload image and logo if provided
-      let finalImageUrl = imagePreview;
-      let finalLogoUrl = logoPreview;
+      let finalImageUrl = imageFile ? null : imagePreview;
+      let finalLogoUrl = logoFile ? null : logoPreview;
       
       if (imageFile) {
         finalImageUrl = await uploadFile(imageFile, 'image');

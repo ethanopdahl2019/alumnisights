@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -19,9 +20,16 @@ import { Wand, Loader2 } from "lucide-react";
 interface UniversityContentFormProps {
   id?: string;
   universityName?: string;
+  initialImage?: string;
+  initialLogo?: string;
 }
 
-const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, universityName }) => {
+const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ 
+  id, 
+  universityName,
+  initialImage,
+  initialLogo
+}) => {
   const navigate = useNavigate();
   const {
     form,
@@ -33,7 +41,12 @@ const UniversityContentForm: React.FC<UniversityContentFormProps> = ({ id, unive
     onSubmit,
     resetImage,
     resetLogo
-  } = useUniversityContentForm({ id, universityName });
+  } = useUniversityContentForm({ 
+    id, 
+    universityName,
+    initialImage,
+    initialLogo
+  });
 
   // State for AI generation
   const [isGeneratingAll, setIsGeneratingAll] = React.useState(false);

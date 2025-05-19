@@ -4,6 +4,7 @@ import type { UniversityContent } from '@/types/database';
 
 export async function getUniversityContent(id: string): Promise<UniversityContent | null> {
   try {
+    console.log("Fetching content for university ID:", id);
     const { data, error } = await supabase
       .from('universities_content')
       .select('*')
@@ -15,6 +16,7 @@ export async function getUniversityContent(id: string): Promise<UniversityConten
       return null;
     }
     
+    console.log("University content fetched:", data);
     return data;
   } catch (error) {
     console.error('Error fetching university content:', error);
@@ -24,6 +26,7 @@ export async function getUniversityContent(id: string): Promise<UniversityConten
 
 export async function getUniversityLogo(id: string): Promise<string | null> {
   try {
+    console.log("Fetching logo for university ID:", id);
     const { data, error } = await supabase
       .from('universities_content')
       .select('logo')
@@ -54,6 +57,8 @@ export async function saveUniversityContent(id: string, content: {
   logo?: string | null;
 }): Promise<UniversityContent | null> {
   try {
+    console.log("Saving university content:", content);
+    
     const { data, error } = await supabase
       .from('universities_content')
       .upsert({
@@ -66,6 +71,7 @@ export async function saveUniversityContent(id: string, content: {
         did_you_know: content.didYouKnow || null,
         image: content.image || null,
         logo: content.logo || null,
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -75,6 +81,7 @@ export async function saveUniversityContent(id: string, content: {
       throw error;
     }
     
+    console.log("University content saved successfully:", data);
     return data;
   } catch (error) {
     console.error('Error saving university content:', error);

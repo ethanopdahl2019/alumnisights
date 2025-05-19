@@ -59,7 +59,12 @@ const UniversityContentEditor: React.FC = () => {
 
       try {
         const content = await getUniversityContent(id);
-        setUniversityData(content || universityInfo);
+        console.log("University content loaded:", content);
+        setUniversityData({
+          ...content,
+          // Fallback to university info if certain fields don't exist in content
+          name: content?.name || universityInfo?.name
+        });
       } catch (error) {
         console.error("Failed to load university content:", error);
         toast.error("Failed to load university content");
@@ -106,7 +111,9 @@ const UniversityContentEditor: React.FC = () => {
             <CardContent className="pt-6">
               <UniversityContentForm 
                 id={id} 
-                universityName={universityName} 
+                universityName={universityName}
+                initialImage={universityData?.image}
+                initialLogo={universityData?.logo}
               />
             </CardContent>
           </Card>
