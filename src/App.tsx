@@ -23,6 +23,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import BookingPage from './pages/BookingPage';
 import BookingSuccessPage from './pages/BookingSuccessPage';
 import UniversityPage from './pages/insights/universities/UniversityPage';
+import RegistrationControl from './pages/admin/RegistrationControl';
+import UniversityContentManager from './pages/insights/universities/UniversityContentManager';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -56,6 +58,18 @@ function App() {
                 {/* Admin Routes */}
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/registration-control" element={<RegistrationControl />} />
+                <Route path="/admin/users" element={<AdminDashboard />} />
+                <Route path="/admin/bookings" element={<AdminDashboard />} />
+                <Route path="/admin/requests" element={<AdminDashboard />} />
+                <Route path="/admin/analytics" element={<AdminDashboard />} />
+                <Route path="/admin/emails" element={<AdminDashboard />} />
+                <Route path="/admin/schools" element={<AdminDashboard />} />
+                <Route path="/admin/companies" element={<AdminDashboard />} />
+                <Route path="/admin/majors" element={<AdminDashboard />} />
+                <Route path="/admin/activities" element={<AdminDashboard />} />
+                <Route path="/admin/calendar" element={<AdminDashboard />} />
+                <Route path="/admin/settings" element={<AdminDashboard />} />
                 
                 {/* Schools Routes */}
                 <Route path="/schools" element={<UndergraduateAdmissions />} />
@@ -69,6 +83,7 @@ function App() {
                 <Route path="/insights/clubs-and-greek-life" element={<UndergraduateAdmissions />} />
                 <Route path="/insights/industry" element={<UndergraduateAdmissions />} />
                 <Route path="/insights/university-content-editor/:id" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
               </Routes>
             </AuthProvider>
           </HelmetProvider>
