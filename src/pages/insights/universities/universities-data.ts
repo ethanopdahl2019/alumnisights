@@ -9,6 +9,7 @@ export interface UniversityData {
   description?: string;
   state?: string;
   type?: string;
+  hasContent?: boolean;
 }
 
 // Static data for fallback during loading states
@@ -33,7 +34,8 @@ export async function getUniversitiesByLetter(): Promise<Record<string, Universi
           name: uni.name,
           state: uni.state || undefined,
           type: uni.type || undefined,
-          description: uni.type || undefined
+          description: uni.type || undefined,
+          hasContent: false // Default to false for now
         }));
       });
       return convertedData;
