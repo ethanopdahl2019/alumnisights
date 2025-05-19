@@ -4,6 +4,7 @@ import { ArrowRight, GraduationCap } from 'lucide-react';
 import { getUniversities, University } from '@/services/universities';
 import { getUniversityLogo } from '@/services/landing-page';
 import { supabase } from '@/integrations/supabase/client';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const FeaturedSchools: React.FC = () => {
   const [featuredUniversities, setFeaturedUniversities] = useState<University[]>([]);
@@ -90,59 +91,59 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Completely revised scroll hijacking effect for smoother transitions
+  // Enhanced scroll hijacking effect that properly translates vertical scroll to horizontal motion
   useEffect(() => {
     const section = sectionRef.current;
     const scrollContainer = scrollContainerRef.current;
     
     if (!section || !scrollContainer) return;
     
-    // Get the total scrollable width of the container (minus what's visible)
     const getMaxScrollDistance = () => {
-      if (!scrollContainer) return 0;
       return scrollContainer.scrollWidth - scrollContainer.clientWidth;
     };
     
     const handleScroll = () => {
-      // Get the current position and dimensions of the section
-      const { top, bottom, height } = section.getBoundingClientRect();
+      const { top, height } = section.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       
-      // The section is taller than the viewport to allow for the scroll effect
+      // Make the section taller than the viewport to allow for complete scroll through
       const sectionScrollHeight = height - viewportHeight;
       
-      // Check if the section is currently visible
-      if (bottom > 0 && top < viewportHeight) {
-        // Calculate how far we've scrolled through the section
-        // This value will be between 0 (start) and 1 (end)
-        const scrolledPixels = Math.max(0, -top);
+      if (section.getBoundingClientRect().top <= 0) {
+        // When section reaches top of viewport, make it sticky
+        section.style.position = 'sticky';
+        section.style.top = '0';
+        
+        // Calculate scroll progress (0 to 1)
+        const scrolledPixels = Math.abs(Math.min(0, top));
         const scrollProgress = Math.min(1, scrolledPixels / sectionScrollHeight);
         
-        // Apply the horizontal scroll based on the vertical scroll progress
+        // Directly set scrollLeft based on scroll progress
         const maxScroll = getMaxScrollDistance();
         scrollContainer.scrollLeft = scrollProgress * maxScroll;
         
-        // When the section is in the "sticky" view (top of viewport)
-        if (top <= 0 && bottom >= viewportHeight) {
-          // Make the section sticky at the top
-          section.style.position = 'sticky';
-          section.style.top = '0';
-          // Prevent regular page scrolling while in the sticky section
+        // Apply transforms to maintain visual position during scrolling
+        if (scrollProgress < 1) {
+          // Keep body scroll locked while we're in the effect zone
           document.body.style.overflow = 'hidden';
-          
-          // The transform helps maintain visual position during scroll
-          section.style.transform = `translateY(${scrolledPixels}px)`;
+        } else {
+          // Once we've scrolled through the entire section, restore normal scrolling
+          document.body.style.overflow = '';
         }
       } else {
-        // Reset styles when the section is not in the viewport
+        // Before the section reaches the top, ensure normal scrolling
         document.body.style.overflow = '';
-        section.style.transform = '';
       }
     };
     
     // Initial calculation and setup
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Debug output to help verify scroll behavior
+    console.log("Scroll container width:", scrollContainer.scrollWidth);
+    console.log("Scroll container visible width:", scrollContainer.clientWidth);
+    console.log("Max horizontal scroll distance:", getMaxScrollDistance());
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -173,7 +174,7 @@ const FeaturedSchools: React.FC = () => {
   return (
     <section 
       ref={sectionRef} 
-      className="relative h-[300vh]" // Increased height for better scroll control
+      className="relative h-[400vh]" // Increased height for smoother scroll control
     >
       <div className="sticky top-0 h-screen flex items-center bg-white">
         <div className="container-custom w-full">
@@ -186,8 +187,12 @@ const FeaturedSchools: React.FC = () => {
 
           <div 
             ref={scrollContainerRef}
-            className="flex overflow-x-auto scrollbar-hide snap-x pb-6"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex overflow-x-auto no-scrollbar snap-x pb-6"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              scrollBehavior: 'auto' // Ensure smooth scrolling is disabled for direct control
+            }}
           >
             {featuredUniversities.map((university) => (
               <Link
