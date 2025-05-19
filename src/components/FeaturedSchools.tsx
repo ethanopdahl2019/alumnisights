@@ -5,7 +5,6 @@ import { ArrowRight, GraduationCap } from 'lucide-react';
 import { getUniversities, University } from '@/services/universities';
 import { getUniversityLogo } from '@/services/landing-page';
 import { supabase } from '@/integrations/supabase/client';
-import { SiteSettingsResponse } from '@/types/site-settings';
 
 const FeaturedSchools: React.FC = () => {
   const [featuredUniversities, setFeaturedUniversities] = useState<University[]>([]);
@@ -92,7 +91,7 @@ const FeaturedSchools: React.FC = () => {
     }
   }, [featuredUniversities]);
 
-  // Scroll hijacking effect
+  // Scroll hijacking effect - the key improvement
   useEffect(() => {
     const section = sectionRef.current;
     const container = scrollContainerRef.current;
@@ -100,17 +99,43 @@ const FeaturedSchools: React.FC = () => {
     if (!section || !container) return;
     
     const handleScroll = () => {
-      const rect = section.getBoundingClientRect();
-      const scrollProgress = Math.max(0, Math.min(1, 1 - (rect.bottom / (window.innerHeight + rect.height))));
+      const sectionRect = section.getBoundingClientRect();
       
-      if (rect.top <= window.innerHeight && rect.bottom >= 0) {
+      if (
+        sectionRect.top <= 0 && 
+        sectionRect.bottom >= 0
+      ) {
+        // Prevent default scroll while in the section
+        document.body.style.overflow = 'hidden';
+        
+        // Calculate scroll position within section
+        const scrollProgress = -sectionRect.top / (sectionRect.height - window.innerHeight);
+        const clampedProgress = Math.max(0, Math.min(1, scrollProgress));
+        
+        // Scroll the container horizontally based on progress
         const maxScroll = container.scrollWidth - container.clientWidth;
-        container.scrollLeft = scrollProgress * maxScroll;
+        container.scrollLeft = clampedProgress * maxScroll;
+        
+        // Use transform to scroll the section into view
+        section.style.transform = `translateY(${Math.min(0, sectionRect.top)}px)`;
+      } else if (sectionRect.bottom < 0) {
+        // After section, allow scrolling again
+        document.body.style.overflow = '';
+        section.style.transform = `translateY(${-(sectionRect.height - window.innerHeight)}px)`;
+      } else {
+        // Before section, allow scrolling
+        document.body.style.overflow = '';
+        section.style.transform = '';
       }
     };
     
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    handleScroll(); // Initialize
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.body.style.overflow = ''; // Cleanup
+    };
   }, []);
 
   if (loading) {
@@ -134,9 +159,12 @@ const FeaturedSchools: React.FC = () => {
   }
 
   return (
-    <section ref={sectionRef} className="py-24 overflow-hidden" style={{ height: '100vh' }}>
-      <div className="sticky top-0 pt-24 pb-24 bg-white">
-        <div className="container-custom">
+    <section 
+      ref={sectionRef} 
+      className="relative h-[200vh]" 
+    >
+      <div className="sticky top-0 h-screen flex items-center bg-white">
+        <div className="container-custom w-full">
           <div className="text-center mb-12">
             <h2 className="mb-4">Featured Schools</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -146,7 +174,7 @@ const FeaturedSchools: React.FC = () => {
 
           <div 
             ref={scrollContainerRef}
-            className="flex overflow-x-auto scrollbar-hide pb-6 snap-x"
+            className="flex overflow-x-auto scrollbar-hide snap-x pb-6"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {featuredUniversities.map((university) => (
