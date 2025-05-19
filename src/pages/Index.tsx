@@ -83,7 +83,7 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Feature Schools Section - now using real data */}
+        {/* Feature Schools Section - using real data from Supabase */}
         <FeaturedSchools />
         
         {/* CTA Section */}

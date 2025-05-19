@@ -300,65 +300,6 @@ const Hero = () => {
         </div>
       </section>
 
-      {/* Featured Schools */}
-      <section className="py-24">
-        <div className="container-custom">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-medium mb-4">Featured Schools</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Connect with students from top universities across the country
-            </p>
-          </div>
-
-          <motion.div 
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true, margin: "-100px" }}
-          >
-            {[
-              { name: "Harvard University", logo: "/placeholder.svg" },
-              { name: "Stanford University", logo: "/placeholder.svg" },
-              { name: "MIT", logo: "/placeholder.svg" },
-              { name: "Yale University", logo: "/placeholder.svg" },
-              { name: "Princeton University", logo: "/placeholder.svg" },
-              { name: "Columbia University", logo: "/placeholder.svg" },
-              { name: "University of California, Berkeley", logo: "/placeholder.svg" },
-              { name: "University of Michigan", logo: "/placeholder.svg" }
-            ].map((school, index) => (
-              <motion.div
-                key={index}
-                className="p-6 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-shadow text-center"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: (index % 4) * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="w-16 h-16 flex items-center justify-center mb-4">
-                  <img src={school.logo} alt={school.name} className="max-w-full max-h-full object-contain" />
-                </div>
-                <h3 className="font-medium">{school.name}</h3>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div 
-            className="text-center mt-12"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
-            <Link to="/schools" className="btn-secondary inline-flex items-center">
-              View All Schools
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-16 bg-navy text-white">
         <div className="container-custom">
