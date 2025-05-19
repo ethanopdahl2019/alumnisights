@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -21,8 +20,8 @@ import {
   UserCheck,
   Star,
   ChevronRight,
-  Progress,
-  FileCheck
+  FileCheck,
+  Progress
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
