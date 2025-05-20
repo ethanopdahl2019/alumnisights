@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -37,8 +37,12 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileComplete = () => {
+  console.log("ProfileComplete component rendering");
   const navigate = useNavigate();
   const { user, session } = useAuth();
+  
+  console.log("Auth state in ProfileComplete:", { user, session });
+  
   const [isLoading, setIsLoading] = useState(false);
   const [majors, setMajors] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
@@ -103,13 +107,18 @@ const ProfileComplete = () => {
   
   // Redirect if not logged in
   useEffect(() => {
-    if (!session) {
+    console.log("ProfileComplete auth check running");
+    if (!user && !session) {
+      console.log("No user or session found, redirecting to auth page");
       navigate('/auth');
       return;
+    } else {
+      console.log("User is authenticated:", user?.email);
     }
     
     // Load universities from the insights page data
     const loadUniversities = () => {
+      console.log("Loading universities");
       const universitiesByLetter = getUniversitiesByLetter();
       const allUniversities: any[] = [];
       
@@ -123,10 +132,12 @@ const ProfileComplete = () => {
       // Sort universities by name
       allUniversities.sort((a, b) => a.name.localeCompare(b.name));
       setUniversities(allUniversities);
+      console.log("Universities loaded:", allUniversities.length);
     };
     
     // Load majors, activities, and Greek Life options
     const loadFormData = async () => {
+      console.log("Loading form data (majors, activities, etc.)");
       try {
         const [majorsData, activitiesData, greekLifeData] = await Promise.all([
           getMajors(),
@@ -134,28 +145,31 @@ const ProfileComplete = () => {
           getGreekLifeOptions ? getGreekLifeOptions() : [] // Use if available, otherwise empty array
         ]);
         
+        console.log("Data loaded:", { 
+          majorsCount: majorsData.length, 
+          activitiesCount: activitiesData.length,
+          greekLifeCount: greekLifeData?.length || 0
+        });
+        
         setMajors(majorsData);
         setActivities(activitiesData);
         setGreekLifeOptions(greekLifeData || []);
         loadUniversities();
       } catch (error) {
         console.error('Error loading form data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile data. Please try again later.",
-          variant: "destructive",
-        });
+        toast("Failed to load profile data. Please try again later.");
       }
     };
     
     loadFormData();
-  }, [session, navigate]);
+  }, [session, navigate, user]);
 
   // Upload profile image to Supabase Storage
   const uploadProfileImage = async (userId: string): Promise<string | null> => {
     if (!imageFile) return null;
     
     try {
+      console.log("Uploading profile image");
       const fileExt = imageFile.name.split('.').pop();
       const filePath = `${userId}/profile.${fileExt}`;
       
@@ -173,21 +187,24 @@ const ProfileComplete = () => {
         .from('profile-images')
         .getPublicUrl(data.path);
       
+      console.log("Image uploaded successfully:", publicUrlData.publicUrl);
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast({
-        title: "Upload Error",
-        description: "Failed to upload your profile image.",
-        variant: "destructive",
-      });
+      toast("Failed to upload your profile image.");
       return null;
     }
   };
   
   const onSubmit = async (values: ProfileFormValues) => {
-    if (!user) return;
+    if (!user) {
+      console.error("Cannot complete profile - no user found");
+      toast("You need to be logged in to complete your profile.");
+      navigate('/auth');
+      return;
+    }
     
+    console.log("Starting profile submission:", values);
     setIsLoading(true);
     try {
       // Upload profile image if one is selected
@@ -205,6 +222,7 @@ const ProfileComplete = () => {
       }
       
       // Create profile
+      console.log("Creating profile for user:", user.id);
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -219,6 +237,7 @@ const ProfileComplete = () => {
       if (profileError) throw profileError;
       
       // Get the newly created profile
+      console.log("Getting created profile");
       const { data: profileData, error: fetchError } = await supabase
         .from('profiles')
         .select('id')
@@ -227,6 +246,8 @@ const ProfileComplete = () => {
       
       if (fetchError) throw fetchError;
       
+      console.log("Profile created successfully:", profileData);
+      
       // Add activities to profile
       const activityInserts = values.activities.map(activityId => ({
         profile_id: profileData.id,
@@ -234,6 +255,7 @@ const ProfileComplete = () => {
       }));
       
       if (activityInserts.length > 0) {
+        console.log("Adding activities to profile:", activityInserts.length);
         const { error: activitiesError } = await supabase
           .from('profile_activities')
           .insert(activityInserts);
@@ -243,6 +265,7 @@ const ProfileComplete = () => {
       
       // Add Greek life affiliation if selected
       if (values.greekLife && values.greekLife !== 'none') {
+        console.log("Adding Greek life affiliation:", values.greekLife);
         try {
           const { error: greekLifeError } = await supabase
             .from('profile_greek_life')
@@ -258,20 +281,14 @@ const ProfileComplete = () => {
         }
       }
       
-      toast({
-        title: "Profile complete!",
-        description: "Your profile has been set up successfully.",
-      });
+      toast("Profile complete! Your profile has been set up successfully.");
       
-      // Redirect to profile page
-      navigate(`/profile/${profileData.id}`);
+      // Redirect to profile page or appropriate dashboard
+      console.log("Redirecting to alumni dashboard");
+      navigate('/alumni-dashboard');
     } catch (error: any) {
       console.error('Error completing profile:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to complete your profile. Please try again.",
-        variant: "destructive",
-      });
+      toast("Failed to complete your profile: " + (error.message || "Please try again."));
     } finally {
       setIsLoading(false);
     }

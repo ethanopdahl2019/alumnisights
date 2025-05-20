@@ -39,6 +39,7 @@ import ContentProgress from './pages/admin/ContentProgress';
 const queryClient = new QueryClient();
 
 function App() {
+  console.log("App rendering, checking routes");
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

@@ -26,8 +26,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
+    console.log("Setting up auth state listener");
+    
     // Set up auth state listener
     const { data: { subscription } } = onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
       setSession(session);
       
       const currentUser = session?.user ?? null;
@@ -46,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Check for existing session
     getCurrentSession()
       .then(session => {
+        console.log("Got existing session:", session?.user?.email);
         setSession(session);
         if (session) {
           return getCurrentUser();
@@ -53,17 +57,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       })
       .then(user => {
+        console.log("Got current user:", user?.email);
         setUser(user);
         if (user) {
           setIsUserAdmin(isAdmin(user));
         }
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Error getting session or user:", error);
         setLoading(false);
       });
 
     return () => {
+      console.log("Unsubscribing from auth state changes");
       subscription.unsubscribe();
     };
   }, []);

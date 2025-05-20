@@ -1,8 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
 export async function signUp({ email, password, firstName, lastName, metadata = {} }: UserRegistration) {
+  console.log("Starting signup process with metadata:", metadata);
+  
   // Set default role if not provided
   if (!metadata.role) {
     metadata.role = 'student';
@@ -21,22 +22,28 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
   });
 
   if (error) {
+    console.error("Signup error:", error);
     throw error;
   }
 
+  console.log("Signup successful:", data);
   return data;
 }
 
 export async function signIn({ email, password }: UserCredentials) {
+  console.log("Starting signin process for:", email);
+  
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
 
   if (error) {
+    console.error("Signin error:", error);
     throw error;
   }
 
+  console.log("Signin successful for:", email);
   return data;
 }
 

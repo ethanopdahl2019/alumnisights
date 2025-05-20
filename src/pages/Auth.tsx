@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { signUp, signIn } from '@/services/auth';
+import { signUp, signIn, isMentor } from '@/services/auth';
 import { getAllUniversities, UniversityData } from '@/pages/insights/universities/universities-data';
 import SearchInput from '@/components/SearchInput';
 import { 
@@ -223,13 +223,16 @@ const Auth = () => {
   // Handle register
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     setIsLoading(true);
+    console.log("Registration form submitted:", values);
     try {
       const { email, password, firstName, lastName, userType } = values;
 
       // Map the userType to the correct role
       const role = userType === 'mentor' ? 'alumni' : 'applicant';
+      
+      console.log(`Registering user as ${userType} with role ${role}`);
 
-      await signUp({ 
+      const userData = await signUp({ 
         email, 
         password, 
         firstName, 
@@ -243,23 +246,22 @@ const Auth = () => {
         }
       });
 
-      toast("Registration successful", {
-        description: "Your account has been created. Please check your email to verify your account."
-      });
+      toast("Registration successful");
 
+      // Sign in the user after registration
       await signIn({ email, password });
       
-      // Redirect based on user role - always send mentors to profile completion
+      // Check user type and redirect accordingly
       if (userType === "mentor") {
+        console.log("User is a mentor, redirecting to profile completion");
         navigate('/profile-complete');
       } else {
+        console.log("User is a student, redirecting to dashboard");
         navigate('/student-dashboard');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast("Registration failed", {
-        description: error.message || "Failed to create account. Please try again."
-      });
+      toast("Registration failed: " + (error.message || "Failed to create account"));
     } finally {
       setIsLoading(false);
     }
