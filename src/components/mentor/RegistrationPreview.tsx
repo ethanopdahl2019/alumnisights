@@ -87,8 +87,51 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="linkedin">LinkedIn Profile</Label>
-        <Input id="linkedin" placeholder="https://linkedin.com/in/yourprofile" />
+        <Label htmlFor="greek-life">Greek Life</Label>
+        <Select>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Greek organization (if any)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            <SelectLabel>Fraternities</SelectLabel>
+            <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
+            <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
+            <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
+            <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
+            <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
+            <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
+            <SelectLabel>Sororities</SelectLabel>
+            <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
+            <SelectItem value="chi-omega">Chi Omega</SelectItem>
+            <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
+            <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
+            <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
+            <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-3">
+        <Label className="text-base">Pricing</Label>
+        <p className="text-sm text-gray-500">Set rates for your mentoring sessions</p>
+        
+        <div className="grid grid-cols-1 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="price-15">15 min session ($)</Label>
+            <Input id="price-15" type="number" placeholder="25" min="0" />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="price-30">30 min session ($)</Label>
+            <Input id="price-30" type="number" placeholder="45" min="0" />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="price-60">60 min session ($)</Label>
+            <Input id="price-60" type="number" placeholder="80" min="0" />
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">
