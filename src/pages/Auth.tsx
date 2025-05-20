@@ -227,15 +227,10 @@ const Auth = () => {
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const { email, password, firstName, lastName, userType, schoolId, degree, majorId } = values;
+      const { email, password, firstName, lastName, userType } = values;
 
       // Map the userType to the correct role
-      const role = userType === 'mentor' ? 'mentor' : 'student';
-
-      // Validate required fields for mentors
-      if (userType === 'mentor' && (!schoolId || !degree)) {
-        throw new Error('School and degree are required for mentors');
-      }
+      const role = userType === 'mentor' ? 'alumni' : 'student';
 
       await signUp({ 
         email, 
@@ -245,9 +240,9 @@ const Auth = () => {
         metadata: {
           user_type: userType,
           role: role,
-          school_id: userType === 'mentor' ? schoolId : null,
-          major_id: majorId || null,
-          degree: userType === 'mentor' ? degree : null
+          school_id: selectedUniversity || null,
+          major_id: selectedMajor || null,
+          degree: values.degree || null
         }
       });
 
@@ -415,7 +410,7 @@ const Auth = () => {
                   </RadioGroup>
                 </div>
 
-                {/* Hidden fields to store university and major information for mentors */}
+                {/* Hidden fields to store university and major information - no longer required */}
                 <input type="hidden" {...registerForm.register('schoolId')} value={selectedUniversity} />
                 <input type="hidden" {...registerForm.register('majorId')} value={selectedMajor} />
                 <input type="hidden" {...registerForm.register('degree')} />

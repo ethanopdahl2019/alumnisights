@@ -18,65 +18,23 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
-
-// Define a User interface for TypeScript
-interface User {
-  id: string;
-  email: string;
-  user_metadata: {
-    first_name?: string;
-    last_name?: string;
-    role?: string;
-    avatar_url?: string;
-  };
-  created_at: string;
-  last_sign_in_at?: string;
-  app_metadata?: {
-    provider?: string;
-    providers?: string[];
-  };
-  identities?: Array<{
-    provider: string;
-  }>;
-  status?: string;
-}
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Trash2Icon, UserIcon } from "lucide-react";
+import { fetchAllUsers, deleteUser, UserWithProfile } from "@/services/supabase/users";
 
 const UserManagement = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserWithProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
 
-  // Fetch all users using Edge Function
-  const fetchUsers = async () => {
+  // Fetch all users with their profiles
+  const loadUsers = async () => {
     setLoadingUsers(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        'https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/admin-users',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch users");
-      }
-
-      const data = await response.json();
-      setUsers(data.users || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Failed to load users: " + (error as Error).message);
+      const usersData = await fetchAllUsers();
+      setUsers(usersData);
     } finally {
       setLoadingUsers(false);
     }
@@ -91,39 +49,32 @@ const UserManagement = () => {
         return;
       }
       
-      if (!isAdmin(user)) {
+      if (!isAdmin) {
         toast.error("You don't have permission to access this page");
         navigate('/');
         return;
       }
 
-      fetchUsers();
+      loadUsers();
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isAdmin]);
 
-  const isAdmin = (user: any) => {
-    return user?.user_metadata?.role === 'admin';
+  // Handle user deletion
+  const handleDeleteUser = async (userId: string) => {
+    const success = await deleteUser(userId);
+    if (success) {
+      toast.success("User deleted successfully");
+      // Refresh the user list
+      loadUsers();
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (!isAdmin(user)) {
-    return null; // Will redirect via useEffect
-  }
-
-  const getUserStatus = (user: User) => {
+  const getUserStatus = (user: UserWithProfile) => {
     if (user.status === 'banned') return 'banned';
     if (!user.last_sign_in_at) return 'pending';
     return 'active';
   };
 
-  // Update this function to use only the available variants
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'active': return "success";
@@ -146,7 +97,7 @@ const UserManagement = () => {
           <div className="flex gap-2 mt-4 md:mt-0">
             <Button
               variant="outline"
-              onClick={() => fetchUsers()}
+              onClick={() => loadUsers()}
             >
               Refresh
             </Button>
@@ -177,8 +128,10 @@ const UserManagement = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>School & Major</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Last Login</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -188,22 +141,28 @@ const UserManagement = () => {
                         <TableRow key={user.id}>
                           <TableCell className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                              <AvatarFallback>
-                                {(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}
-                              </AvatarFallback>
+                              {user.profile?.image || user.user_metadata?.avatar_url ? (
+                                <AvatarImage 
+                                  src={user.profile?.image || user.user_metadata?.avatar_url} 
+                                  alt={user.email} 
+                                />
+                              ) : (
+                                <AvatarFallback className="bg-primary/10 flex items-center justify-center">
+                                  <UserIcon className="h-4 w-4 text-primary/60" />
+                                </AvatarFallback>
+                              )}
                             </Avatar>
                             <div>
-                              {user.user_metadata?.first_name && user.user_metadata?.last_name ? (
-                                `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
-                              ) : (
-                                <span className="text-muted-foreground">No name</span>
-                              )}
+                              {user.profile?.name || 
+                                (user.user_metadata?.first_name && user.user_metadata?.last_name ? 
+                                  `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : 
+                                  <span className="text-muted-foreground">No name</span>)
+                              }
                             </div>
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
                           <TableCell>
-                            <Badge variant={user.user_metadata?.role === 'admin' ? 'destructive' : 'outline'}>
+                            <Badge variant={user.user_metadata?.role === 'admin' ? 'destructive' : (user.user_metadata?.role === 'alumni' ? 'success' : 'outline')}>
                               {user.user_metadata?.role || 'user'}
                             </Badge>
                           </TableCell>
@@ -213,12 +172,59 @@ const UserManagement = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
+                            {user.profile?.school ? (
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium">{user.profile.school.name}</span>
+                                {user.profile.major && (
+                                  <span className="text-xs text-gray-500">{user.profile.major.name}</span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500">No school data</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
                             {new Date(user.created_at).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
                             {user.last_sign_in_at ? 
                               new Date(user.last_sign_in_at).toLocaleDateString() : 
                               'Never'}
+                          </TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm"
+                                  onClick={() => setSelectedUser(user)}
+                                >
+                                  <Trash2Icon className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete User Account</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this user account? This action cannot be undone.
+                                    <div className="mt-2 p-2 border rounded bg-muted">
+                                      <p><strong>Email:</strong> {selectedUser?.email}</p>
+                                      <p><strong>Name:</strong> {selectedUser?.profile?.name || `${selectedUser?.user_metadata?.first_name || ''} ${selectedUser?.user_metadata?.last_name || ''}`}</p>
+                                      <p><strong>Role:</strong> {selectedUser?.user_metadata?.role}</p>
+                                    </div>
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => selectedUser && handleDeleteUser(selectedUser.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </TableCell>
                         </TableRow>
                       );
