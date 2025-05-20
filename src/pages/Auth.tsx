@@ -249,12 +249,9 @@ const Auth = () => {
 
       await signIn({ email, password });
       
-      // Redirect based on user role - always send mentors to profile completion
-      if (userType === "mentor") {
-        navigate('/profile-complete');
-      } else {
-        navigate('/student-dashboard');
-      }
+      // Redirect based on user role - always send to profile completion
+      navigate('/profile-complete');
+      
     } catch (error: any) {
       console.error('Registration error:', error);
       toast("Registration failed", {

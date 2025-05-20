@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -142,8 +142,7 @@ const ProfileComplete = () => {
         console.error('Error loading form data:', error);
         toast({
           title: "Error",
-          description: "Failed to load profile data. Please try again later.",
-          variant: "destructive",
+          description: "Failed to load profile data. Please try again later."
         });
       }
     };
@@ -178,8 +177,7 @@ const ProfileComplete = () => {
       console.error('Error uploading image:', error);
       toast({
         title: "Upload Error",
-        description: "Failed to upload your profile image.",
-        variant: "destructive",
+        description: "Failed to upload your profile image."
       });
       return null;
     }
@@ -202,6 +200,37 @@ const ProfileComplete = () => {
       
       if (!schoolId) {
         throw new Error("School information not found. Please try again.");
+      }
+      
+      // Determine if user is a mentor/alumni or student/applicant
+      const isMentor = metadata.user_type === 'mentor' || metadata.role === 'alumni';
+      
+      if (isMentor) {
+        // Update alumni table
+        const { error: alumniError } = await supabase
+          .from('alumni')
+          .update({
+            school_id: schoolId,
+            major_id: values.majorId,
+            degree: values.degree,
+            bio: values.bio,
+            image: imageUrl
+          })
+          .eq('id', user.id);
+          
+        if (alumniError) throw alumniError;
+      } else {
+        // Update applicant table
+        const { error: applicantError } = await supabase
+          .from('applicants')
+          .update({
+            school_id: schoolId,
+            major_id: values.majorId,
+            degree: values.degree
+          })
+          .eq('id', user.id);
+          
+        if (applicantError) throw applicantError;
       }
       
       // Create profile
@@ -260,17 +289,20 @@ const ProfileComplete = () => {
       
       toast({
         title: "Profile complete!",
-        description: "Your profile has been set up successfully.",
+        description: "Your profile has been set up successfully."
       });
       
-      // Redirect to profile page
-      navigate(`/profile/${profileData.id}`);
+      // Redirect based on user role
+      if (isMentor) {
+        navigate('/mentor-dashboard');
+      } else {
+        navigate('/student-dashboard');
+      }
     } catch (error: any) {
       console.error('Error completing profile:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to complete your profile. Please try again.",
-        variant: "destructive",
+        description: error.message || "Failed to complete your profile. Please try again."
       });
     } finally {
       setIsLoading(false);

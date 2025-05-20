@@ -1,107 +1,84 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from '@/components/theme-provider';
-import { HelmetProvider } from "react-helmet-async";
+import './App.css';
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Index from './pages/Index';
-import AuthProvider from '@/components/AuthProvider';
-import Auth from './pages/Auth';
-import Browse from './pages/Browse';
-import StudentDashboard from './pages/StudentDashboard';
-import MentorDashboard from './pages/MentorDashboard';
-import AlumniDashboard from './pages/AlumniDashboard';
-import UndergraduateAdmissions from './pages/UndergraduateAdmissions';
-import MyAccount from './pages/MyAccount';
-import ApplicantDashboard from './pages/ApplicantDashboard';
-import HowItWorks from './pages/HowItWorks';
-import MentorChat from './pages/MentorChat';
-import AlumniProfilePage from './pages/AlumniProfilePage';
-import ProfileComplete from './pages/ProfileComplete';
-import LandingPage from './pages/LandingPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import FeaturedSchoolsPage from './pages/admin/FeaturedSchools';
-import BookingPage from './pages/BookingPage';
-import BookingSuccessPage from './pages/BookingSuccessPage';
-import UniversityPage from './pages/insights/universities/UniversityPage';
-import RegistrationControl from './pages/admin/RegistrationControl';
-import UniversityContentManager from './pages/insights/universities/UniversityContentManager';
-import UniversityContentEditor from './pages/insights/universities/UniversityContentEditor';
-import UserManagement from './pages/admin/UserManagement';
-import BookingManagement from './pages/admin/BookingManagement';
-import Analytics from './pages/admin/Analytics';
-import GraduateAdmissions from './pages/insights/GraduateAdmissions';
-import IndustryInsights from './pages/insights/IndustryInsights';
-import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
-import ContentProgress from './pages/admin/ContentProgress';
-
-// Create a client
-const queryClient = new QueryClient();
+import { AuthProvider } from '@/components/AuthProvider';
+import Index from '@/pages/Index';
+import NotFound from '@/pages/NotFound';
+import AboutUs from '@/pages/AboutUs';
+import Contact from '@/pages/Contact';
+import FAQ from '@/pages/FAQ';
+import Auth from '@/pages/Auth';
+import StudentDashboard from '@/pages/StudentDashboard';
+import ProfileComplete from '@/pages/ProfileComplete'; // Import the new page
+import MentorDashboard from '@/pages/MentorDashboard';
+import Profile from '@/pages/Profile';
+import Insights from '@/pages/Insights';
+import Universities from '@/pages/insights/universities/Universities';
+import Majors from '@/pages/insights/majors/Majors';
+import Activities from '@/pages/insights/activities/Activities';
+import Blog from '@/pages/blog/Blog';
+import BlogPost from '@/pages/blog/BlogPost';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminSchools from '@/pages/admin/AdminSchools';
+import AdminMajors from '@/pages/admin/AdminMajors';
+import AdminActivities from '@/pages/admin/AdminActivities';
+import AdminBlogPosts from '@/pages/admin/AdminBlogPosts';
+import AdminBlogCategories from '@/pages/admin/AdminBlogCategories';
+import AdminSiteSettings from '@/pages/admin/AdminSiteSettings';
+import Bookings from '@/pages/Bookings';
+import Messages from '@/pages/Messages';
+import LandingPage from '@/pages/LandingPage';
+import UniversityLandingPage from '@/pages/UniversityLandingPage';
+import MajorLandingPage from '@/pages/MajorLandingPage';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-          <HelmetProvider>
-            <Toaster />
-            <AuthProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/student-dashboard" element={<StudentDashboard />} />
-                <Route path="/mentor-dashboard" element={<MentorDashboard />} />
-                <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
-                <Route path="/my-account" element={<MyAccount />} />
-                <Route path="/account" element={<MyAccount />} />
-                <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
-                <Route path="/how-it-works" element={<HowItWorks />} />
-                <Route path="/mentor-chat" element={<MentorChat />} />
-                <Route path="/alumni/:id" element={<AlumniProfilePage />} />
-                <Route path="/profile-complete" element={<ProfileComplete />} />
-                <Route path="/landing" element={<LandingPage />} />
-                <Route path="/booking/:id/:productId" element={<BookingPage />} />
-                <Route path="/booking-success" element={<BookingSuccessPage />} />
-                
-                {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/featured-schools" element={<FeaturedSchoolsPage />} />
-                <Route path="/admin/registration-control" element={<RegistrationControl />} />
-                <Route path="/admin/users" element={<UserManagement />} />
-                <Route path="/admin/bookings" element={<BookingManagement />} />
-                <Route path="/admin/requests" element={<AdminDashboard />} />
-                <Route path="/admin/analytics" element={<Analytics />} />
-                <Route path="/admin/emails" element={<AdminDashboard />} />
-                <Route path="/admin/schools" element={<AdminDashboard />} />
-                <Route path="/admin/companies" element={<AdminDashboard />} />
-                <Route path="/admin/majors" element={<AdminDashboard />} />
-                <Route path="/admin/activities" element={<AdminDashboard />} />
-                <Route path="/admin/calendar" element={<AdminDashboard />} />
-                <Route path="/admin/settings" element={<AdminDashboard />} />
-                <Route path="/admin/content-progress" element={<ContentProgress />} />
-                
-                {/* Schools Routes */}
-                <Route path="/schools" element={<UndergraduateAdmissions />} />
-                <Route path="/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-                <Route path="/schools/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-                <Route path="/schools/undergraduate-admissions/:id" element={<UniversityPage />} />
-                
-                {/* Insights Routes */}
-                <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-                <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
-                <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
-                <Route path="/insights/industry" element={<IndustryInsights />} />
-                <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
-                <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
-                <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
-              </Routes>
-            </AuthProvider>
-          </HelmetProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/student-dashboard" element={<StudentDashboard />} />
+            <Route path="/profile-complete" element={<ProfileComplete />} /> {/* Add the new route */}
+            <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+            <Route path="/profile/:profileId" element={<Profile />} />
+            <Route path="/insights" element={<Insights />} />
+            <Route path="/insights/universities" element={<Universities />} />
+            <Route path="/insights/majors" element={<Majors />} />
+            <Route path="/insights/activities" element={<Activities />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/schools" element={<AdminSchools />} />
+            <Route path="/admin/majors" element={<AdminMajors />} />
+            <Route path="/admin/activities" element={<AdminActivities />} />
+            <Route path="/admin/blog-posts" element={<AdminBlogPosts />} />
+            <Route path="/admin/blog-categories" element={<AdminBlogCategories />} />
+            <Route path="/admin/site-settings" element={<AdminSiteSettings />} />
+
+            <Route path="/bookings" element={<Bookings />} />
+            <Route path="/messages" element={<Messages />} />
+
+            {/* Landing Pages */}
+            <Route path="/landing-page/:slug" element={<LandingPage />} />
+            <Route path="/university/:slug" element={<UniversityLandingPage />} />
+            <Route path="/major/:slug" element={<MajorLandingPage />} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

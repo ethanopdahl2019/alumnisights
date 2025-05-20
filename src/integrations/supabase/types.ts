@@ -57,6 +57,126 @@ export type Database = {
         }
         Relationships: []
       }
+      alumni: {
+        Row: {
+          bio: string | null
+          created_at: string
+          degree: string | null
+          email: string
+          first_name: string
+          graduation_year: number | null
+          id: string
+          image: string | null
+          last_name: string
+          major_id: string | null
+          price_15_min: number | null
+          price_30_min: number | null
+          price_60_min: number | null
+          school_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          degree?: string | null
+          email: string
+          first_name: string
+          graduation_year?: number | null
+          id: string
+          image?: string | null
+          last_name: string
+          major_id?: string | null
+          price_15_min?: number | null
+          price_30_min?: number | null
+          price_60_min?: number | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          degree?: string | null
+          email?: string
+          first_name?: string
+          graduation_year?: number | null
+          id?: string
+          image?: string | null
+          last_name?: string
+          major_id?: string | null
+          price_15_min?: number | null
+          price_30_min?: number | null
+          price_60_min?: number | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumni_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alumni_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applicants: {
+        Row: {
+          created_at: string
+          degree: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          major_id: string | null
+          school_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          degree?: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          major_id?: string | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          degree?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          major_id?: string | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicants_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_categories: {
         Row: {
           created_at: string

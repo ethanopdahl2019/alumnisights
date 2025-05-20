@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
@@ -22,6 +21,45 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
 
   if (error) {
     throw error;
+  }
+
+  // Create either applicant or alumni record based on user type
+  if (data.user) {
+    try {
+      const userType = metadata.user_type || 'student';
+      const userId = data.user.id;
+      
+      if (userType === 'mentor') {
+        // Create alumni record
+        const { error: alumniError } = await supabase.from('alumni').insert({
+          id: userId,
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          school_id: metadata.school_id || null,
+          major_id: metadata.major_id || null,
+          degree: metadata.degree || null
+        });
+        
+        if (alumniError) throw alumniError;
+      } else {
+        // Create applicant record
+        const { error: applicantError } = await supabase.from('applicants').insert({
+          id: userId,
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          school_id: metadata.school_id || null,
+          major_id: metadata.major_id || null,
+          degree: metadata.degree || null
+        });
+        
+        if (applicantError) throw applicantError;
+      }
+    } catch (dbError) {
+      console.error('Error creating user record:', dbError);
+      // Proceed anyway since the auth record was created
+    }
   }
 
   return data;
