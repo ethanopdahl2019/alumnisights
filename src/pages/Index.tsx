@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
 import HowItWorks from '@/components/HowItWorks';
 import FeaturedSchools from '@/components/FeaturedSchools';
-import MentorReviews from '@/components/MentorReviews';
+import TestimonialSection from '@/components/TestimonialSection';
 
 const Index: React.FC = () => {
   return (
@@ -22,7 +22,7 @@ const Index: React.FC = () => {
       <FeaturedSchools />
       
       {/* Testimonials */}
-      <MentorReviews />
+      <TestimonialSection />
       
       <Footer />
     </div>
