@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +36,7 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
   const [majors, setMajors] = useState<Array<Major>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("profile-complete");
   
   // Fetch universities from Supabase
   useEffect(() => {
@@ -88,6 +88,32 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
 
   const getMentorSpecificContent = () => (
     <div className="space-y-4 mt-4">
+      {/* Profile Image Upload for mentors */}
+      <div className="space-y-2">
+        <Label htmlFor="mentor-profile-image">Profile Image</Label>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative cursor-pointer">
+            <Avatar className="w-24 h-24">
+              {imagePreview ? (
+                <AvatarImage src={imagePreview} alt="Profile preview" />
+              ) : (
+                <AvatarFallback className="bg-muted flex items-center justify-center">
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <input
+              type="file"
+              id="mentor-profile-image"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+            />
+          </div>
+          <p className="text-xs text-gray-500">Click to upload your profile picture</p>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="work-experience">Work Experience (years)</Label>
         <Select>
@@ -185,11 +211,11 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
         <CardTitle>{registrationType === 'mentor' ? 'Mentor' : 'Student'} Registration Preview</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs defaultValue={activeTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
-            <TabsTrigger value="profile-complete">Profile Completion</TabsTrigger>
+            <TabsTrigger value="login" onClick={() => setActiveTab("login")}>Login</TabsTrigger>
+            <TabsTrigger value="register" onClick={() => setActiveTab("register")}>Register</TabsTrigger>
+            <TabsTrigger value="profile-complete" onClick={() => setActiveTab("profile-complete")}>Profile Completion</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login" className="space-y-4">

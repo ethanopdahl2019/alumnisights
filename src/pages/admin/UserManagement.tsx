@@ -32,10 +32,18 @@ interface User {
   };
   created_at: string;
   last_sign_in_at?: string;
+  app_metadata?: {
+    provider?: string;
+    providers?: string[];
+  };
+  identities?: Array<{
+    provider: string;
+  }>;
+  status?: string;
 }
 
 const UserManagement = () => {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -83,7 +91,7 @@ const UserManagement = () => {
         return;
       }
       
-      if (!isAdmin) {
+      if (!isAdmin(user)) {
         toast.error("You don't have permission to access this page");
         navigate('/');
         return;
@@ -91,7 +99,11 @@ const UserManagement = () => {
 
       fetchUsers();
     }
-  }, [user, loading, isAdmin, navigate]);
+  }, [user, loading, navigate]);
+
+  const isAdmin = (user: any) => {
+    return user?.user_metadata?.role === 'admin';
+  };
 
   if (loading) {
     return (
@@ -101,9 +113,24 @@ const UserManagement = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin(user)) {
     return null; // Will redirect via useEffect
   }
+
+  const getUserStatus = (user: User) => {
+    if (user.status === 'banned') return 'banned';
+    if (!user.last_sign_in_at) return 'pending';
+    return 'active';
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'active': return 'success';
+      case 'pending': return 'warning';
+      case 'banned': return 'destructive';
+      default: return 'secondary';
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -148,44 +175,53 @@ const UserManagement = () => {
                       <TableHead>User</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Last Login</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                            <AvatarFallback>
-                              {(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            {user.user_metadata?.first_name && user.user_metadata?.last_name ? (
-                              `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
-                            ) : (
-                              <span className="text-muted-foreground">No name</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.user_metadata?.role === 'admin' ? 'destructive' : 'outline'}>
-                            {user.user_metadata?.role || 'user'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {user.last_sign_in_at ? 
-                            new Date(user.last_sign_in_at).toLocaleDateString() : 
-                            'Never'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {users.map((user) => {
+                      const status = getUserStatus(user);
+                      return (
+                        <TableRow key={user.id}>
+                          <TableCell className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                              <AvatarFallback>
+                                {(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              {user.user_metadata?.first_name && user.user_metadata?.last_name ? (
+                                `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+                              ) : (
+                                <span className="text-muted-foreground">No name</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.user_metadata?.role === 'admin' ? 'destructive' : 'outline'}>
+                              {user.user_metadata?.role || 'user'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(status)}>
+                              {status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {user.last_sign_in_at ? 
+                              new Date(user.last_sign_in_at).toLocaleDateString() : 
+                              'Never'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

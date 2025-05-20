@@ -57,25 +57,11 @@ const RegistrationControl = () => {
               </TabsList>
               
               <TabsContent value="student">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Student Registration Preview</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <RegistrationPreview registrationType="student" />
-                  </CardContent>
-                </Card>
+                <RegistrationPreview registrationType="student" />
               </TabsContent>
               
               <TabsContent value="mentor">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Mentor Registration Preview</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <RegistrationPreview registrationType="mentor" />
-                  </CardContent>
-                </Card>
+                <RegistrationPreview registrationType="mentor" />
               </TabsContent>
             </Tabs>
           </CardContent>
