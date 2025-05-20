@@ -56,7 +56,7 @@ const Browse = () => {
             },
             activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
             // Explicitly cast the role to the correct type - Accept both 'mentor' and 'alumni' roles
-            role: (['mentor', 'alumni', 'applicant'].includes(profile.role as string) ? profile.role : 'applicant') as 'applicant' | 'alumni' | 'mentor',
+            role: (['applicant', 'alumni'].includes(profile.role as string) ? profile.role : 'applicant') as 'applicant' | 'alumni',
             social_links: socialLinks
           };
         });
@@ -116,10 +116,10 @@ const Browse = () => {
   ];
 
   const filteredProfiles = profiles.filter((profile) => {
-    // Include both mentor and alumni profiles
-    const isMentorOrAlumni = profile.role === 'mentor' || profile.role === 'alumni';
+    // Include alumni profiles (mentors)
+    const isAlumni = profile.role === 'alumni';
     
-    if (!isMentorOrAlumni) return false;
+    if (!isAlumni) return false;
     
     const matchesSearch = profile.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       profile.school?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
