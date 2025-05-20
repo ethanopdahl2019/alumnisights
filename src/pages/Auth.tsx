@@ -59,11 +59,14 @@ const Auth = () => {
   const createProfile = async (userId: string, firstName: string, lastName: string) => {
     try {
       console.log("[Auth] Creating profile for user:", userId);
+      // Fix: Add null values for required fields that will be set later
       const { error } = await supabase
         .from('profiles')
         .insert({
           user_id: userId,
           name: `${firstName} ${lastName}`,
+          school_id: null, // Add null for required field
+          major_id: null  // Add null for required field
         });
       
       if (error) throw error;

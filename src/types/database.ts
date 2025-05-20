@@ -62,11 +62,12 @@ export interface ProfileWithDetails extends Profile {
   location?: string | null;
   social_links?: Record<string, any> | string | null;
   achievements?: string[] | null;
+  // Fix: Update greek_life type to be either a string or an object with id, name, type
   greek_life?: {
     id: string;
     name: string;
     type: string;
-  } | null;
+  } | string | null;
 }
 
 // New types for authentication

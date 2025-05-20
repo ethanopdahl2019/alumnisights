@@ -48,6 +48,7 @@ const Browse = () => {
             }
           }
           
+          // Fix: Cast processed profiles to ProfileWithDetails to satisfy TypeScript
           return {
             ...profile,
             school: {
@@ -57,11 +58,15 @@ const Browse = () => {
             activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
             // Explicitly cast the role to the correct type
             role: (profile.role === 'alumni' || profile.role === 'applicant' ? profile.role : 'applicant') as 'applicant' | 'alumni',
-            social_links: socialLinks
-          };
+            social_links: socialLinks,
+            // Handle greek_life according to updated type
+            greek_life: typeof profile.greek_life === 'object' 
+              ? profile.greek_life 
+              : profile.greek_life
+          } as ProfileWithDetails;
         });
         
-        setProfiles(processedProfiles as ProfileWithDetails[]);
+        setProfiles(processedProfiles);
       }
       
       if (schoolsData.data) {
