@@ -1,26 +1,30 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import AlphabeticalNav from "@/components/AlphabeticalNav";
 import DefaultLogo from "./universities/DefaultLogo";
-import { getUniversitiesByLetter } from "./universities/universities-data";
+import { getAlphabeticalLetters, getUniversitiesByLetter } from "./universities/universities-data";
 import { getUniversityLogo } from "@/services/landing-page";
 import { useAuth } from "@/components/AuthProvider";
 import { generateUniversityContent } from "@/services/ai/generateUniversityContent";
 import { toast } from "sonner";
-import { Loader2, Wand } from "lucide-react";
+import { Wand, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const UndergraduateAdmissions = () => {
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [activeLetter, setActiveLetter] = useState<string | null>(null);
   const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
   const [isLoadingLogos, setIsLoadingLogos] = useState(true);
   const [generatingContentFor, setGeneratingContentFor] = useState<string | null>(null);
-  const [universitiesList, setUniversitiesList] = useState<any[]>([]);
+  const [alphabeticalLetters, setAlphabeticalLetters] = useState<string[]>([]);
+  const [universitiesByLetter, setUniversitiesByLetter] = useState<Record<string, any[]>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const { isAdmin } = useAuth();
   
   // Fetch university data with memoization to improve performance
@@ -28,15 +32,16 @@ const UndergraduateAdmissions = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        const letters = await getAlphabeticalLetters();
         const universities = await getUniversitiesByLetter();
         
-        // Convert the object of arrays into a single array of universities
-        const allUniversities = Object.values(universities).flat();
+        setAlphabeticalLetters(letters);
+        setUniversitiesByLetter(universities);
         
-        // Sort alphabetically by name
-        allUniversities.sort((a, b) => a.name.localeCompare(b.name));
-        
-        setUniversitiesList(allUniversities);
+        // Set initial active letter to the first one
+        if (letters.length > 0 && !activeLetter) {
+          setActiveLetter(letters[0]);
+        }
       } catch (error) {
         console.error("Failed to fetch university data:", error);
       } finally {
@@ -50,16 +55,19 @@ const UndergraduateAdmissions = () => {
   // Batch logo fetching for better performance
   useEffect(() => {
     const fetchUniversityLogos = async () => {
-      if (universitiesList.length === 0) return;
+      if (Object.keys(universitiesByLetter).length === 0) return;
       
       setIsLoadingLogos(true);
       const logosMap: Record<string, string | null> = {};
       
       try {
+        // Get all universities to fetch logos for
+        const allUniversities = Object.values(universitiesByLetter).flat();
+        
         // Process logos in smaller batches to prevent overwhelming the network
         const batchSize = 10;
-        for (let i = 0; i < universitiesList.length; i += batchSize) {
-          const batch = universitiesList.slice(i, i + batchSize);
+        for (let i = 0; i < allUniversities.length; i += batchSize) {
+          const batch = allUniversities.slice(i, i + batchSize);
           const batchPromises = batch.map(async (university) => {
             try {
               const logo = await getUniversityLogo(university.id);
@@ -87,7 +95,42 @@ const UndergraduateAdmissions = () => {
     };
     
     fetchUniversityLogos();
-  }, [universitiesList]);
+  }, [universitiesByLetter]);
+  
+  const scrollToLetter = (letter: string) => {
+    setActiveLetter(letter);
+    if (letterRefs.current[letter]) {
+      letterRefs.current[letter]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  };
+  
+  // Memoize visible universities to avoid unnecessary re-renders
+  const visibleLetters = useMemo(() => {
+    if (isLoading) return [];
+    return alphabeticalLetters;
+  }, [alphabeticalLetters, isLoading]);
+  
+  useEffect(() => {
+    // Setup intersection observer to update active letter on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const letter = entry.target.getAttribute('data-letter');
+          if (letter) setActiveLetter(letter);
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    // Observe all letter section headers
+    Object.values(letterRefs.current).forEach(ref => {
+      if (ref) observer.observe(ref);
+    });
+    
+    return () => observer.disconnect();
+  }, [alphabeticalLetters.length]);
 
   // Generate content for a specific university
   const handleGenerateContent = async (universityId: string, universityName: string) => {
@@ -160,7 +203,7 @@ const UndergraduateAdmissions = () => {
           src={logo} 
           alt={`${universityName} logo`}
           className="h-16 w-16 object-contain"
-          loading="lazy"
+          loading="lazy" // Add lazy loading for images
         />
       );
     }
@@ -171,13 +214,6 @@ const UndergraduateAdmissions = () => {
       </div>
     );
   };
-
-  // Filter universities based on search term
-  const filteredUniversities = searchTerm
-    ? universitiesList.filter(uni => 
-        uni.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : universitiesList;
 
   if (isLoading) {
     return (
@@ -193,12 +229,12 @@ const UndergraduateAdmissions = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="flex flex-col items-center">
-                    <div className="bg-gray-200 rounded-full h-16 w-16 mb-3"></div>
-                    <div className="bg-gray-200 h-5 w-32 rounded mb-2"></div>
-                  </div>
-                </div>
+                <Card key={i} className="overflow-hidden border shadow h-full">
+                  <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                    <div className="animate-pulse bg-gray-200 rounded-full h-16 w-16 mb-3"></div>
+                    <div className="animate-pulse bg-gray-200 h-5 w-32 rounded mb-2"></div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
@@ -229,58 +265,73 @@ const UndergraduateAdmissions = () => {
             <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
           </div>
 
-          <div className="relative mb-10 max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search for universities..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+          <div className="flex gap-6">
+            {/* Alphabetical navigation sidebar */}
+            <AlphabeticalNav 
+              letters={alphabeticalLetters} 
+              onLetterClick={scrollToLetter}
+              activeLetter={activeLetter} 
             />
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredUniversities.map((university) => (
-              <div key={university.id} className="flex justify-center">
-                <Link
-                  to={`/insights/undergraduate-admissions/${university.id}`}
-                  className="flex flex-col items-center p-4 hover:bg-gray-50 rounded-lg transition-colors"
+            {/* Main content area with universities */}
+            <div className="flex-1">
+              {visibleLetters.map((letter) => (
+                <div 
+                  key={letter}
+                  ref={el => letterRefs.current[letter] = el}
+                  data-letter={letter}
+                  className="mb-8"
                 >
-                  <div className="mb-3 h-16 w-16 flex items-center justify-center">
-                    {renderUniversityLogo(university.id, university.name)}
+                  <h2 className="text-2xl font-bold text-navy mb-4 px-2 border-l-4 border-blue-500">{letter}</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {universitiesByLetter[letter]?.map((university) => (
+                      <Card key={university.id} className="overflow-hidden border shadow hover:shadow-md h-full">
+                        <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                          <Link
+                            to={`/insights/undergraduate-admissions/${university.id}`}
+                            className="block w-full transform transition-transform hover:scale-105 focus:outline-none"
+                          >
+                            <div className="mb-3 h-16 w-16 flex items-center justify-center mx-auto">
+                              {renderUniversityLogo(university.id, university.name)}
+                            </div>
+                            <h3 className="font-medium text-navy">
+                              {university.name}
+                            </h3>
+                          </Link>
+                          
+                          {isAdmin && (
+                            <div className="mt-3 w-full">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="w-full"
+                                disabled={generatingContentFor === university.id}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleGenerateContent(university.id, university.name);
+                                }}
+                              >
+                                {generatingContentFor === university.id ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                    Generating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Wand className="h-3 w-3 mr-1" />
+                                    Generate AI Content
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                  <h3 className="font-medium text-center text-navy">
-                    {university.name}
-                  </h3>
-                  
-                  {isAdmin && (
-                    <div className="mt-3 w-full">
-                      <button 
-                        className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors"
-                        disabled={generatingContentFor === university.id}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleGenerateContent(university.id, university.name);
-                        }}
-                      >
-                        {generatingContentFor === university.id ? (
-                          <>
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            <span>Generating...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Wand className="h-3 w-3" />
-                            <span>Generate AI Content</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  )}
-                </Link>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </main>

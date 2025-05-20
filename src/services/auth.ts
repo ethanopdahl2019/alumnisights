@@ -1,7 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
-export async function signUp({ email, password, firstName, lastName, metadata = {} }: UserRegistration): Promise<any> {
+export async function signUp({ email, password, firstName, lastName, metadata = {} }: UserRegistration) {
   // Set default role if not provided
   if (!metadata.role) {
     metadata.role = 'student';
@@ -21,28 +22,6 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
 
   if (error) {
     throw error;
-  }
-
-  // If user type is mentor/alumni, create the profile with alumni role
-  if (metadata.user_type === 'mentor') {
-    // Check if the user profile already exists
-    const { data: existingProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', data.user?.id)
-      .maybeSingle();
-    
-    if (!profileError && !existingProfile) {
-      // Create a new profile with alumni role
-      await supabase.from('profiles').insert({
-        user_id: data.user?.id,
-        name: `${firstName} ${lastName}`,
-        role: 'alumni',
-        school_id: metadata.school_id || null,
-        major_id: metadata.major_id || null,
-        degree: metadata.degree || null
-      });
-    }
   }
 
   return data;

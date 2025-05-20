@@ -267,7 +267,7 @@ const Auth = () => {
       
       // Redirect based on user role
       if (userType === "mentor") {
-        navigate('/alumni-onboarding');
+        navigate('/profile/complete');
       } else {
         navigate('/student-dashboard');
       }
