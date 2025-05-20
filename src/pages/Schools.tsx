@@ -1,78 +1,114 @@
 
-import React, { useState, useEffect } from 'react';
-import { GraduationCap } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { GraduationCap, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import AlphabeticalNav from '@/components/AlphabeticalNav';
 import SearchInput from '@/components/SearchInput';
+import { getAlphabeticalLetters, getUniversitiesByLetter, UniversityData } from './insights/universities/universities-data';
 import { getUniversityLogo } from '@/services/landing-page';
-import { getUniversities } from '@/services/universities';
 
 const Schools = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeLetter, setActiveLetter] = useState<string | null>(null);
   const [universityLogos, setUniversityLogos] = useState<Record<string, string | null>>({});
-  const [allUniversities, setAllUniversities] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingLogos, setIsLoadingLogos] = useState(true);
+  const letterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
-  // Fetch all universities on component mount
+  // Store fetched data in state
+  const [alphabeticalLetters, setAlphabeticalLetters] = useState<string[]>([]);
+  const [universitiesByLetter, setUniversitiesByLetter] = useState<Record<string, UniversityData[]>>({});
+  const [allUniversities, setAllUniversities] = useState<UniversityData[]>([]);
+  
+  // Fetch data on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true);
-        const universities = await getUniversities();
-        setAllUniversities(universities);
+        const letters = await getAlphabeticalLetters();
+        setAlphabeticalLetters(letters);
+        
+        const universities = await getUniversitiesByLetter();
+        setUniversitiesByLetter(universities);
+        
+        // Get all universities as a flat array
+        const allUnis = Object.values(universities).flat();
+        setAllUniversities(allUnis);
+        
+        // Set initial active letter
+        if (letters.length > 0 && !activeLetter) {
+          setActiveLetter(letters[0]);
+        }
       } catch (error) {
         console.error("Failed to fetch university data:", error);
         toast.error("Failed to load universities");
-      } finally {
-        setIsLoading(false);
       }
     };
     
     fetchData();
   }, []);
   
-  // Fetch university logos
+  // Fetch university logos efficiently
   useEffect(() => {
-    if (allUniversities.length === 0) return;
-    
-    const fetchLogos = async () => {
+    const fetchUniversityLogos = async () => {
+      setIsLoadingLogos(true);
+      const logosMap: Record<string, string | null> = {};
+      
       try {
-        const logosMap: Record<string, string | null> = {};
+        // Fetch logos in parallel for better performance
+        const logoPromises = allUniversities.map(async (university) => {
+          const logo = await getUniversityLogo(university.id);
+          return { id: university.id, logo };
+        });
         
-        // Process logos in batches for better performance
-        for (let i = 0; i < allUniversities.length; i += 10) {
-          const batch = allUniversities.slice(i, i + 10);
-          const batchPromises = batch.map(async (university) => {
-            try {
-              const logo = await getUniversityLogo(university.id);
-              return { id: university.id, logo };
-            } catch (error) {
-              return { id: university.id, logo: null };
-            }
-          });
-          
-          const results = await Promise.all(batchPromises);
-          results.forEach(result => {
-            logosMap[result.id] = result.logo;
-          });
-        }
+        const results = await Promise.allSettled(logoPromises);
+        
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            logosMap[result.value.id] = result.value.logo;
+          }
+        });
         
         setUniversityLogos(logosMap);
       } catch (error) {
-        console.error('Failed to fetch logos:', error);
+        console.error('Failed to fetch university logos:', error);
+        toast.error('Failed to load some university logos');
+      } finally {
+        setIsLoadingLogos(false);
       }
     };
     
-    fetchLogos();
+    if (allUniversities.length > 0) {
+      fetchUniversityLogos();
+    }
   }, [allUniversities]);
+  
+  // Handle letter click in the alphabetical nav
+  const handleLetterClick = (letter: string) => {
+    setActiveLetter(letter);
+    if (letterRefs.current[letter]) {
+      letterRefs.current[letter]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  };
   
   // Filter universities based on search term
   const filteredSchools = searchTerm
     ? allUniversities.filter(uni => 
         uni.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : allUniversities;
+    : [];
+    
+  const getUniversityLocation = (university: any) => {
+    // If we have location data in university, use it
+    if (university.location) return university.location;
+    
+    // Otherwise return a placeholder
+    return "United States";
+  };
   
   // Render university logo component
   const renderUniversityLogo = (universityId: string, universityName: string) => {
@@ -83,45 +119,17 @@ const Schools = () => {
         <img 
           src={logo} 
           alt={`${universityName} logo`}
-          className="h-20 w-auto max-w-full object-contain mx-auto"
-          loading="lazy"
+          className="max-h-full max-w-full object-contain"
         />
       );
     }
     
     return (
-      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+      <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
         <GraduationCap className="h-8 w-8 text-slate-500" />
       </div>
     );
   };
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow container mx-auto py-12 px-4">
-          <div className="max-w-6xl mx-auto">
-            <h1 className="text-4xl font-bold mb-8 text-center">
-              Browse Schools
-            </h1>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {[...Array(20)].map((_, i) => (
-                <div key={i} className="animate-pulse p-4">
-                  <div className="h-20 flex items-center justify-center mb-4">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
-                  </div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -141,26 +149,72 @@ const Schools = () => {
             />
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {filteredSchools.length > 0 ? filteredSchools.map((university) => (
-              <a 
-                key={university.id}
-                href={`/schools/undergraduate-admissions/${university.id}`}
-                className="flex flex-col items-center p-4 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <div className="h-20 flex items-center justify-center mb-4">
-                  {renderUniversityLogo(university.id, university.name)}
+          {searchTerm ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredSchools.length > 0 ? filteredSchools.map((university) => (
+                <div key={university.id}>
+                  <Link 
+                    to={`/schools/undergraduate-admissions/${university.id}`}
+                    className="flex flex-col items-center p-6 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
+                  >
+                    <div className="h-24 flex items-center justify-center mb-4">
+                      {renderUniversityLogo(university.id, university.name)}
+                    </div>
+                    <h3 className="font-semibold text-lg mb-2 text-center">{university.name}</h3>
+                    <div className="flex items-center text-gray-600 text-sm">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      <span>{getUniversityLocation(university)}</span>
+                    </div>
+                  </Link>
                 </div>
-                <h3 className="font-medium text-center text-sm">
-                  {university.name}
-                </h3>
-              </a>
-            )) : (
-              <div className="col-span-full text-center py-10">
-                <p className="text-gray-500">No schools found matching your search.</p>
+              )) : (
+                <div className="col-span-full text-center py-10">
+                  <p className="text-gray-500">No schools found matching your search.</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex gap-4">
+              <AlphabeticalNav 
+                letters={alphabeticalLetters} 
+                onLetterClick={handleLetterClick}
+                activeLetter={activeLetter} 
+              />
+              
+              <div className="flex-1">
+                {alphabeticalLetters.map((letter) => (
+                  <div 
+                    key={letter}
+                    ref={el => letterRefs.current[letter] = el}
+                    className="mb-8"
+                    id={`letter-${letter}`}
+                  >
+                    <h2 className="text-2xl font-bold text-navy mb-4 px-2 border-l-4 border-blue-500">{letter}</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {universitiesByLetter[letter]?.map((university) => (
+                        <Link
+                          key={university.id}
+                          to={`/schools/undergraduate-admissions/${university.id}`}
+                          className="flex flex-col items-center p-5 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100 shadow-sm"
+                        >
+                          <div className="h-20 flex items-center justify-center mb-3">
+                            {renderUniversityLogo(university.id, university.name)}
+                          </div>
+                          <h3 className="font-medium text-center text-base mb-2">
+                            {university.name}
+                          </h3>
+                          <div className="flex items-center text-gray-600 text-xs">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            <span>{getUniversityLocation(university)}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </main>
       <Footer />

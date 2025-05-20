@@ -110,7 +110,7 @@ const UniversityContentEditor: React.FC = () => {
           <Card>
             <CardContent className="pt-6">
               <UniversityContentForm 
-                universityId={id}
+                id={id} 
                 universityName={universityName}
                 initialImage={universityData?.image}
                 initialLogo={universityData?.logo}

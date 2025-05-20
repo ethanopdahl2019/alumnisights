@@ -50,11 +50,6 @@ export const NavbarUserSection = () => {
     );
   }
 
-  // Get user's name and avatar
-  const userName = user.user_metadata?.first_name || user.email?.split('@')[0] || "User";
-  const avatarUrl = user.user_metadata?.avatar_url;
-  const userInitial = (userName[0] || "U").toUpperCase();
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -63,23 +58,14 @@ export const NavbarUserSection = () => {
           title={user.email}
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl} alt={userName} />
-            <AvatarFallback>{userInitial}</AvatarFallback>
+            <AvatarImage src={user?.user_metadata?.avatar_url} alt={user.email || "profile"} />
+            <AvatarFallback>{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline text-sm font-medium text-navy">{userName}</span>
+          <span className="hidden md:inline text-sm font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl} alt={userName} />
-            <AvatarFallback>{userInitial}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span>{userName}</span>
-            <span className="text-xs text-muted-foreground truncate">{user.email}</span>
-          </div>
-        </DropdownMenuLabel>
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/account')}>
           <User className="mr-2 h-4 w-4" />

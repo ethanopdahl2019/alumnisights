@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -21,8 +22,7 @@ import {
   Star,
   ChevronRight,
   FileCheck,
-  BarChart,
-  PieChart
+  BarChart
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -88,12 +88,6 @@ const adminLinkGroups = {
       description: "Manage clubs, sports and activities",
       icon: <Activity className="h-5 w-5" />,
       href: "/admin/activities"
-    },
-    {
-      title: "Admission Statistics",
-      description: "Manage university acceptance rates and test scores",
-      icon: <PieChart className="h-5 w-5" />,
-      href: "/admin/admission-stats"
     },
   ],
   operations: [

@@ -2,16 +2,10 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Helmet } from "react-helmet-async";
 
 const AboutUs = () => {
   return (
     <div className="min-h-screen bg-white">
-      <Helmet>
-        <title>About Us | AlumniSights</title>
-        <meta name="description" content="Learn about the founders and mission of AlumniSights" />
-      </Helmet>
-      
       <Navbar />
       
       <main className="py-12 px-4 sm:px-6">
@@ -24,29 +18,16 @@ const AboutUs = () => {
               insights from people who've been there before.
             </p>
             
-            <h2 className="text-2xl font-bold text-gray-900 mt-10 mb-4">Our Founders</h2>
-            
-            <div className="grid md:grid-cols-2 gap-8 my-8">
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-100">
-                <h3 className="text-xl font-semibold mb-2">Ethan Opdahl</h3>
-                <p className="text-gray-700 mb-4">
-                  Ethan attended Amherst College where he played lacrosse and studied Economics. 
-                  After graduation, he pursued a career in consulting and currently works at Bain.
-                  His experience navigating college admissions and athletics inspired him to create a 
-                  platform that helps students make informed decisions about their education.
-                </p>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-100">
-                <h3 className="text-xl font-semibold mb-2">Jeffrey Guo</h3>
-                <p className="text-gray-700 mb-4">
-                  Jeffrey studied Neuroscience at Johns Hopkins University and is now attending 
-                  medical school at the University of Maryland. His journey through undergraduate 
-                  education and into medical school highlighted the need for better guidance and 
-                  mentorship for students considering similar paths.
-                </p>
-              </div>
-            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mt-10 mb-4">Our Story</h2>
+            <p className="text-gray-700 mb-4">
+              As former students who navigated the complex world of college and graduate school applications, 
+              we experienced firsthand how challenging it can be to make informed decisions about education.
+            </p>
+            <p className="text-gray-700 mb-6">
+              We created AlumniSights to bridge the information gap between what universities tell you and what 
+              current students and alumni know from experience. Our platform facilitates meaningful connections 
+              that help prospective students make confident decisions about their educational future.
+            </p>
             
             <h2 className="text-2xl font-bold text-gray-900 mt-10 mb-4">Our Mission</h2>
             <p className="text-gray-700 mb-6">

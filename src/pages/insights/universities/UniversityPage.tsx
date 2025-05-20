@@ -8,9 +8,6 @@ import { getUniversityById } from "@/services/universities";
 import { getUniversityContent } from "@/services/landing-page";
 import { UniversityContent } from "@/types/database";
 import { UniversityData } from "./universities-data";
-import { supabase } from "@/integrations/supabase/client";
-import AdmissionStats, { AdmissionStatsType } from "@/components/insights/AdmissionStats";
-import { UniversityAdmissionStats } from "@/types/admission-stats";
 
 const UniversityPage: React.FC = () => {
   // Get ID from params or extract from pathname if needed
@@ -19,7 +16,6 @@ const UniversityPage: React.FC = () => {
   const [content, setContent] = useState<UniversityContent | null>(null);
   const [universityData, setUniversityData] = useState<UniversityData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [admissionStats, setAdmissionStats] = useState<AdmissionStatsType>({});
   const { user } = useAuth();
   
   // Extract university ID from pathname if not in params
@@ -60,24 +56,6 @@ const UniversityPage: React.FC = () => {
               name: university.name,
               type: university.type || undefined,
               state: university.state || undefined
-            });
-          }
-          
-          // Fetch admission statistics using edge function
-          const { data: statsData, error: statsError } = await supabase.functions.invoke(
-            'get_university_admission_stats', 
-            { 
-              body: { 
-                university_id: universityId 
-              } 
-            }
-          );
-            
-          if (statsData && !statsError) {
-            setAdmissionStats({
-              acceptanceRate: statsData.acceptance_rate,
-              averageSAT: statsData.average_sat,
-              averageACT: statsData.average_act
             });
           }
         } catch (error) {
@@ -135,13 +113,12 @@ const UniversityPage: React.FC = () => {
             <p className="whitespace-pre-line">{content.overview}</p>
           </section>
           
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Admission Statistics</h2>
-            <AdmissionStats stats={admissionStats} />
-            {content.admission_stats && (
-              <p className="whitespace-pre-line mt-4">{content.admission_stats}</p>
-            )}
-          </section>
+          {content.admission_stats && (
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4">Admission Statistics</h2>
+              <p className="whitespace-pre-line">{content.admission_stats}</p>
+            </section>
+          )}
           
           {content.application_requirements && (
             <section className="mb-8">

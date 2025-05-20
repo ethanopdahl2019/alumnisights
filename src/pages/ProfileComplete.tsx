@@ -1,100 +1,188 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CheckIcon, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import OnboardingModal from '@/components/onboarding/OnboardingModal';
-import { OnboardingData } from '@/types/onboarding';
-import { addProfileSports, addProfileClubs, addProfileGreekLife } from '@/services/activities';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { getMajors, getActivities } from '@/services/profiles';
+import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
+import SearchInput from '@/components/SearchInput';
+
+const profileSchema = z.object({
+  bio: z.string().min(20, { message: "Bio should be at least 20 characters" }),
+  universityId: z.string().min(1, { message: "Please select your university" }),
+  degree: z.string().min(1, { message: "Please select your degree" }),
+  majorId: z.string().min(1, { message: "Please select your major" }),
+  activities: z.array(z.string()).min(1, { message: "Please select at least one activity" }),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileComplete = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const { user, session } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [majors, setMajors] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [universities, setUniversities] = useState<any[]>([]);
+  const [universityOpen, setUniversityOpen] = useState(false);
+  const [majorOpen, setMajorOpen] = useState(false);
+  const [universitySearchTerm, setUniversitySearchTerm] = useState("");
+  const [majorSearchTerm, setMajorSearchTerm] = useState("");
+  
+  const degrees = [
+    { id: "bachelors", name: "Bachelor's Degree" },
+    { id: "masters", name: "Master's Degree" },
+    { id: "phd", name: "PhD" },
+    { id: "associates", name: "Associate's Degree" },
+    { id: "other", name: "Other" }
+  ];
+  
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      bio: "",
+      universityId: "",
+      degree: "",
+      majorId: "",
+      activities: [],
+    },
+    mode: "onChange",
+  });
+  
+  // Watch form values to update progress
+  const watchedValues = form.watch();
   
   useEffect(() => {
-    // Show the onboarding modal when the component mounts
-    if (user) {
-      setIsModalOpen(true);
-    } else {
-      // If no user, redirect to auth page
-      navigate('/auth');
-    }
-  }, [user, navigate]);
+    // Calculate form completion progress
+    let completedSteps = 0;
+    if (watchedValues.bio.length >= 20) completedSteps++;
+    if (watchedValues.universityId) completedSteps++;
+    if (watchedValues.degree) completedSteps++;
+    if (watchedValues.majorId) completedSteps++;
+    if (watchedValues.activities.length > 0) completedSteps++;
+    
+    setProgress((completedSteps / 5) * 100);
+  }, [watchedValues]);
   
-  const getUserRole = () => {
-    return user?.user_metadata?.role || 'applicant';
-  };
-  
-  const handleOnboardingComplete = async (data: OnboardingData) => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be signed in to complete your profile.",
-        variant: "destructive",
-      });
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!session) {
       navigate('/auth');
       return;
     }
     
+    // Load universities from the insights page data
+    const loadUniversities = () => {
+      const universitiesByLetter = getUniversitiesByLetter();
+      const allUniversities: any[] = [];
+      
+      // Flatten the university list from all letters
+      Object.values(universitiesByLetter).forEach(universities => {
+        universities.forEach(university => {
+          allUniversities.push(university);
+        });
+      });
+      
+      // Sort universities by name
+      allUniversities.sort((a, b) => a.name.localeCompare(b.name));
+      setUniversities(allUniversities);
+    };
+    
+    // Load majors and activities
+    const loadFormData = async () => {
+      try {
+        const [majorsData, activitiesData] = await Promise.all([
+          getMajors(),
+          getActivities()
+        ]);
+        
+        setMajors(majorsData);
+        setActivities(activitiesData);
+        loadUniversities();
+      } catch (error) {
+        console.error('Error loading form data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile data. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    loadFormData();
+  }, [session, navigate]);
+  
+  const onSubmit = async (values: ProfileFormValues) => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
-      const userRole = getUserRole();
+      // Get school_id from session user metadata or from selected university
+      const metadata = user.user_metadata || {};
+      const schoolId = values.universityId;
+      
+      if (!schoolId) {
+        throw new Error("School information not found. Please try again.");
+      }
       
       // Create profile
-      const { data: profileData, error: profileError } = await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           user_id: user.id,
-          name: `${user.user_metadata.first_name} ${user.user_metadata.last_name}`,
-          school_id: data.schoolId,
-          major_id: data.majorId,
-          bio: data.bio || null,
-          degree: data.degree || null,
-          role: userRole,
-          price_15_min: data.pricing?.price_15_min || null,
-          price_30_min: data.pricing?.price_30_min || null,
-          price_60_min: data.pricing?.price_60_min || null,
-          image: data.image || null,
-        })
-        .select('id')
-        .single();
+          name: `${metadata.first_name} ${metadata.last_name}`,
+          school_id: schoolId,
+          major_id: values.majorId,
+          bio: values.bio,
+        });
       
       if (profileError) throw profileError;
       
-      // Add sports, clubs, and Greek life if selected
-      const promises = [];
+      // Get the newly created profile
+      const { data: profileData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
       
-      if (data.sports?.length) {
-        promises.push(addProfileSports(profileData.id, data.sports));
-      }
+      if (fetchError) throw fetchError;
       
-      if (data.clubs?.length) {
-        promises.push(addProfileClubs(profileData.id, data.clubs));
-      }
+      // Add activities to profile
+      const activityInserts = values.activities.map(activityId => ({
+        profile_id: profileData.id,
+        activity_id: activityId,
+      }));
       
-      if (data.greekLife?.length) {
-        promises.push(addProfileGreekLife(profileData.id, data.greekLife));
-      }
+      const { error: activitiesError } = await supabase
+        .from('profile_activities')
+        .insert(activityInserts);
       
-      // Wait for all promises to resolve
-      if (promises.length) {
-        await Promise.all(promises);
-      }
+      if (activitiesError) throw activitiesError;
       
       toast({
         title: "Profile complete!",
         description: "Your profile has been set up successfully.",
       });
       
-      // Redirect based on user role
-      if (userRole === 'alumni') {
-        navigate('/alumni-dashboard');
-      } else {
-        navigate('/student-dashboard');
-      }
+      // Redirect to profile page
+      navigate(`/profile/${profileData.id}`);
     } catch (error: any) {
       console.error('Error completing profile:', error);
       toast({
@@ -104,37 +192,211 @@ const ProfileComplete = () => {
       });
     } finally {
       setIsLoading(false);
-      setIsModalOpen(false);
     }
   };
-
+  
+  // Filter majors based on search
+  const filteredMajors = majorSearchTerm 
+    ? majors.filter(major => 
+        major.name.toLowerCase().includes(majorSearchTerm.toLowerCase())
+      ).slice(0, 10) 
+    : majors.slice(0, 10);
+  
   return (
-    <>
-      <OnboardingModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onComplete={handleOnboardingComplete}
-        userType={user?.user_metadata?.role as 'applicant' | 'alumni'}
-      />
-      
-      {/* Minimal UI for when the modal is closed */}
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Setting Up Your Profile</h1>
-          <p className="text-gray-600 mb-4">
-            Please complete the onboarding process to set up your profile.
-          </p>
-          {!isModalOpen && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Continue Setup
-            </button>
-          )}
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <div className="flex-grow container mx-auto py-12 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">Complete Your Profile</h1>
+            <p className="text-gray-600">
+              Help others find you by completing your profile information
+            </p>
+            
+            <div className="mt-6">
+              <Progress value={progress} className="h-2 w-full" />
+              <p className="text-sm text-gray-500 mt-2">
+                Profile completion: {Math.round(progress)}%
+              </p>
+            </div>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Information</CardTitle>
+              <CardDescription>
+                This information will be displayed on your public profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="bio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bio</FormLabel>
+                        <FormControl>
+                          <textarea 
+                            className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Tell others about yourself, your experiences, and what you can offer..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="universityId"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>University</FormLabel>
+                        <FormControl>
+                          <SearchInput
+                            value={universitySearchTerm}
+                            onChange={setUniversitySearchTerm}
+                            placeholder="Type to search universities..."
+                            options={universities}
+                            onOptionSelect={(university) => {
+                              form.setValue("universityId", university.id);
+                              setUniversitySearchTerm(university.name);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="degree"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Degree</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={isLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your degree" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {degrees.map((degree) => (
+                              <SelectItem key={degree.id} value={degree.id}>
+                                {degree.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="majorId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Major</FormLabel>
+                        <FormControl>
+                          <SearchInput
+                            value={majorSearchTerm}
+                            onChange={setMajorSearchTerm}
+                            placeholder="Type to search majors..."
+                            options={filteredMajors}
+                            onOptionSelect={(major) => {
+                              form.setValue("majorId", major.id);
+                              setMajorSearchTerm(major.name);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="activities"
+                    render={() => (
+                      <FormItem>
+                        <div className="mb-4">
+                          <FormLabel className="text-base">Activities</FormLabel>
+                          <p className="text-sm text-gray-500">
+                            Select the activities you're involved in
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          {activities.map((activity) => (
+                            <FormField
+                              key={activity.id}
+                              control={form.control}
+                              name="activities"
+                              render={({ field }) => (
+                                <FormItem
+                                  key={activity.id}
+                                  className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(activity.id)}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([...field.value, activity.id])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== activity.id
+                                              )
+                                            );
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    {activity.name}
+                                  </FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex justify-end space-x-4 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => navigate('/')}
+                    >
+                      Skip for now
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading || progress < 100}
+                      className={progress < 100 ? "opacity-70" : ""}
+                    >
+                      {isLoading ? "Saving..." : "Complete Profile"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 };
 

@@ -248,24 +248,6 @@ export type Database = {
           },
         ]
       }
-      clubs: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       content_blocks: {
         Row: {
           content: string
@@ -344,27 +326,6 @@ export type Database = {
           payment_status?: string | null
           product_type?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      greek_life: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          type: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          type: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          type?: string
         }
         Relationships: []
       }
@@ -636,120 +597,11 @@ export type Database = {
           },
         ]
       }
-      profile_clubs: {
-        Row: {
-          club_id: string
-          created_at: string | null
-          id: string
-          profile_id: string
-        }
-        Insert: {
-          club_id: string
-          created_at?: string | null
-          id?: string
-          profile_id: string
-        }
-        Update: {
-          club_id?: string
-          created_at?: string | null
-          id?: string
-          profile_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_clubs_club_id_fkey"
-            columns: ["club_id"]
-            isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profile_clubs_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profile_greek_life: {
-        Row: {
-          created_at: string | null
-          greek_life_id: string
-          id: string
-          profile_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          greek_life_id: string
-          id?: string
-          profile_id: string
-        }
-        Update: {
-          created_at?: string | null
-          greek_life_id?: string
-          id?: string
-          profile_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_greek_life_greek_life_id_fkey"
-            columns: ["greek_life_id"]
-            isOneToOne: false
-            referencedRelation: "greek_life"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profile_greek_life_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profile_sports: {
-        Row: {
-          created_at: string | null
-          id: string
-          profile_id: string
-          sport_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          profile_id: string
-          sport_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          profile_id?: string
-          sport_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_sports_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profile_sports_sport_id_fkey"
-            columns: ["sport_id"]
-            isOneToOne: false
-            referencedRelation: "sports"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           achievements: string[] | null
           bio: string | null
           created_at: string | null
-          degree: Database["public"]["Enums"]["degree_type"] | null
           featured: boolean | null
           graduation_year: number | null
           headline: string | null
@@ -770,7 +622,6 @@ export type Database = {
           achievements?: string[] | null
           bio?: string | null
           created_at?: string | null
-          degree?: Database["public"]["Enums"]["degree_type"] | null
           featured?: boolean | null
           graduation_year?: number | null
           headline?: string | null
@@ -791,7 +642,6 @@ export type Database = {
           achievements?: string[] | null
           bio?: string | null
           created_at?: string | null
-          degree?: Database["public"]["Enums"]["degree_type"] | null
           featured?: boolean | null
           graduation_year?: number | null
           headline?: string | null
@@ -1122,24 +972,6 @@ export type Database = {
         }
         Relationships: []
       }
-      sports: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       tags: {
         Row: {
           created_at: string
@@ -1279,16 +1111,6 @@ export type Database = {
       activity_type: "club" | "sport" | "study_abroad"
       booking_status: "pending" | "confirmed" | "completed" | "cancelled"
       content_block_type: "school" | "major" | "general"
-      degree_type:
-        | "ba"
-        | "bs"
-        | "ma"
-        | "ms"
-        | "mba"
-        | "phd"
-        | "md"
-        | "jd"
-        | "other"
       school_type:
         | "ivy_league"
         | "public"
@@ -1420,7 +1242,6 @@ export const Constants = {
       activity_type: ["club", "sport", "study_abroad"],
       booking_status: ["pending", "confirmed", "completed", "cancelled"],
       content_block_type: ["school", "major", "general"],
-      degree_type: ["ba", "bs", "ma", "ms", "mba", "phd", "md", "jd", "other"],
       school_type: [
         "ivy_league",
         "public",
