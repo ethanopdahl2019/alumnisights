@@ -1,10 +1,8 @@
-
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DefaultLogo from "./universities/DefaultLogo";
