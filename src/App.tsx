@@ -16,6 +16,7 @@ import MentorDashboard from '@/pages/MentorDashboard';
 import LandingPage from '@/pages/LandingPage';
 
 function App() {
+  console.log("App component rendered");
   return (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">

@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -36,8 +36,29 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileComplete = () => {
+  console.log("ProfileComplete component mounted");
   const navigate = useNavigate();
   const { user, session } = useAuth();
+  
+  // Log auth state on component mount
+  useEffect(() => {
+    console.log("Auth state in ProfileComplete:", { 
+      hasUser: !!user, 
+      hasSession: !!session,
+      userId: user?.id,
+      userMetadata: user?.user_metadata
+    });
+    
+    if (!session) {
+      console.log("No session found, redirecting to auth page");
+      navigate('/auth');
+      return;
+    }
+    
+    console.log("User type from metadata:", user?.user_metadata?.user_type);
+    console.log("Role from metadata:", user?.user_metadata?.role);
+  }, [session, user, navigate]);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [majors, setMajors] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
@@ -100,10 +121,9 @@ const ProfileComplete = () => {
     setProgress((completedSteps / 6) * 100);
   }, [watchedValues, imagePreview]);
   
-  // Redirect if not logged in
+  // Load form data
   useEffect(() => {
     if (!session) {
-      navigate('/auth');
       return;
     }
     
@@ -127,11 +147,14 @@ const ProfileComplete = () => {
     // Load majors, activities, and Greek Life options
     const loadFormData = async () => {
       try {
+        console.log("Loading profile form data");
         const [majorsData, activitiesData, greekLifeData] = await Promise.all([
           getMajors(),
           getActivities(),
           getGreekLifeOptions ? getGreekLifeOptions() : [] // Use if available, otherwise empty array
         ]);
+        
+        console.log(`Loaded ${majorsData?.length || 0} majors, ${activitiesData?.length || 0} activities`);
         
         setMajors(majorsData);
         setActivities(activitiesData);
@@ -177,7 +200,11 @@ const ProfileComplete = () => {
   };
   
   const onSubmit = async (values: ProfileFormValues) => {
-    if (!user) return;
+    console.log("Profile form submitted:", values);
+    if (!user) {
+      console.error("No user found during form submission");
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -283,6 +310,9 @@ const ProfileComplete = () => {
       toast("Profile complete! Your profile has been set up successfully.");
       
       // Redirect based on user role
+      const isMentor = user?.user_metadata?.user_type === 'mentor' || user?.user_metadata?.role === 'alumni';
+      console.log("Is mentor:", isMentor, "Redirecting to dashboard");
+      
       if (isMentor) {
         navigate('/mentor-dashboard');
       } else {
