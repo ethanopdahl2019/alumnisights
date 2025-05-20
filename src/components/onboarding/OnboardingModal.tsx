@@ -11,6 +11,7 @@ import SportsStep from './steps/SportsStep';
 import ClubsStep from './steps/ClubsStep';
 import GreekLifeStep from './steps/GreekLifeStep';
 import BioStep from './steps/BioStep';
+import AvatarStep from './steps/AvatarStep';
 import PricingStep from './steps/PricingStep';
 import SummaryStep from './steps/SummaryStep';
 
@@ -27,6 +28,7 @@ const OnboardingModal = ({ isOpen, onClose, onComplete, userType }: OnboardingMo
     { id: 'school', title: 'School' },
     { id: 'major', title: 'Major' },
     { id: 'degree', title: 'Degree' },
+    { id: 'avatar', title: 'Profile Picture' },
     { id: 'sports', title: 'Sports' },
     { id: 'clubs', title: 'Clubs & Activities' },
     { id: 'greekLife', title: 'Greek Life' },
@@ -74,6 +76,8 @@ const OnboardingModal = ({ isOpen, onClose, onComplete, userType }: OnboardingMo
         return <MajorStep onNext={handleNext} onBack={handleBack} initialData={onboardingData} />;
       case 'degree':
         return <DegreeStep onNext={handleNext} onBack={handleBack} initialData={onboardingData} />;
+      case 'avatar':
+        return <AvatarStep onNext={handleNext} onBack={handleBack} initialData={onboardingData} />;
       case 'sports':
         return <SportsStep onNext={handleNext} onBack={handleBack} initialData={onboardingData} />;
       case 'clubs':

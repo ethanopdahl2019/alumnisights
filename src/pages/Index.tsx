@@ -5,6 +5,7 @@ import { ArrowRight, GraduationCap, Users, Building, Star } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
+import HowItWorks from '@/components/HowItWorks';
 import FeaturedSchools from '@/components/FeaturedSchools';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -15,6 +16,9 @@ const Index = () => {
       
       <main>
         <Hero />
+        
+        {/* How It Works Section */}
+        <HowItWorks />
         
         {/* Feature Schools Section with scroll hijack effect */}
         <FeaturedSchools />

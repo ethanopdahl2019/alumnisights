@@ -57,6 +57,7 @@ const ProfileComplete = () => {
           price_15_min: data.pricing?.price_15_min || null,
           price_30_min: data.pricing?.price_30_min || null,
           price_60_min: data.pricing?.price_60_min || null,
+          image: data.image || null,
         })
         .select('id')
         .single();

@@ -57,4 +57,5 @@ export interface OnboardingData {
   greekLife?: string[];
   bio?: string;
   pricing?: PricingInfo;
+  image?: string | null;
 }
