@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import { HelmetProvider } from "react-helmet-async";
@@ -97,7 +98,7 @@ function App() {
                 <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
                 <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
                 
-                {/* Add AlumniOnboarding route */}
+                {/* Alumni Onboarding Route */}
                 <Route path="/alumni-onboarding" element={<AlumniOnboarding />} />
               </Routes>
             </AuthProvider>
