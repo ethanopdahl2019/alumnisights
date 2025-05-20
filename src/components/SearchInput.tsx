@@ -10,6 +10,7 @@ interface SearchInputProps {
   className?: string;
   options?: Array<{ id: string; name: string }>;
   onOptionSelect?: (option: { id: string; name: string }) => void;
+  isLoading?: boolean;
 }
 
 const SearchInput = ({ 
@@ -18,7 +19,8 @@ const SearchInput = ({
   placeholder = "Search...", 
   className = "",
   options = [],
-  onOptionSelect
+  onOptionSelect,
+  isLoading = false
 }: SearchInputProps) => {
   const [showOptions, setShowOptions] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,6 +57,12 @@ const SearchInput = ({
         className={`pl-10 ${className}`}
         onFocus={() => value && setShowOptions(true)}
       />
+      
+      {isLoading && (
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       
       {showOptions && filteredOptions.length > 0 && (
         <div className="absolute z-20 w-full bg-white mt-1 rounded-md border border-gray-200 shadow-md max-h-60 overflow-auto">
