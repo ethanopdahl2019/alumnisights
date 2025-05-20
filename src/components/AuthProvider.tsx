@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!profile || !profile.role) {
         setNeedsRoleSelection(true);
         setNeedsProfileCompletion(false);
+        setUserRole(null);
       } else {
         setNeedsRoleSelection(false);
         setUserRole(profile.role);
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error("[AuthProvider] Error checking user profile:", error);
       setNeedsRoleSelection(true); // Default to needing role selection if there's an error
+      setUserRole(null);
     }
   };
 
@@ -73,8 +75,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = onAuthStateChange((event, session) => {
       console.log("[AuthProvider] Auth state changed:", event, session?.user?.email);
-      console.log("[AuthProvider] User metadata:", session?.user?.user_metadata);
-      console.log("[AuthProvider] Event type:", event);
       
       setSession(session);
       
@@ -84,9 +84,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Check admin status whenever the user changes
       if (currentUser) {
         const adminStatus = isAdmin(currentUser);
-        console.log("[AuthProvider] Admin status:", adminStatus);
-        console.log("[AuthProvider] User role:", currentUser.user_metadata?.role);
-        console.log("[AuthProvider] User type:", currentUser.user_metadata?.user_type);
         setIsUserAdmin(adminStatus);
         
         // Check if user has role and completed profile
@@ -106,7 +103,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     getCurrentSession()
       .then(session => {
         console.log("[AuthProvider] Got existing session:", session?.user?.email);
-        console.log("[AuthProvider] User metadata:", session?.user?.user_metadata);
         setSession(session);
         if (session) {
           return getCurrentUser();
@@ -116,7 +112,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .then(user => {
         console.log("[AuthProvider] Got current user:", user?.email);
         if (user) {
-          console.log("[AuthProvider] User metadata:", user.user_metadata);
           setUser(user);
           setIsUserAdmin(isAdmin(user));
           

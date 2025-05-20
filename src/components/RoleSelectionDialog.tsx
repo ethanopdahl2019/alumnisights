@@ -37,16 +37,13 @@ const RoleSelectionDialog = ({ isOpen, onClose }: RoleSelectionDialogProps) => {
       
       // Handle navigation based on role
       if (selectedRole === 'alumni') {
-        navigate('/profile-complete');
+        navigate('/alumni-profile-complete');
+        toast(`You've been registered as a student/alumni`);
       } else {
-        if (selectedRole === 'applicant') {
-          navigate('/applicant-profile-complete');
-        } else {
-          navigate('/');
-        }
+        navigate('/applicant-dashboard');
+        toast(`You've been registered as an applicant`);
       }
       
-      toast(`You've been registered as ${selectedRole === 'alumni' ? 'a student/alumni' : 'an applicant'}`);
       onClose();
     } catch (error: any) {
       console.error('[RoleSelectionDialog] Error updating role:', error);

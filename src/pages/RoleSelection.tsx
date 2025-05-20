@@ -29,7 +29,7 @@ const RoleSelection = () => {
         // If user already has a role, redirect to the appropriate page
         if (data?.role) {
           if (data.role === 'alumni') {
-            navigate('/mentor-dashboard');
+            navigate('/alumni-dashboard');
           } else if (data.role === 'applicant') {
             navigate('/applicant-dashboard');
           } else {
