@@ -14,8 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
@@ -37,11 +35,16 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileComplete = () => {
-  console.log("ProfileComplete component rendering");
+  console.log("[ProfileComplete] Component rendering");
   const navigate = useNavigate();
   const { user, session } = useAuth();
   
-  console.log("Auth state in ProfileComplete:", { user, session });
+  console.log("[ProfileComplete] Auth state:", { 
+    userExists: !!user, 
+    userEmail: user?.email, 
+    sessionExists: !!session,
+    userMetadata: user?.user_metadata 
+  });
   
   const [isLoading, setIsLoading] = useState(false);
   const [majors, setMajors] = useState<any[]>([]);
@@ -79,6 +82,7 @@ const ProfileComplete = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("[ProfileComplete] Image selected:", file.name);
       setImageFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -102,23 +106,25 @@ const ProfileComplete = () => {
     if (imagePreview) completedSteps++;
     
     // Calculate progress based on total possible steps (including image upload)
-    setProgress((completedSteps / 6) * 100);
+    const progressValue = (completedSteps / 6) * 100;
+    setProgress(progressValue);
+    console.log("[ProfileComplete] Form progress:", progressValue);
   }, [watchedValues, imagePreview]);
   
   // Redirect if not logged in
   useEffect(() => {
-    console.log("ProfileComplete auth check running");
+    console.log("[ProfileComplete] Auth check running");
     if (!user && !session) {
-      console.log("No user or session found, redirecting to auth page");
+      console.log("[ProfileComplete] No user or session found, redirecting to auth page");
       navigate('/auth');
       return;
     } else {
-      console.log("User is authenticated:", user?.email);
+      console.log("[ProfileComplete] User is authenticated:", user?.email);
     }
     
     // Load universities from the insights page data
     const loadUniversities = () => {
-      console.log("Loading universities");
+      console.log("[ProfileComplete] Loading universities");
       const universitiesByLetter = getUniversitiesByLetter();
       const allUniversities: any[] = [];
       
@@ -132,12 +138,12 @@ const ProfileComplete = () => {
       // Sort universities by name
       allUniversities.sort((a, b) => a.name.localeCompare(b.name));
       setUniversities(allUniversities);
-      console.log("Universities loaded:", allUniversities.length);
+      console.log("[ProfileComplete] Universities loaded:", allUniversities.length);
     };
     
     // Load majors, activities, and Greek Life options
     const loadFormData = async () => {
-      console.log("Loading form data (majors, activities, etc.)");
+      console.log("[ProfileComplete] Loading form data (majors, activities, etc.)");
       try {
         const [majorsData, activitiesData, greekLifeData] = await Promise.all([
           getMajors(),
@@ -145,7 +151,7 @@ const ProfileComplete = () => {
           getGreekLifeOptions ? getGreekLifeOptions() : [] // Use if available, otherwise empty array
         ]);
         
-        console.log("Data loaded:", { 
+        console.log("[ProfileComplete] Data loaded:", { 
           majorsCount: majorsData.length, 
           activitiesCount: activitiesData.length,
           greekLifeCount: greekLifeData?.length || 0
@@ -156,7 +162,7 @@ const ProfileComplete = () => {
         setGreekLifeOptions(greekLifeData || []);
         loadUniversities();
       } catch (error) {
-        console.error('Error loading form data:', error);
+        console.error('[ProfileComplete] Error loading form data:', error);
         toast("Failed to load profile data. Please try again later.");
       }
     };
@@ -169,7 +175,7 @@ const ProfileComplete = () => {
     if (!imageFile) return null;
     
     try {
-      console.log("Uploading profile image");
+      console.log("[ProfileComplete] Uploading profile image");
       const fileExt = imageFile.name.split('.').pop();
       const filePath = `${userId}/profile.${fileExt}`;
       
@@ -187,10 +193,10 @@ const ProfileComplete = () => {
         .from('profile-images')
         .getPublicUrl(data.path);
       
-      console.log("Image uploaded successfully:", publicUrlData.publicUrl);
+      console.log("[ProfileComplete] Image uploaded successfully:", publicUrlData.publicUrl);
       return publicUrlData.publicUrl;
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('[ProfileComplete] Error uploading image:', error);
       toast("Failed to upload your profile image.");
       return null;
     }
@@ -198,13 +204,13 @@ const ProfileComplete = () => {
   
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) {
-      console.error("Cannot complete profile - no user found");
+      console.error("[ProfileComplete] Cannot complete profile - no user found");
       toast("You need to be logged in to complete your profile.");
       navigate('/auth');
       return;
     }
     
-    console.log("Starting profile submission:", values);
+    console.log("[ProfileComplete] Starting profile submission:", values);
     setIsLoading(true);
     try {
       // Upload profile image if one is selected
@@ -222,7 +228,7 @@ const ProfileComplete = () => {
       }
       
       // Create profile
-      console.log("Creating profile for user:", user.id);
+      console.log("[ProfileComplete] Creating profile for user:", user.id);
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -237,7 +243,7 @@ const ProfileComplete = () => {
       if (profileError) throw profileError;
       
       // Get the newly created profile
-      console.log("Getting created profile");
+      console.log("[ProfileComplete] Getting created profile");
       const { data: profileData, error: fetchError } = await supabase
         .from('profiles')
         .select('id')
@@ -246,7 +252,7 @@ const ProfileComplete = () => {
       
       if (fetchError) throw fetchError;
       
-      console.log("Profile created successfully:", profileData);
+      console.log("[ProfileComplete] Profile created successfully:", profileData);
       
       // Add activities to profile
       const activityInserts = values.activities.map(activityId => ({
@@ -255,7 +261,7 @@ const ProfileComplete = () => {
       }));
       
       if (activityInserts.length > 0) {
-        console.log("Adding activities to profile:", activityInserts.length);
+        console.log("[ProfileComplete] Adding activities to profile:", activityInserts.length);
         const { error: activitiesError } = await supabase
           .from('profile_activities')
           .insert(activityInserts);
@@ -265,7 +271,7 @@ const ProfileComplete = () => {
       
       // Add Greek life affiliation if selected
       if (values.greekLife && values.greekLife !== 'none') {
-        console.log("Adding Greek life affiliation:", values.greekLife);
+        console.log("[ProfileComplete] Adding Greek life affiliation:", values.greekLife);
         try {
           const { error: greekLifeError } = await supabase
             .from('profile_greek_life')
@@ -276,7 +282,7 @@ const ProfileComplete = () => {
           
           if (greekLifeError) throw greekLifeError;
         } catch (error) {
-          console.error('Error adding Greek life affiliation:', error);
+          console.error('[ProfileComplete] Error adding Greek life affiliation:', error);
           // Continue even if Greek life association fails
         }
       }
@@ -284,10 +290,10 @@ const ProfileComplete = () => {
       toast("Profile complete! Your profile has been set up successfully.");
       
       // Redirect to profile page or appropriate dashboard
-      console.log("Redirecting to alumni dashboard");
-      navigate('/alumni-dashboard');
+      console.log("[ProfileComplete] Redirecting to alumni dashboard");
+      navigate('/mentor-dashboard');
     } catch (error: any) {
-      console.error('Error completing profile:', error);
+      console.error('[ProfileComplete] Error completing profile:', error);
       toast("Failed to complete your profile: " + (error.message || "Please try again."));
     } finally {
       setIsLoading(false);

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -11,149 +12,29 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { signUp, signIn, isMentor } from '@/services/auth';
-import { getAllUniversities, UniversityData } from '@/pages/insights/universities/universities-data';
-import SearchInput from '@/components/SearchInput';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 
-// Sample major data for registration
-const MAJORS = [
-  { id: "cs", name: "Computer Science" },
-  { id: "neuro", name: "Neuroscience" },
-  { id: "ph", name: "Public Health" },
-  { id: "mech", name: "Mechanical Engineering" },
-  { id: "bio", name: "Biomedical Engineering" },
-  { id: "econ", name: "Economics" },
-  { id: "psych", name: "Psychology" },
-  { id: "polisci", name: "Political Science" },
-  { id: "biochem", name: "Biochemistry" },
-  { id: "molbio", name: "Molecular Biology" },
-  { id: "socio", name: "Sociology" },
-  { id: "env", name: "Environmental Science" },
-  { id: "stats", name: "Statistics" },
-  { id: "phys", name: "Physics" },
-  { id: "chem", name: "Chemistry" },
-  { id: "ee", name: "Electrical Engineering" },
-  { id: "ai", name: "Artificial Intelligence" },
-  { id: "genetics", name: "Genetics" },
-  { id: "anthro", name: "Anthropology" },
-  { id: "edpolicy", name: "Education Policy" },
-  { id: "finance", name: "Finance" },
-  { id: "ling", name: "Linguistics" },
-  { id: "cogsci", name: "Cognitive Science" },
-  { id: "healthinfo", name: "Health Informatics" },
-  { id: "urban", name: "Urban Planning" },
-  { id: "busadmin", name: "Business Administration" },
-  { id: "acct", name: "Accounting" },
-  { id: "mktg", name: "Marketing" },
-  { id: "scm", name: "Supply Chain Management" },
-  { id: "is", name: "Information Systems" },
-  { id: "mgmt", name: "Management Science" },
-  { id: "entrep", name: "Entrepreneurship" },
-  { id: "ir", name: "International Relations" },
-  { id: "phil", name: "Philosophy" },
-  { id: "hist", name: "History" },
-  { id: "eng", name: "English" },
-  { id: "compli", name: "Comparative Literature" },
-  { id: "reli", name: "Religious Studies" },
-  { id: "arthistory", name: "Art History" },
-  { id: "studioart", name: "Studio Art" },
-  { id: "gd", name: "Graphic Design" },
-  { id: "film", name: "Film and Media Studies" },
-  { id: "journ", name: "Journalism" },
-  { id: "comm", name: "Communications" },
-  { id: "theater", name: "Theater and Performance Studies" },
-  { id: "music", name: "Music" },
-  { id: "arch", name: "Architecture" },
-  { id: "ce", name: "Civil Engineering" },
-  { id: "ie", name: "Industrial Engineering" },
-  { id: "cheme", name: "Chemical Engineering" },
-  { id: "aero", name: "Aerospace Engineering" },
-  { id: "mse", name: "Materials Science and Engineering" },
-  { id: "datascience", name: "Data Science" },
-  { id: "cybersec", name: "Cybersecurity" },
-  { id: "robotics", name: "Robotics" },
-  { id: "applied-math", name: "Applied Mathematics" },
-  { id: "pure-math", name: "Pure Mathematics" },
-  { id: "actuary", name: "Actuarial Science" },
-  { id: "marine-bio", name: "Marine Biology" },
-  { id: "eco-evo", name: "Ecology and Evolutionary Biology" },
-  { id: "geo", name: "Geology" },
-  { id: "geog", name: "Geography" },
-  { id: "astro", name: "Astronomy" },
-  { id: "climate", name: "Climate Science" },
-  { id: "ag", name: "Agricultural Science" },
-  { id: "nutrition", name: "Nutrition" },
-  { id: "nursing", name: "Nursing" },
-  { id: "ot", name: "Occupational Therapy" },
-  { id: "pt", name: "Physical Therapy" },
-  { id: "kinesio", name: "Kinesiology" },
-  { id: "sports", name: "Sports Management" },
-  { id: "crim", name: "Criminology" },
-  { id: "law", name: "Law and Society" },
-  { id: "gender", name: "Gender Studies" },
-  { id: "ethnic", name: "Ethnic Studies" },
-  { id: "afam", name: "African American Studies" },
-  { id: "latinx", name: "Latinx Studies" },
-  { id: "asian", name: "Asian American Studies" },
-  { id: "native", name: "Native American Studies" },
-  { id: "mideast", name: "Middle Eastern Studies" },
-  { id: "jewish", name: "Jewish Studies" },
-  { id: "latam", name: "Latin American Studies" },
-  { id: "dev", name: "Development Studies" },
-  { id: "peace", name: "Peace and Conflict Studies" },
-  { id: "globalhealth", name: "Global Health" },
-  { id: "policy", name: "Public Policy" },
-  { id: "socialwork", name: "Social Work" },
-  { id: "humdev", name: "Human Development" },
-  { id: "ed", name: "Education" },
-  { id: "ece", name: "Early Childhood Education" },
-  { id: "sped", name: "Special Education" },
-  { id: "speech", name: "Speech and Hearing Sciences" },
-  { id: "asl", name: "American Sign Language" },
-  { id: "gamedesign", name: "Game Design" },
-  { id: "ixd", name: "Interaction Design" },
-  { id: "hci", name: "Human-Computer Interaction" }
-];
-
-// Define form schemas
+// Define form schemas with simplified requirements
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  password: z.string().min(1, { message: 'Password is required' }),
 });
 
 const registerFormSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required' }),
   lastName: z.string().min(1, { message: 'Last name is required' }),
   email: z.string().email({ message: 'Please enter a valid email' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
-  confirmPassword: z.string().min(8, { message: 'Please confirm your password' }),
+  password: z.string().min(1, { message: 'Password is required' }),
   userType: z.enum(['student', 'mentor']),
-  schoolId: z.string().optional(),
-  majorId: z.string().optional(),
-  degree: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 type RegisterFormValues = z.infer<typeof registerFormSchema>;
 
 const Auth = () => {
+  console.log("[Auth] Component rendering");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
   const [userType, setUserType] = useState<'student' | 'mentor'>('student');
-  const [universities, setUniversities] = useState<UniversityData[]>([]);
-  const [selectedUniversity, setSelectedUniversity] = useState<string>("");
-  const [selectedMajor, setSelectedMajor] = useState<string>("");
-  const [universitySearchTerm, setUniversitySearchTerm] = useState<string>("");
-  const [majorSearchTerm, setMajorSearchTerm] = useState<string>("");
   const navigate = useNavigate();
   
   // Login form
@@ -165,7 +46,7 @@ const Auth = () => {
     },
   });
   
-  // Register form
+  // Register form (simplified)
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
@@ -173,64 +54,48 @@ const Auth = () => {
       lastName: '',
       email: '',
       password: '',
-      confirmPassword: '',
       userType: 'student',
-      schoolId: '',
-      majorId: '',
-      degree: '',
     },
   });
 
-  // Load universities from Supabase
-  useEffect(() => {
-    const fetchUniversities = async () => {
-      try {
-        const data = await getAllUniversities();
-        setUniversities(data);
-      } catch (error) {
-        console.error("Failed to load universities:", error);
-      }
-    };
-    
-    fetchUniversities();
-  }, []);
-
-  // Filter majors based on search term
-  const filteredMajors = MAJORS.filter(major => 
-    major.name.toLowerCase().includes(majorSearchTerm.toLowerCase())
-  ).slice(0, 5);
-
   // Handle login
   const onLoginSubmit = async (values: LoginFormValues) => {
+    console.log("[Auth] Login submission started with email:", values.email);
     setIsLoading(true);
     try {
       const { email, password } = values;
-      await signIn({ email, password });
-      toast("Login successful", {
-        description: "Welcome back!"
-      });
-      navigate('/student-dashboard');
+      const userData = await signIn({ email, password });
+      console.log("[Auth] Login successful for:", email, userData);
+      
+      toast("Login successful");
+      
+      // Redirect based on user role
+      if (isMentor(userData.user)) {
+        console.log("[Auth] User is a mentor, redirecting to mentor dashboard");
+        navigate('/mentor-dashboard');
+      } else {
+        console.log("[Auth] User is a student, redirecting to student dashboard");
+        navigate('/student-dashboard');
+      }
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast("Login failed", {
-        description: error.message || "Failed to login. Please try again."
-      });
+      console.error('[Auth] Login error:', error);
+      toast("Login failed: " + (error.message || "Failed to login. Please try again."));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle register
+  // Handle register with simplified flow
   const onRegisterSubmit = async (values: RegisterFormValues) => {
+    console.log("[Auth] Registration started:", values);
     setIsLoading(true);
-    console.log("Registration form submitted:", values);
     try {
       const { email, password, firstName, lastName, userType } = values;
 
       // Map the userType to the correct role
       const role = userType === 'mentor' ? 'alumni' : 'applicant';
       
-      console.log(`Registering user as ${userType} with role ${role}`);
+      console.log(`[Auth] Registering user as ${userType} with role ${role}`);
 
       const userData = await signUp({ 
         email, 
@@ -240,27 +105,33 @@ const Auth = () => {
         metadata: {
           user_type: userType,
           role: role,
-          school_id: selectedUniversity || null,
-          major_id: selectedMajor || null,
-          degree: values.degree || null
         }
       });
 
+      console.log("[Auth] Registration successful, user data:", userData);
       toast("Registration successful");
 
       // Sign in the user after registration
+      console.log("[Auth] Signing in after registration");
       await signIn({ email, password });
+      console.log("[Auth] Sign-in after registration completed");
       
-      // Check user type and redirect accordingly
+      // Check user type and redirect accordingly with timeout to ensure auth state is updated
       if (userType === "mentor") {
-        console.log("User is a mentor, redirecting to profile completion");
-        navigate('/profile-complete');
+        console.log("[Auth] User is a mentor, redirecting to profile completion");
+        setTimeout(() => {
+          console.log("[Auth] Executing delayed redirect to profile completion");
+          navigate('/profile-complete');
+        }, 500);
       } else {
-        console.log("User is a student, redirecting to dashboard");
-        navigate('/student-dashboard');
+        console.log("[Auth] User is a student, redirecting to dashboard");
+        setTimeout(() => {
+          console.log("[Auth] Executing delayed redirect to student dashboard");
+          navigate('/student-dashboard');
+        }, 500);
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('[Auth] Registration error:', error);
       toast("Registration failed: " + (error.message || "Failed to create account"));
     } finally {
       setIsLoading(false);
@@ -268,6 +139,7 @@ const Auth = () => {
   };
 
   const handleUserTypeChange = (value: string) => {
+    console.log("[Auth] User type changed to:", value);
     setUserType(value as 'student' | 'mentor');
     registerForm.setValue('userType', value as 'student' | 'mentor');
   };
@@ -360,32 +232,17 @@ const Auth = () => {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-password">Password</Label>
-                    <Input 
-                      id="reg-password" 
-                      type="password" 
-                      placeholder="••••••••" 
-                      {...registerForm.register('password')} 
-                    />
-                    {registerForm.formState.errors.password && (
-                      <p className="text-red-500 text-sm">{registerForm.formState.errors.password.message}</p>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input 
-                      id="confirmPassword" 
-                      type="password" 
-                      placeholder="••••••••" 
-                      {...registerForm.register('confirmPassword')} 
-                    />
-                    {registerForm.formState.errors.confirmPassword && (
-                      <p className="text-red-500 text-sm">{registerForm.formState.errors.confirmPassword.message}</p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-password">Password</Label>
+                  <Input 
+                    id="reg-password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    {...registerForm.register('password')} 
+                  />
+                  {registerForm.formState.errors.password && (
+                    <p className="text-red-500 text-sm">{registerForm.formState.errors.password.message}</p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -405,11 +262,6 @@ const Auth = () => {
                     </div>
                   </RadioGroup>
                 </div>
-
-                {/* Hidden fields to store university and major information - no longer required */}
-                <input type="hidden" {...registerForm.register('schoolId')} value={selectedUniversity} />
-                <input type="hidden" {...registerForm.register('majorId')} value={selectedMajor} />
-                <input type="hidden" {...registerForm.register('degree')} />
                 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Creating account...' : 'Create account'}

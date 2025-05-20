@@ -26,11 +26,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
-    console.log("Setting up auth state listener");
+    console.log("[AuthProvider] Setting up auth state listener");
     
     // Set up auth state listener
     const { data: { subscription } } = onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email);
+      console.log("[AuthProvider] Auth state changed:", event, session?.user?.email);
+      console.log("[AuthProvider] User metadata:", session?.user?.user_metadata);
+      
       setSession(session);
       
       const currentUser = session?.user ?? null;
@@ -38,7 +40,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Check admin status whenever the user changes
       if (currentUser) {
-        setIsUserAdmin(isAdmin(currentUser));
+        const adminStatus = isAdmin(currentUser);
+        console.log("[AuthProvider] Admin status:", adminStatus);
+        setIsUserAdmin(adminStatus);
       } else {
         setIsUserAdmin(false);
       }
@@ -47,9 +51,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     // Check for existing session
+    console.log("[AuthProvider] Checking for existing session");
     getCurrentSession()
       .then(session => {
-        console.log("Got existing session:", session?.user?.email);
+        console.log("[AuthProvider] Got existing session:", session?.user?.email);
+        console.log("[AuthProvider] User metadata:", session?.user?.user_metadata);
         setSession(session);
         if (session) {
           return getCurrentUser();
@@ -57,20 +63,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       })
       .then(user => {
-        console.log("Got current user:", user?.email);
-        setUser(user);
+        console.log("[AuthProvider] Got current user:", user?.email);
         if (user) {
+          console.log("[AuthProvider] User metadata:", user.user_metadata);
+          setUser(user);
           setIsUserAdmin(isAdmin(user));
         }
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error getting session or user:", error);
+        console.error("[AuthProvider] Error getting session or user:", error);
         setLoading(false);
       });
 
     return () => {
-      console.log("Unsubscribing from auth state changes");
+      console.log("[AuthProvider] Unsubscribing from auth state changes");
       subscription.unsubscribe();
     };
   }, []);
