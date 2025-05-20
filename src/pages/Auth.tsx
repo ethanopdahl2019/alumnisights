@@ -85,7 +85,7 @@ const Auth = () => {
     }
   };
 
-  // Handle register with simplified flow
+  // Handle register with simplified flow and immediate redirect
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     console.log("[Auth] Registration started:", values);
     setIsLoading(true);
@@ -109,26 +109,21 @@ const Auth = () => {
       });
 
       console.log("[Auth] Registration successful, user data:", userData);
-      toast("Registration successful");
-
+      
       // Sign in the user after registration
       console.log("[Auth] Signing in after registration");
       await signIn({ email, password });
       console.log("[Auth] Sign-in after registration completed");
       
-      // Check user type and redirect accordingly with timeout to ensure auth state is updated
+      toast("Registration successful");
+
+      // Immediate redirect based on user type
       if (userType === "mentor") {
-        console.log("[Auth] User is a mentor, redirecting to profile completion");
-        setTimeout(() => {
-          console.log("[Auth] Executing delayed redirect to profile completion");
-          navigate('/profile-complete');
-        }, 500);
+        console.log("[Auth] User is a mentor, immediately redirecting to profile completion");
+        navigate('/profile-complete');
       } else {
-        console.log("[Auth] User is a student, redirecting to dashboard");
-        setTimeout(() => {
-          console.log("[Auth] Executing delayed redirect to student dashboard");
-          navigate('/student-dashboard');
-        }, 500);
+        console.log("[Auth] User is a student, immediately redirecting to dashboard");
+        navigate('/student-dashboard');
       }
     } catch (error: any) {
       console.error('[Auth] Registration error:', error);

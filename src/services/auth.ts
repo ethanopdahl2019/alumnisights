@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
@@ -28,6 +27,8 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
   }
 
   console.log("[auth.ts] Signup successful:", data);
+  console.log("[auth.ts] User role in metadata:", data.user?.user_metadata?.role);
+  console.log("[auth.ts] User type in metadata:", data.user?.user_metadata?.user_type);
   return data;
 }
 
@@ -46,6 +47,8 @@ export async function signIn({ email, password }: UserCredentials) {
 
   console.log("[auth.ts] Signin successful for:", email);
   console.log("[auth.ts] User metadata:", data.user?.user_metadata);
+  console.log("[auth.ts] User role:", data.user?.user_metadata?.role);
+  console.log("[auth.ts] User type:", data.user?.user_metadata?.user_type);
   return data;
 }
 
@@ -109,6 +112,7 @@ export function isStudent(user: any) {
 export function isMentor(user: any) {
   const result = getUserRole(user) === 'mentor' || getUserRole(user) === 'alumni';
   console.log("[auth.ts] isMentor check:", result);
+  console.log("[auth.ts] User metadata for mentor check:", user?.user_metadata);
   return result;
 }
 

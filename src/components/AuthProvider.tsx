@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = onAuthStateChange((event, session) => {
       console.log("[AuthProvider] Auth state changed:", event, session?.user?.email);
       console.log("[AuthProvider] User metadata:", session?.user?.user_metadata);
+      console.log("[AuthProvider] Event type:", event);
       
       setSession(session);
       
@@ -42,6 +43,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (currentUser) {
         const adminStatus = isAdmin(currentUser);
         console.log("[AuthProvider] Admin status:", adminStatus);
+        console.log("[AuthProvider] User role:", currentUser.user_metadata?.role);
+        console.log("[AuthProvider] User type:", currentUser.user_metadata?.user_type);
         setIsUserAdmin(adminStatus);
       } else {
         setIsUserAdmin(false);
