@@ -10,19 +10,19 @@ const testimonials = [
     id: '1',
     author_name: 'Sarah Johnson',
     rating: 5,
-    comment: 'My mentor gave me incredible insights about Duke's basketball program that I couldn't find anywhere else. Their advice on the application process was invaluable.',
+    comment: "My mentor gave me incredible insights about Duke's basketball program that I couldn't find anywhere else. Their advice on the application process was invaluable.",
   },
   {
     id: '2',
     author_name: 'Michael Chang',
     rating: 5,
-    comment: 'I was on the fence about which school to choose, but after speaking with an alumni mentor, I had a much clearer picture of the culture and opportunities.',
+    comment: "I was on the fence about which school to choose, but after speaking with an alumni mentor, I had a much clearer picture of the culture and opportunities.",
   },
   {
     id: '3',
     author_name: 'Leila Rodriguez',
     rating: 4,
-    comment: 'The perspective I gained from my mentor chat helped me craft an application that truly stood out. They shared experiences that no guidebook could provide.',
+    comment: "The perspective I gained from my mentor chat helped me craft an application that truly stood out. They shared experiences that no guidebook could provide.",
   }
 ];
 
