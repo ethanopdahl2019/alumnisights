@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -207,17 +206,15 @@ const Auth = () => {
     try {
       const { email, password } = values;
       await signIn({ email, password });
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
+      toast("Login successful", {
+        description: "Welcome back!"
       });
       navigate('/student-dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
-      toast({
-        title: "Login failed",
+      toast("Login failed", {
         description: error.message || "Failed to login. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -231,7 +228,7 @@ const Auth = () => {
       const { email, password, firstName, lastName, userType } = values;
 
       // Map the userType to the correct role
-      const role = userType === 'mentor' ? 'alumni' : 'student';
+      const role = userType === 'mentor' ? 'alumni' : 'applicant';
 
       await signUp({ 
         email, 
@@ -247,9 +244,8 @@ const Auth = () => {
         }
       });
 
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created. Please check your email to verify your account.",
+      toast("Registration successful", {
+        description: "Your account has been created. Please check your email to verify your account."
       });
 
       await signIn({ email, password });
@@ -262,10 +258,9 @@ const Auth = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast({
-        title: "Registration failed",
+      toast("Registration failed", {
         description: error.message || "Failed to create account. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);

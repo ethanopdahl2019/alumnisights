@@ -5,7 +5,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import RegistrationPreview from "@/components/mentor/RegistrationPreview";
 import { useAuth } from "@/components/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -57,11 +56,17 @@ const RegistrationControl = () => {
               </TabsList>
               
               <TabsContent value="student">
-                <RegistrationPreview registrationType="student" />
+                <div className="p-4 border rounded-md">
+                  <h3 className="text-lg font-medium mb-2">Student Registration Form Preview</h3>
+                  <p>Student registration form preview would appear here.</p>
+                </div>
               </TabsContent>
               
               <TabsContent value="mentor">
-                <RegistrationPreview registrationType="mentor" />
+                <div className="p-4 border rounded-md">
+                  <h3 className="text-lg font-medium mb-2">Mentor Registration Form Preview</h3>
+                  <p>Mentor registration form preview would appear here.</p>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>
