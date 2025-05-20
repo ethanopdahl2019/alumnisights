@@ -34,6 +34,8 @@ import GraduateAdmissions from './pages/insights/GraduateAdmissions';
 import IndustryInsights from './pages/insights/IndustryInsights';
 import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
 import ContentProgress from './pages/admin/ContentProgress';
+import AlumniProfileComplete from './pages/AlumniProfileComplete';
+import ApplicantProfileComplete from './pages/ApplicantProfileComplete';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -61,6 +63,8 @@ function App() {
                 <Route path="/mentor-chat" element={<MentorChat />} />
                 <Route path="/alumni/:id" element={<AlumniProfilePage />} />
                 <Route path="/profile-complete" element={<ProfileComplete />} />
+                <Route path="/alumni-profile-complete" element={<AlumniProfileComplete />} />
+                <Route path="/applicant-profile-complete" element={<ApplicantProfileComplete />} />
                 <Route path="/landing" element={<LandingPage />} />
                 <Route path="/booking/:id/:productId" element={<BookingPage />} />
                 <Route path="/booking-success" element={<BookingSuccessPage />} />

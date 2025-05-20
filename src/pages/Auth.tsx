@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { signUp, signIn, isMentor } from '@/services/auth';
+import { signUp, signIn } from '@/services/auth';
 
 // Define form schemas with simplified requirements
 const loginFormSchema = z.object({
@@ -24,7 +24,7 @@ const registerFormSchema = z.object({
   lastName: z.string().min(1, { message: 'Last name is required' }),
   email: z.string().email({ message: 'Please enter a valid email' }),
   password: z.string().min(1, { message: 'Password is required' }),
-  userType: z.enum(['student', 'mentor']),
+  userType: z.enum(['applicant', 'alumni']),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -34,7 +34,7 @@ const Auth = () => {
   console.log("[Auth] Component rendering");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [userType, setUserType] = useState<'student' | 'mentor'>('student');
+  const [userType, setUserType] = useState<'applicant' | 'alumni'>('applicant');
   const navigate = useNavigate();
   
   // Login form
@@ -46,7 +46,7 @@ const Auth = () => {
     },
   });
   
-  // Register form (simplified)
+  // Register form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
@@ -54,7 +54,7 @@ const Auth = () => {
       lastName: '',
       email: '',
       password: '',
-      userType: 'student',
+      userType: 'applicant',
     },
   });
 
@@ -70,12 +70,18 @@ const Auth = () => {
       toast("Login successful");
       
       // Redirect based on user role
-      if (isMentor(userData.user)) {
-        console.log("[Auth] User is a mentor, redirecting to mentor dashboard");
-        navigate('/mentor-dashboard');
+      const role = userData.user?.user_metadata?.role;
+      console.log("[Auth] User role after login:", role);
+      
+      if (role === 'alumni') {
+        console.log("[Auth] User is an alumni, redirecting to alumni dashboard");
+        navigate('/alumni-dashboard');
+      } else if (role === 'applicant') {
+        console.log("[Auth] User is an applicant, redirecting to applicant dashboard");
+        navigate('/applicant-dashboard');
       } else {
-        console.log("[Auth] User is a student, redirecting to student dashboard");
-        navigate('/student-dashboard');
+        console.log("[Auth] User role not recognized, redirecting to home page");
+        navigate('/');
       }
     } catch (error: any) {
       console.error('[Auth] Login error:', error);
@@ -85,15 +91,15 @@ const Auth = () => {
     }
   };
 
-  // Handle register with simplified flow and immediate redirect
+  // Handle register with redirect to profile completion
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     console.log("[Auth] Registration started:", values);
     setIsLoading(true);
     try {
       const { email, password, firstName, lastName, userType } = values;
 
-      // Map the userType to the correct role
-      const role = userType === 'mentor' ? 'alumni' : 'applicant';
+      // Set the role based on user type
+      const role = userType;
       
       console.log(`[Auth] Registering user as ${userType} with role ${role}`);
 
@@ -103,7 +109,6 @@ const Auth = () => {
         firstName, 
         lastName,
         metadata: {
-          user_type: userType,
           role: role,
         }
       });
@@ -117,13 +122,13 @@ const Auth = () => {
       
       toast("Registration successful");
 
-      // Immediate redirect based on user type
-      if (userType === "mentor") {
-        console.log("[Auth] User is a mentor, immediately redirecting to profile completion");
-        navigate('/profile-complete');
+      // Redirect based on user type to appropriate profile completion page
+      if (userType === "alumni") {
+        console.log("[Auth] User is an alumni, redirecting to alumni profile completion");
+        navigate('/alumni-profile-complete');
       } else {
-        console.log("[Auth] User is a student, immediately redirecting to dashboard");
-        navigate('/student-dashboard');
+        console.log("[Auth] User is an applicant, redirecting to applicant profile completion");
+        navigate('/applicant-profile-complete');
       }
     } catch (error: any) {
       console.error('[Auth] Registration error:', error);
@@ -135,8 +140,8 @@ const Auth = () => {
 
   const handleUserTypeChange = (value: string) => {
     console.log("[Auth] User type changed to:", value);
-    setUserType(value as 'student' | 'mentor');
-    registerForm.setValue('userType', value as 'student' | 'mentor');
+    setUserType(value as 'applicant' | 'alumni');
+    registerForm.setValue('userType', value as 'applicant' | 'alumni');
   };
 
   return (
@@ -241,19 +246,19 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>I am a:</Label>
+                  <Label>I am registering as:</Label>
                   <RadioGroup 
                     value={userType} 
                     onValueChange={handleUserTypeChange}
                     className="flex flex-col space-y-1"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="student" id="student" />
-                      <Label htmlFor="student" className="font-normal">Student</Label>
+                      <RadioGroupItem value="applicant" id="applicant" />
+                      <Label htmlFor="applicant" className="font-normal">Applicant</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="mentor" id="mentor" />
-                      <Label htmlFor="mentor" className="font-normal">Mentor</Label>
+                      <RadioGroupItem value="alumni" id="alumni" />
+                      <Label htmlFor="alumni" className="font-normal">Alumni</Label>
                     </div>
                   </RadioGroup>
                 </div>
