@@ -55,8 +55,8 @@ const Browse = () => {
               image: profile.school?.image ?? null
             },
             activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
-            // Explicitly cast the role to the correct type - Accept both 'mentor' and 'alumni' roles
-            role: (['applicant', 'alumni'].includes(profile.role as string) ? profile.role : 'applicant') as 'applicant' | 'alumni',
+            // Explicitly cast the role to the correct type
+            role: (profile.role === 'alumni' || profile.role === 'applicant' ? profile.role : 'applicant') as 'applicant' | 'alumni',
             social_links: socialLinks
           };
         });

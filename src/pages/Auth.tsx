@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { signUp, signIn } from '@/services/auth';
 import { getAllUniversities, UniversityData } from '@/pages/insights/universities/universities-data';
 import SearchInput from '@/components/SearchInput';
@@ -255,7 +256,7 @@ const Auth = () => {
       
       // Redirect based on user role - always send mentors to profile completion
       if (userType === "mentor") {
-        navigate('/profile/complete');
+        navigate('/profile-complete');
       } else {
         navigate('/student-dashboard');
       }

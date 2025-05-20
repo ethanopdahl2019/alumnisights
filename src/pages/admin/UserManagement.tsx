@@ -1,125 +1,204 @@
 
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { useAuth } from "@/components/AuthProvider";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2Icon, UserIcon } from "lucide-react";
-import { fetchAllUsers, deleteUser, UserWithProfile } from "@/services/supabase/users";
+import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Trash2, Search, MoreHorizontal, UserPlus, UserCheck, AlertTriangle } from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider';
+import { isAdmin } from '@/services/auth';
+import { fetchAllUsers, deleteUser, UserWithProfile } from '@/services/supabase/users';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const UserManagement = () => {
-  const { user, loading, isAdmin } = useAuth();
+const UserManagement: React.FC = () => {
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserWithProfile[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
-
-  // Fetch all users with their profiles
-  const loadUsers = async () => {
-    setLoadingUsers(true);
-    try {
-      const usersData = await fetchAllUsers();
-      setUsers(usersData);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [userToDelete, setUserToDelete] = useState<UserWithProfile | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin
-    if (!loading) {
-      if (!user) {
-        toast.error("Please sign in to access this page");
-        navigate('/auth');
-        return;
-      }
-      
-      if (!isAdmin) {
-        toast.error("You don't have permission to access this page");
-        navigate('/');
-        return;
-      }
-
+    if (!loading && (!user || !isAdmin(user))) {
+      toast.error("You don't have permission to access this page");
+      navigate('/');
+      return;
+    }
+    
+    if (!loading && user) {
       loadUsers();
     }
-  }, [user, loading, navigate, isAdmin]);
+  }, [loading, user, navigate]);
 
-  // Handle user deletion
-  const handleDeleteUser = async (userId: string) => {
-    const success = await deleteUser(userId);
-    if (success) {
-      toast.success("User deleted successfully");
-      // Refresh the user list
-      loadUsers();
+  const loadUsers = async () => {
+    setIsLoading(true);
+    try {
+      const userData = await fetchAllUsers();
+      setUsers(userData);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast.error("Failed to load users");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getUserStatus = (user: UserWithProfile) => {
-    if (user.status === 'banned') return 'banned';
-    if (!user.last_sign_in_at) return 'pending';
-    return 'active';
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'active': return "success";
-      case 'pending': return "warning";
-      case 'banned': return "destructive";
-      default: return "secondary";
+  const handleDeleteUser = (user: UserWithProfile) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const success = await deleteUser(userToDelete.id);
+      if (success) {
+        toast.success(`User ${userToDelete.email} has been deleted`);
+        setUsers(users.filter(u => u.id !== userToDelete.id));
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error("Failed to delete user");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
     }
   };
+
+  const filteredUsers = searchTerm 
+    ? users.filter(user => 
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.user_metadata?.first_name && user.user_metadata.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (user.user_metadata?.last_name && user.user_metadata.last_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (user.user_metadata?.role && user.user_metadata.role.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    : users;
+
+  const getRoleBadgeColor = (role: string | undefined) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-500 hover:bg-red-600';
+      case 'alumni':
+      case 'mentor':
+        return 'bg-blue-500 hover:bg-blue-600';
+      case 'student':
+        return 'bg-green-500 hover:bg-green-600';
+      default:
+        return 'bg-gray-500 hover:bg-gray-600';
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return '??';
+    return `${(firstName?.[0] || '').toUpperCase()}${(lastName?.[0] || '').toUpperCase()}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin(user)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <AlertTriangle className="h-16 w-16 text-yellow-500 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+        <p className="text-gray-600 mb-4 text-center">
+          You don't have permission to access this page.
+        </p>
+        <Button onClick={() => navigate('/')}>
+          Go back to home
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>User Management | Admin</title>
+        <title>User Management | Admin Dashboard</title>
       </Helmet>
       <Navbar />
       
-      <main className="flex-grow container-custom py-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-3xl font-bold text-navy">User Management</h1>
-          <div className="flex gap-2 mt-4 md:mt-0">
-            <Button
-              variant="outline"
-              onClick={() => loadUsers()}
-            >
-              Refresh
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/admin/dashboard')}
-            >
-              Back to Dashboard
-            </Button>
-          </div>
-        </div>
+      <div className="flex-grow container-custom py-8">
+        <h1 className="text-3xl font-bold mb-6">User Management</h1>
         
-        <Card className="mb-8">
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle>All Users</CardTitle>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Users</CardTitle>
+                <CardDescription>Manage all users in the system.</CardDescription>
+              </div>
+              <div className="relative w-64">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                  className="pl-8" 
+                  placeholder="Search users..." 
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {loadingUsers ? (
+            {isLoading ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
-            ) : users.length > 0 ? (
+            ) : filteredUsers.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -127,117 +206,95 @@ const UserManagement = () => {
                       <TableHead>User</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>School & Major</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Last Login</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => {
-                      const status = getUserStatus(user);
-                      return (
-                        <TableRow key={user.id}>
-                          <TableCell className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              {user.profile?.image || user.user_metadata?.avatar_url ? (
-                                <AvatarImage 
-                                  src={user.profile?.image || user.user_metadata?.avatar_url} 
-                                  alt={user.email} 
-                                />
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-3">
+                            <Avatar>
+                              {user.profile?.image ? (
+                                <AvatarImage src={user.profile.image} alt={user.user_metadata?.first_name || ''} />
                               ) : (
-                                <AvatarFallback className="bg-primary/10 flex items-center justify-center">
-                                  <UserIcon className="h-4 w-4 text-primary/60" />
+                                <AvatarFallback>
+                                  {getInitials(user.user_metadata?.first_name, user.user_metadata?.last_name)}
                                 </AvatarFallback>
                               )}
                             </Avatar>
-                            <div>
-                              {user.profile?.name || 
-                                (user.user_metadata?.first_name && user.user_metadata?.last_name ? 
-                                  `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : 
-                                  <span className="text-muted-foreground">No name</span>)
-                              }
-                            </div>
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <Badge variant={user.user_metadata?.role === 'admin' ? 'destructive' : (user.user_metadata?.role === 'alumni' ? 'success' : 'outline')}>
-                              {user.user_metadata?.role || 'user'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getStatusBadgeVariant(status)}>
-                              {status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {user.profile?.school ? (
-                              <div className="flex flex-col">
-                                <span className="text-sm font-medium">{user.profile.school.name}</span>
-                                {user.profile.major && (
-                                  <span className="text-xs text-gray-500">{user.profile.major.name}</span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-500">No school data</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            {user.last_sign_in_at ? 
-                              new Date(user.last_sign_in_at).toLocaleDateString() : 
-                              'Never'}
-                          </TableCell>
-                          <TableCell>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm"
-                                  onClick={() => setSelectedUser(user)}
-                                >
-                                  <Trash2Icon className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete User Account</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this user account? This action cannot be undone.
-                                    <div className="mt-2 p-2 border rounded bg-muted">
-                                      <p><strong>Email:</strong> {selectedUser?.email}</p>
-                                      <p><strong>Name:</strong> {selectedUser?.profile?.name || `${selectedUser?.user_metadata?.first_name || ''} ${selectedUser?.user_metadata?.last_name || ''}`}</p>
-                                      <p><strong>Role:</strong> {selectedUser?.user_metadata?.role}</p>
-                                    </div>
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    onClick={() => selectedUser && handleDeleteUser(selectedUser.id)}
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                            <span>{user.user_metadata?.first_name} {user.user_metadata?.last_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge className={getRoleBadgeColor(user.user_metadata?.role)}>
+                            {user.user_metadata?.role || 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatDate(user.created_at)}</TableCell>
+                        <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem 
+                                className="text-red-600 cursor-pointer"
+                                onClick={() => handleDeleteUser(user)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
             ) : (
-              <p className="text-center py-4 text-muted-foreground">No users found.</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">No users matching your search.</p>
+              </div>
             )}
           </CardContent>
+          <CardFooter className="flex justify-between">
+            <p className="text-sm text-gray-500">
+              Total Users: {users.length}
+            </p>
+            <Button size="sm" onClick={loadUsers} disabled={isLoading}>
+              Refresh
+            </Button>
+          </CardFooter>
         </Card>
-      </main>
+      </div>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm User Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the user {userToDelete?.email}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteUser} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>
