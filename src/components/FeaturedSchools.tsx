@@ -1,119 +1,67 @@
 
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import { getUniversityContent } from "@/services/landing-page";
-import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { getUniversities } from '@/services/universities';
+import { getUniversityLogo } from '@/services/landing-page';
+import { Card, CardContent } from '@/components/ui/card';
+import { GraduationCap } from 'lucide-react';
 
-// Component to display featured schools on the homepage
 const FeaturedSchools = () => {
-  const [featuredSchools, setFeaturedSchools] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [universityContents, setUniversityContents] = useState<Record<string, any>>({});
-  
-  // Fetch featured schools from site settings
+  const [schools, setSchools] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchFeaturedSchools = async () => {
+    const fetchSchools = async () => {
       try {
-        setIsLoading(true);
+        setLoading(true);
+        const universities = await getUniversities();
         
-        // Get featured schools IDs from site settings
-        const { data: settingsData, error: settingsError } = await supabase
-          .from('site_settings')
-          .select('*')
-          .eq('key', 'featured_schools')
-          .single();
-          
-        if (settingsError && settingsError.code !== 'PGRST116') {
-          console.error("Error fetching featured schools setting:", settingsError);
-          setIsLoading(false);
-          return;
-        }
+        // Get featured or random schools (limit to 8)
+        const featuredSchools = universities
+          .sort(() => 0.5 - Math.random()) // Simple randomization
+          .slice(0, 8);
         
-        // Parse the featured school IDs from the settings value
-        let schoolIds: string[] = [];
-        if (settingsData?.value) {
-          try {
-            schoolIds = JSON.parse(settingsData.value);
-          } catch (err) {
-            console.error("Error parsing featured schools:", err);
-          }
-        }
-        
-        if (schoolIds.length === 0) {
-          setIsLoading(false);
-          return;
-        }
-        
-        // Fetch the universities data
-        const { data: schoolsData, error: schoolsError } = await supabase
-          .from('universities')
-          .select('*')
-          .in('id', schoolIds);
-        
-        if (schoolsError) {
-          console.error("Error fetching schools:", schoolsError);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Sort schools to match the order in the settings
-        const sortedSchools = schoolIds.map(id => 
-          schoolsData?.find(school => school.id === id)
-        ).filter(Boolean);
-        
-        setFeaturedSchools(sortedSchools);
-        
-        // Fetch university content (for logos)
-        if (sortedSchools.length > 0) {
-          const contentMap: Record<string, any> = {};
-          
-          for (const school of sortedSchools) {
+        // Fetch logos for each school
+        const schoolsWithLogos = await Promise.all(
+          featuredSchools.map(async (school) => {
             try {
-              const content = await getUniversityContent(school.id);
-              if (content) {
-                contentMap[school.id] = content;
-              }
+              const logo = await getUniversityLogo(school.id);
+              return { ...school, logo };
             } catch (error) {
-              console.error(`Failed to fetch content for ${school.name}:`, error);
+              return { ...school, logo: null };
             }
-          }
-          
-          setUniversityContents(contentMap);
-        }
+          })
+        );
         
-        setIsLoading(false);
+        setSchools(schoolsWithLogos);
       } catch (error) {
-        console.error("Failed to load featured schools:", error);
-        setIsLoading(false);
+        console.error('Error fetching featured schools:', error);
+      } finally {
+        setLoading(false);
       }
     };
     
-    fetchFeaturedSchools();
+    fetchSchools();
   }, []);
   
-  if (isLoading) {
+  if (loading) {
     return (
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Featured Universities</h2>
-            <Link 
-              to="/insights/undergraduate-admissions"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mt-2 md:mt-0"
-            >
-              View all universities
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
+      <section className="py-16 bg-white">
+        <div className="container-custom">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-medium mb-4">Featured Schools</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Explore top universities our mentors represent
+            </p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array(4).fill(0).map((_, i) => (
-              <div key={i} className="bg-white rounded-lg p-4 shadow-sm animate-pulse">
-                <div className="h-20 bg-gray-200 rounded-md mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <Card className="h-40 flex items-center justify-center">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+                </Card>
               </div>
             ))}
           </div>
@@ -121,77 +69,50 @@ const FeaturedSchools = () => {
       </section>
     );
   }
-  
-  if (featuredSchools.length === 0) {
-    return null;
-  }
-
-  const scrollContainer = (e: React.WheelEvent<HTMLDivElement>) => {
-    const container = e.currentTarget;
-    const scrollAmount = e.deltaY;
-    
-    container.scrollTo({
-      left: container.scrollLeft + scrollAmount,
-      behavior: 'smooth'
-    });
-    
-    e.preventDefault();
-  };
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Featured Universities</h2>
-          <Link 
-            to="/insights/undergraduate-admissions"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mt-2 md:mt-0"
-          >
-            View all universities
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
+    <section className="py-16 bg-white">
+      <div className="container-custom">
+        <div className="text-center mb-10">
+          <h2 className="text-4xl font-medium mb-4">Featured Schools</h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Explore top universities our mentors represent
+          </p>
         </div>
         
-        <div 
-          className="grid grid-cols-1 md:flex md:space-x-4 overflow-x-auto scrollbar-hide pb-4" 
-          onWheel={scrollContainer}
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {featuredSchools.map((school) => (
-            <div 
-              key={school.id} 
-              className="min-w-[280px] bg-white rounded-lg shadow-sm border border-gray-100 p-4 flex flex-col"
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {schools.map((school, index) => (
+            <motion.div
+              key={school.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
             >
-              <div className="h-20 flex items-center justify-center mb-4">
-                {(universityContents[school.id]?.logo) ? (
-                  <img 
-                    src={universityContents[school.id]?.logo} 
-                    alt={`${school.name} logo`}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                    <GraduationCap className="h-8 w-8 text-gray-400" />
-                  </div>
-                )}
-              </div>
-              <h3 className="text-lg font-semibold text-center mb-2">{school.name}</h3>
-              <p className="text-sm text-gray-500 text-center mb-4">{school.state || "United States"}</p>
-              <div className="mt-auto">
-                <Link
-                  to={`/insights/undergraduate-admissions/${school.id}`}
-                  className="inline-block w-full bg-white text-blue-600 border border-blue-600 rounded px-4 py-2 text-center text-sm font-medium hover:bg-blue-50 transition-colors"
-                >
-                  View Details
-                </Link>
-              </div>
-            </div>
+              <Link to={`/schools/undergraduate-admissions/${school.id}`} className="block h-full">
+                <Card className="h-full hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                    <div className="mb-4 h-24 flex items-center justify-center">
+                      {school.logo ? (
+                        <img 
+                          src={school.logo} 
+                          alt={school.name} 
+                          className="max-h-24 max-w-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
+                          <GraduationCap className="h-8 w-8 text-slate-500" />
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="font-medium">{school.name}</h3>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </div>
-      <style>
-        {`.scrollbar-hide::-webkit-scrollbar { display: none; }`}
-      </style>
     </section>
   );
 };

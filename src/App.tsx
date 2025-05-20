@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
@@ -34,6 +34,7 @@ import IndustryInsights from './pages/insights/IndustryInsights';
 import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
 import ContentProgress from './pages/admin/ContentProgress';
 import AdmissionStatsManager from './pages/admin/AdmissionStatsManager';
+import ScrollToTop from '@/components/ScrollToTop';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -41,7 +42,8 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <Router>
+        <ScrollToTop />
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
           <HelmetProvider>
             <Toaster />
@@ -101,7 +103,7 @@ function App() {
             </AuthProvider>
           </HelmetProvider>
         </ThemeProvider>
-      </BrowserRouter>
+      </Router>
     </QueryClientProvider>
   );
 }

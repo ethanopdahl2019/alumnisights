@@ -162,7 +162,7 @@ const Hero = () => {
         </div>
       </section>
 
-      {/* Features Section with image */}
+      {/* Features Section with university image */}
       <section className="py-24">
         <div className="container-custom">
           <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -219,8 +219,8 @@ const Hero = () => {
             >
               <div className="relative z-10 rounded-lg overflow-hidden shadow-xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=1000" 
-                  alt="Students collaborating on campus" 
+                  src="https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                  alt="University campus with historic buildings" 
                   className="w-full h-auto"
                 />
               </div>
