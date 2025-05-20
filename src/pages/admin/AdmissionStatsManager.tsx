@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, BarChart3, Wand, Loader2, Save, CheckCircle } from "lucide-react";
+import { Search, Loader2, Save, CheckCircle, Wand } from "lucide-react";
 import { toast } from "sonner";
 import { getUniversities, University } from "@/services/universities";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,7 +97,7 @@ const AdmissionStatsManager = () => {
     };
     
     fetchUniversities();
-  }, [isAdmin]);
+  }, [isAdmin, navigate]);
   
   // Filter universities based on search
   const filteredUniversities = universities.filter(uni => 
@@ -109,7 +109,7 @@ const AdmissionStatsManager = () => {
     try {
       setProcessingUniversityId(universityId);
       
-      const { data, error } = await supabase.functions.invoke('update_admission_stats', {
+      const { error } = await supabase.functions.invoke('update_admission_stats', {
         body: {
           university_id: universityId,
           acceptance_rate: stats.acceptanceRate,
@@ -160,26 +160,22 @@ const AdmissionStatsManager = () => {
       toast.info(`Looking up admissions data for ${universityName}...`);
       
       // Call the AI function to fetch admission stats
-      const response = await fetch('/api/generate-admission-stats', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate-admission-stats', {
+        body: {
           universityName,
-        }),
+        },
       });
       
-      const result = await response.json();
+      if (error) throw error;
       
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to get admission statistics");
+      if (!data) {
+        throw new Error("No data returned from the AI service");
       }
       
       const stats = {
-        acceptanceRate: result.acceptanceRate,
-        averageSAT: result.averageSAT,
-        averageACT: result.averageACT
+        acceptanceRate: data.acceptanceRate,
+        averageSAT: data.averageSAT,
+        averageACT: data.averageACT
       };
       
       // Update the database with these stats
