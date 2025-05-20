@@ -62,6 +62,11 @@ export interface ProfileWithDetails extends Profile {
   location?: string | null;
   social_links?: Record<string, any> | string | null;
   achievements?: string[] | null;
+  greek_life?: {
+    id: string;
+    name: string;
+    type: string;
+  } | null;
 }
 
 // New types for authentication
