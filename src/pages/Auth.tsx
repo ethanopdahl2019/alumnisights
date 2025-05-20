@@ -213,8 +213,7 @@ const Auth = () => {
     } catch (error: any) {
       console.error('Login error:', error);
       toast("Login failed", {
-        description: error.message || "Failed to login. Please try again.",
-        variant: "destructive"
+        description: error.message || "Failed to login. Please try again."
       });
     } finally {
       setIsLoading(false);
@@ -259,8 +258,7 @@ const Auth = () => {
     } catch (error: any) {
       console.error('Registration error:', error);
       toast("Registration failed", {
-        description: error.message || "Failed to create account. Please try again.",
-        variant: "destructive"
+        description: error.message || "Failed to create account. Please try again."
       });
     } finally {
       setIsLoading(false);
