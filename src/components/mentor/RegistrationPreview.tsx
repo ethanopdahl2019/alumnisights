@@ -15,6 +15,7 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue,
+  SelectGroup,
   SelectLabel
 } from "@/components/ui/select";
 import { getAllUniversities, UniversityData } from "@/pages/insights/universities/universities-data";
@@ -110,20 +111,24 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None</SelectItem>
-            <SelectLabel>Fraternities</SelectLabel>
-            <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
-            <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
-            <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
-            <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
-            <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
-            <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
-            <SelectLabel>Sororities</SelectLabel>
-            <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
-            <SelectItem value="chi-omega">Chi Omega</SelectItem>
-            <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
-            <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
-            <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
-            <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
+            <SelectGroup>
+              <SelectLabel>Fraternities</SelectLabel>
+              <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
+              <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
+              <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
+              <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
+              <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
+              <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>Sororities</SelectLabel>
+              <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
+              <SelectItem value="chi-omega">Chi Omega</SelectItem>
+              <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
+              <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
+              <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
+              <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
@@ -364,20 +369,24 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">None</SelectItem>
-                          <SelectLabel>Fraternities</SelectLabel>
-                          <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
-                          <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
-                          <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
-                          <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
-                          <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
-                          <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
-                          <SelectLabel>Sororities</SelectLabel>
-                          <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
-                          <SelectItem value="chi-omega">Chi Omega</SelectItem>
-                          <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
-                          <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
-                          <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
-                          <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
+                          <SelectGroup>
+                            <SelectLabel>Fraternities</SelectLabel>
+                            <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
+                            <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
+                            <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
+                            <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
+                            <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
+                            <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
+                          </SelectGroup>
+                          <SelectGroup>
+                            <SelectLabel>Sororities</SelectLabel>
+                            <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
+                            <SelectItem value="chi-omega">Chi Omega</SelectItem>
+                            <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
+                            <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
+                            <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
+                            <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
+                          </SelectGroup>
                         </SelectContent>
                       </Select>
                     </div>
