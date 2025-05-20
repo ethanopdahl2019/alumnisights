@@ -81,36 +81,6 @@ export interface UserRegistration extends UserCredentials {
   metadata?: Record<string, any>;
 }
 
-export interface ApplicantRecord {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  school_id?: string | null;
-  major_id?: string | null;
-  degree?: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface AlumniRecord {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  school_id?: string | null;
-  major_id?: string | null;
-  degree?: string | null;
-  price_15_min?: number | null;
-  price_30_min?: number | null;
-  price_60_min?: number | null;
-  graduation_year?: number | null;
-  bio?: string | null;
-  image?: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Company {
   id: string;
   profile_id: string;

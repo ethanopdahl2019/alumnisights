@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -11,8 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -36,29 +37,8 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileComplete = () => {
-  console.log("ProfileComplete component mounted");
   const navigate = useNavigate();
   const { user, session } = useAuth();
-  
-  // Log auth state on component mount
-  useEffect(() => {
-    console.log("Auth state in ProfileComplete:", { 
-      hasUser: !!user, 
-      hasSession: !!session,
-      userId: user?.id,
-      userMetadata: user?.user_metadata
-    });
-    
-    if (!session) {
-      console.log("No session found, redirecting to auth page");
-      navigate('/auth');
-      return;
-    }
-    
-    console.log("User type from metadata:", user?.user_metadata?.user_type);
-    console.log("Role from metadata:", user?.user_metadata?.role);
-  }, [session, user, navigate]);
-  
   const [isLoading, setIsLoading] = useState(false);
   const [majors, setMajors] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
@@ -121,9 +101,10 @@ const ProfileComplete = () => {
     setProgress((completedSteps / 6) * 100);
   }, [watchedValues, imagePreview]);
   
-  // Load form data
+  // Redirect if not logged in
   useEffect(() => {
     if (!session) {
+      navigate('/auth');
       return;
     }
     
@@ -147,14 +128,11 @@ const ProfileComplete = () => {
     // Load majors, activities, and Greek Life options
     const loadFormData = async () => {
       try {
-        console.log("Loading profile form data");
         const [majorsData, activitiesData, greekLifeData] = await Promise.all([
           getMajors(),
           getActivities(),
           getGreekLifeOptions ? getGreekLifeOptions() : [] // Use if available, otherwise empty array
         ]);
-        
-        console.log(`Loaded ${majorsData?.length || 0} majors, ${activitiesData?.length || 0} activities`);
         
         setMajors(majorsData);
         setActivities(activitiesData);
@@ -162,7 +140,11 @@ const ProfileComplete = () => {
         loadUniversities();
       } catch (error) {
         console.error('Error loading form data:', error);
-        toast("Failed to load profile data. Please try again later.");
+        toast({
+          title: "Error",
+          description: "Failed to load profile data. Please try again later.",
+          variant: "destructive",
+        });
       }
     };
     
@@ -194,17 +176,17 @@ const ProfileComplete = () => {
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast("Failed to upload your profile image.");
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload your profile image.",
+        variant: "destructive",
+      });
       return null;
     }
   };
   
   const onSubmit = async (values: ProfileFormValues) => {
-    console.log("Profile form submitted:", values);
-    if (!user) {
-      console.error("No user found during form submission");
-      return;
-    }
+    if (!user) return;
     
     setIsLoading(true);
     try {
@@ -220,37 +202,6 @@ const ProfileComplete = () => {
       
       if (!schoolId) {
         throw new Error("School information not found. Please try again.");
-      }
-      
-      // Determine if user is a mentor/alumni or student/applicant
-      const isMentor = metadata.user_type === 'mentor' || metadata.role === 'alumni';
-      
-      if (isMentor) {
-        // Update alumni table
-        const { error: alumniError } = await supabase
-          .from('alumni')
-          .update({
-            school_id: schoolId,
-            major_id: values.majorId,
-            degree: values.degree,
-            bio: values.bio,
-            image: imageUrl
-          })
-          .eq('id', user.id);
-          
-        if (alumniError) throw alumniError;
-      } else {
-        // Update applicant table
-        const { error: applicantError } = await supabase
-          .from('applicants')
-          .update({
-            school_id: schoolId,
-            major_id: values.majorId,
-            degree: values.degree
-          })
-          .eq('id', user.id);
-          
-        if (applicantError) throw applicantError;
       }
       
       // Create profile
@@ -307,20 +258,20 @@ const ProfileComplete = () => {
         }
       }
       
-      toast("Profile complete! Your profile has been set up successfully.");
+      toast({
+        title: "Profile complete!",
+        description: "Your profile has been set up successfully.",
+      });
       
-      // Redirect based on user role
-      const isMentor = user?.user_metadata?.user_type === 'mentor' || user?.user_metadata?.role === 'alumni';
-      console.log("Is mentor:", isMentor, "Redirecting to dashboard");
-      
-      if (isMentor) {
-        navigate('/mentor-dashboard');
-      } else {
-        navigate('/student-dashboard');
-      }
+      // Redirect to profile page
+      navigate(`/profile/${profileData.id}`);
     } catch (error: any) {
       console.error('Error completing profile:', error);
-      toast(error.message || "Failed to complete your profile. Please try again.");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to complete your profile. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

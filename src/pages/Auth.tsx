@@ -204,10 +204,8 @@ const Auth = () => {
   const onLoginSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     try {
-      console.log("Login attempt with:", values.email);
       const { email, password } = values;
       await signIn({ email, password });
-      console.log("Login successful");
       toast("Login successful", {
         description: "Welcome back!"
       });
@@ -226,13 +224,6 @@ const Auth = () => {
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      console.log("Registration attempt:", { 
-        email: values.email, 
-        firstName: values.firstName,
-        lastName: values.lastName,
-        userType: values.userType
-      });
-
       const { email, password, firstName, lastName, userType } = values;
 
       // Map the userType to the correct role
@@ -252,20 +243,18 @@ const Auth = () => {
         }
       });
 
-      console.log("Registration successful, signing in...");
       toast("Registration successful", {
-        description: "Your account has been created. Redirecting to profile completion..."
+        description: "Your account has been created. Please check your email to verify your account."
       });
 
       await signIn({ email, password });
       
-      console.log("Sign in successful, redirecting to profile completion...");
-      
-      // Redirect to profile completion with a slight delay to ensure auth state is updated
-      setTimeout(() => {
+      // Redirect based on user role - always send mentors to profile completion
+      if (userType === "mentor") {
         navigate('/profile-complete');
-      }, 100);
-      
+      } else {
+        navigate('/student-dashboard');
+      }
     } catch (error: any) {
       console.error('Registration error:', error);
       toast("Registration failed", {
