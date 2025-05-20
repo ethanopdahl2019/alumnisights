@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import { HelmetProvider } from "react-helmet-async";
@@ -34,7 +35,9 @@ import IndustryInsights from './pages/insights/IndustryInsights';
 import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
 import ContentProgress from './pages/admin/ContentProgress';
 import AdmissionStatsManager from './pages/admin/AdmissionStatsManager';
+import AboutUs from './pages/AboutUs';
 import ScrollToTop from '@/components/ScrollToTop';
+import Schools from './pages/Schools';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -65,6 +68,8 @@ function App() {
                 <Route path="/landing" element={<LandingPage />} />
                 <Route path="/booking/:id/:productId" element={<BookingPage />} />
                 <Route path="/booking-success" element={<BookingSuccessPage />} />
+                <Route path="/about" element={<AboutUs />} />
+                <Route path="/schools" element={<Schools />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -86,7 +91,6 @@ function App() {
                 <Route path="/admin/admission-stats" element={<AdmissionStatsManager />} />
                 
                 {/* Schools Routes */}
-                <Route path="/schools" element={<UndergraduateAdmissions />} />
                 <Route path="/undergraduate-admissions" element={<UndergraduateAdmissions />} />
                 <Route path="/schools/undergraduate-admissions" element={<UndergraduateAdmissions />} />
                 <Route path="/schools/undergraduate-admissions/:id" element={<UniversityPage />} />
