@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { signUp, signIn } from '@/services/auth';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define form schemas with simplified requirements
 const loginFormSchema = z.object({
@@ -54,6 +55,26 @@ const Auth = () => {
     },
   });
 
+  // Create profile after registration
+  const createProfile = async (userId: string, firstName: string, lastName: string) => {
+    try {
+      console.log("[Auth] Creating profile for user:", userId);
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          name: `${firstName} ${lastName}`,
+        });
+      
+      if (error) throw error;
+      console.log("[Auth] Profile created successfully");
+      return true;
+    } catch (error) {
+      console.error('[Auth] Error creating profile:', error);
+      return false;
+    }
+  };
+
   // Handle login
   const onLoginSubmit = async (values: LoginFormValues) => {
     console.log("[Auth] Login submission started with email:", values.email);
@@ -64,7 +85,23 @@ const Auth = () => {
       console.log("[Auth] Login successful for:", email, userData);
       
       toast("Login successful");
-      navigate('/');
+      
+      // Check if user has a role, if not redirect to role selection
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', userData.user.id)
+        .single();
+      
+      if (!profile?.role) {
+        navigate('/role-selection');
+      } else if (profile.role === 'alumni') {
+        navigate('/mentor-dashboard');
+      } else if (profile.role === 'applicant') {
+        navigate('/applicant-dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error: any) {
       console.error('[Auth] Login error:', error);
       toast("Login failed: " + (error.message || "Failed to login. Please try again."));
@@ -93,13 +130,18 @@ const Auth = () => {
 
       console.log("[Auth] Registration successful, user data:", userData);
       
+      // Create profile for the new user
+      if (userData.user) {
+        await createProfile(userData.user.id, firstName, lastName);
+      }
+      
       // Sign in the user after registration
       console.log("[Auth] Signing in after registration");
       await signIn({ email, password });
       console.log("[Auth] Sign-in after registration completed");
       
       toast("Registration successful");
-      navigate('/');
+      navigate('/role-selection'); // Redirect to role selection
     } catch (error: any) {
       console.error('[Auth] Registration error:', error);
       toast("Registration failed: " + (error.message || "Failed to create account"));
