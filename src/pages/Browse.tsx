@@ -54,9 +54,9 @@ const Browse = () => {
               ...profile.school,
               image: profile.school?.image ?? null
             },
-            activities: profile.activities.map((pa: any) => pa.activities),
-            // Explicitly cast the role to the correct type
-            role: (profile.role as 'applicant' | 'alumni') || 'applicant',
+            activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
+            // Explicitly cast the role to the correct type - Accept both 'mentor' and 'alumni' roles
+            role: (['mentor', 'alumni', 'applicant'].includes(profile.role as string) ? profile.role : 'applicant') as 'applicant' | 'alumni' | 'mentor',
             social_links: socialLinks
           };
         });
@@ -116,9 +116,14 @@ const Browse = () => {
   ];
 
   const filteredProfiles = profiles.filter((profile) => {
-    const matchesSearch = profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.school?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.major?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    // Include both mentor and alumni profiles
+    const isMentorOrAlumni = profile.role === 'mentor' || profile.role === 'alumni';
+    
+    if (!isMentorOrAlumni) return false;
+    
+    const matchesSearch = profile.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.school?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.major?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     if (!matchesSearch) return false;
 
@@ -135,7 +140,7 @@ const Browse = () => {
         case 'majors':
           return selectedIds.includes(profile.major_id);
         case 'activities':
-          return profile.activities.some(activity => 
+          return profile.activities?.some(activity => 
             selectedIds.includes(activity.id)
           );
         default:

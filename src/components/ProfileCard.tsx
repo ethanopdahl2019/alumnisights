@@ -75,8 +75,9 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
   ];
   
   // Determine the link destination based on whether it's the user's own profile
+  // and whether they're a mentor or alumni
   const linkDestination = isOwnProfile 
-    ? '/alumni-dashboard' 
+    ? (profile.role === 'mentor' ? '/mentor-dashboard' : '/alumni-dashboard')
     : `/alumni/${profile.id}`;
   
   return (

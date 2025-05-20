@@ -140,19 +140,7 @@ const registerFormSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
-}).refine(
-  (data) => {
-    // If user is a mentor, schoolId and degree are required
-    if (data.userType === 'mentor') {
-      return !!data.schoolId && !!data.degree;
-    }
-    return true;
-  },
-  {
-    message: "School and degree are required for mentors",
-    path: ["schoolId"],
-  }
-);
+});
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 type RegisterFormValues = z.infer<typeof registerFormSchema>;
@@ -244,6 +232,11 @@ const Auth = () => {
       // Map the userType to the correct role
       const role = userType === 'mentor' ? 'mentor' : 'student';
 
+      // Validate required fields for mentors
+      if (userType === 'mentor' && (!schoolId || !degree)) {
+        throw new Error('School and degree are required for mentors');
+      }
+
       await signUp({ 
         email, 
         password, 
@@ -265,7 +258,7 @@ const Auth = () => {
 
       await signIn({ email, password });
       
-      // Redirect based on user role
+      // Redirect based on user role - always send mentors to profile completion
       if (userType === "mentor") {
         navigate('/profile/complete');
       } else {
@@ -421,77 +414,11 @@ const Auth = () => {
                     </div>
                   </RadioGroup>
                 </div>
-                
-                {userType === 'mentor' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="university">University</Label>
-                      <SearchInput 
-                        value={universitySearchTerm}
-                        onChange={setUniversitySearchTerm}
-                        placeholder="Type to search universities..."
-                        options={universities}
-                        onOptionSelect={(university) => {
-                          setSelectedUniversity(university.id);
-                          setUniversitySearchTerm(university.name);
-                          registerForm.setValue('schoolId', university.id);
-                        }}
-                      />
-                      {registerForm.formState.errors.schoolId && (
-                        <p className="text-red-500 text-sm">{registerForm.formState.errors.schoolId.message}</p>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="major">Major</Label>
-                      <SearchInput 
-                        value={majorSearchTerm}
-                        onChange={setMajorSearchTerm}
-                        placeholder="Type to search majors..."
-                        options={MAJORS}
-                        onOptionSelect={(major) => {
-                          setSelectedMajor(major.id);
-                          setMajorSearchTerm(major.name);
-                          registerForm.setValue('majorId', major.id);
-                        }}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="degree">Degree</Label>
-                      <Select 
-                        onValueChange={(value) => registerForm.setValue('degree', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your degree" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ba">BA - Bachelor of Arts</SelectItem>
-                          <SelectItem value="bs">BS - Bachelor of Science</SelectItem>
-                          <SelectItem value="ma">MA - Master of Arts</SelectItem>
-                          <SelectItem value="ms">MS - Master of Science</SelectItem>
-                          <SelectItem value="mba">MBA - Master of Business Administration</SelectItem>
-                          <SelectItem value="md">MD - Doctor of Medicine</SelectItem>
-                          <SelectItem value="jd">JD - Juris Doctor</SelectItem>
-                          <SelectItem value="mph">MPH - Master of Public Health</SelectItem>
-                          <SelectItem value="meng">MEng - Master of Engineering</SelectItem>
-                          <SelectItem value="mfa">MFA - Master of Fine Arts</SelectItem>
-                          <SelectItem value="phd">PhD - Doctor of Philosophy</SelectItem>
-                          <SelectItem value="edd">EdD - Doctor of Education</SelectItem>
-                          <SelectItem value="dnp">DNP - Doctor of Nursing Practice</SelectItem>
-                          <SelectItem value="msw">MSW - Master of Social Work</SelectItem>
-                          <SelectItem value="bba">BBA - Bachelor of Business Administration</SelectItem>
-                          <SelectItem value="bfa">BFA - Bachelor of Fine Arts</SelectItem>
-                          <SelectItem value="llm">LLM - Master of Laws</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {registerForm.formState.errors.degree && (
-                        <p className="text-red-500 text-sm">{registerForm.formState.errors.degree.message}</p>
-                      )}
-                    </div>
-                  </>
-                )}
+
+                {/* Hidden fields to store university and major information for mentors */}
+                <input type="hidden" {...registerForm.register('schoolId')} value={selectedUniversity} />
+                <input type="hidden" {...registerForm.register('majorId')} value={selectedMajor} />
+                <input type="hidden" {...registerForm.register('degree')} />
                 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Creating account...' : 'Create account'}

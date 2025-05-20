@@ -88,32 +88,8 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
 
   const getMentorSpecificContent = () => (
     <div className="space-y-4 mt-4">
-      {/* Profile Image Upload for mentors */}
-      <div className="space-y-2">
-        <Label htmlFor="mentor-profile-image">Profile Image</Label>
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative cursor-pointer">
-            <Avatar className="w-24 h-24">
-              {imagePreview ? (
-                <AvatarImage src={imagePreview} alt="Profile preview" />
-              ) : (
-                <AvatarFallback className="bg-muted flex items-center justify-center">
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <input
-              type="file"
-              id="mentor-profile-image"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-          </div>
-          <p className="text-xs text-gray-500">Click to upload your profile picture</p>
-        </div>
-      </div>
-
+      {/* Profile image is now part of the common content in profile-complete tab */}
+      
       <div className="space-y-2">
         <Label htmlFor="work-experience">Work Experience (years)</Label>
         <Select>
@@ -294,7 +270,7 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
               </div>
               
               <div className="space-y-4">
-                {/* Profile Image Upload */}
+                {/* Profile Image Upload - Only one instance for both students and mentors */}
                 <div className="space-y-2">
                   <Label htmlFor="profile-image">Profile Image</Label>
                   <div className="flex flex-col items-center gap-4">
@@ -450,7 +426,7 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
                     </div>
                   </>
                 ) : (
-                  // Special fields for mentors
+                  // Mentor specific fields
                   getMentorSpecificContent()
                 )}
                 
