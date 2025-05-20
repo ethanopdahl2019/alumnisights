@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
@@ -55,9 +56,7 @@ const Browse = () => {
             },
             activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
             // Explicitly cast the role to the correct type
-            role: (profile.role === 'alumni' || profile.role === 'mentor' || profile.role === 'applicant') 
-              ? profile.role as 'alumni' | 'mentor' | 'applicant' 
-              : 'applicant',
+            role: (profile.role === 'alumni' || profile.role === 'applicant' ? profile.role : 'applicant') as 'applicant' | 'alumni',
             social_links: socialLinks
           };
         });
@@ -117,8 +116,8 @@ const Browse = () => {
   ];
 
   const filteredProfiles = profiles.filter((profile) => {
-    // Include alumni/mentor or applicant profiles
-    const isAlumni = profile.role === 'alumni' || profile.role === 'mentor' || profile.role === 'applicant';
+    // Include alumni profiles (mentors)
+    const isAlumni = profile.role === 'alumni';
     
     if (!isAlumni) return false;
     

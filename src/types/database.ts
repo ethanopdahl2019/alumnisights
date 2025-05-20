@@ -180,26 +180,3 @@ export interface UniversityContent {
   created_at: string;
   updated_at: string;
 }
-
-// Student type for registration
-export interface Student {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-}
-
-// Applicant type for registration
-export interface Applicant {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  schoolId?: string;
-  majorId?: string;
-  degree?: string;
-  sport?: string;
-  clubs?: string;
-  greekLife?: string;
-  profileImage?: File | null;
-}
