@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -140,10 +139,7 @@ const ProfileComplete = () => {
         loadUniversities();
       } catch (error) {
         console.error('Error loading form data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile data. Please try again later."
-        });
+        toast("Failed to load profile data. Please try again later.");
       }
     };
     
@@ -175,10 +171,7 @@ const ProfileComplete = () => {
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast({
-        title: "Upload Error",
-        description: "Failed to upload your profile image."
-      });
+      toast("Failed to upload your profile image.");
       return null;
     }
   };
@@ -287,10 +280,7 @@ const ProfileComplete = () => {
         }
       }
       
-      toast({
-        title: "Profile complete!",
-        description: "Your profile has been set up successfully."
-      });
+      toast("Profile complete! Your profile has been set up successfully.");
       
       // Redirect based on user role
       if (isMentor) {
@@ -300,10 +290,7 @@ const ProfileComplete = () => {
       }
     } catch (error: any) {
       console.error('Error completing profile:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to complete your profile. Please try again."
-      });
+      toast(error.message || "Failed to complete your profile. Please try again.");
     } finally {
       setIsLoading(false);
     }
