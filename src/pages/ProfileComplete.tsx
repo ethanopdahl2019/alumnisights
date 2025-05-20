@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckIcon, ChevronsUpDown } from 'lucide-react';
+import { CheckIcon, ChevronsUpDown, Upload } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -13,13 +13,14 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { getMajors, getActivities } from '@/services/profiles';
+import { getMajors, getActivities, getGreekLifeOptions } from '@/services/profiles';
 import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
 import SearchInput from '@/components/SearchInput';
 
@@ -29,6 +30,8 @@ const profileSchema = z.object({
   degree: z.string().min(1, { message: "Please select your degree" }),
   majorId: z.string().min(1, { message: "Please select your major" }),
   activities: z.array(z.string()).min(1, { message: "Please select at least one activity" }),
+  greekLife: z.string().optional(),
+  image: z.any().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -39,12 +42,13 @@ const ProfileComplete = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [majors, setMajors] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
+  const [greekLifeOptions, setGreekLifeOptions] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
   const [universities, setUniversities] = useState<any[]>([]);
-  const [universityOpen, setUniversityOpen] = useState(false);
-  const [majorOpen, setMajorOpen] = useState(false);
   const [universitySearchTerm, setUniversitySearchTerm] = useState("");
   const [majorSearchTerm, setMajorSearchTerm] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   const degrees = [
     { id: "bachelors", name: "Bachelor's Degree" },
@@ -62,9 +66,23 @@ const ProfileComplete = () => {
       degree: "",
       majorId: "",
       activities: [],
+      greekLife: "",
     },
     mode: "onChange",
   });
+  
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   // Watch form values to update progress
   const watchedValues = form.watch();
@@ -77,9 +95,11 @@ const ProfileComplete = () => {
     if (watchedValues.degree) completedSteps++;
     if (watchedValues.majorId) completedSteps++;
     if (watchedValues.activities.length > 0) completedSteps++;
+    if (imagePreview) completedSteps++;
     
-    setProgress((completedSteps / 5) * 100);
-  }, [watchedValues]);
+    // Calculate progress based on total possible steps (including image upload)
+    setProgress((completedSteps / 6) * 100);
+  }, [watchedValues, imagePreview]);
   
   // Redirect if not logged in
   useEffect(() => {
@@ -105,16 +125,18 @@ const ProfileComplete = () => {
       setUniversities(allUniversities);
     };
     
-    // Load majors and activities
+    // Load majors, activities, and Greek Life options
     const loadFormData = async () => {
       try {
-        const [majorsData, activitiesData] = await Promise.all([
+        const [majorsData, activitiesData, greekLifeData] = await Promise.all([
           getMajors(),
-          getActivities()
+          getActivities(),
+          getGreekLifeOptions ? getGreekLifeOptions() : [] // Use if available, otherwise empty array
         ]);
         
         setMajors(majorsData);
         setActivities(activitiesData);
+        setGreekLifeOptions(greekLifeData || []);
         loadUniversities();
       } catch (error) {
         console.error('Error loading form data:', error);
@@ -128,12 +150,52 @@ const ProfileComplete = () => {
     
     loadFormData();
   }, [session, navigate]);
+
+  // Upload profile image to Supabase Storage
+  const uploadProfileImage = async (userId: string): Promise<string | null> => {
+    if (!imageFile) return null;
+    
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const filePath = `${userId}/profile.${fileExt}`;
+      
+      // Upload the image
+      const { data, error } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, imageFile, {
+          upsert: true
+        });
+      
+      if (error) throw error;
+      
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(data.path);
+      
+      return publicUrlData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload your profile image.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
   
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
     
     setIsLoading(true);
     try {
+      // Upload profile image if one is selected
+      let imageUrl = null;
+      if (imageFile) {
+        imageUrl = await uploadProfileImage(user.id);
+      }
+      
       // Get school_id from session user metadata or from selected university
       const metadata = user.user_metadata || {};
       const schoolId = values.universityId;
@@ -151,6 +213,7 @@ const ProfileComplete = () => {
           school_id: schoolId,
           major_id: values.majorId,
           bio: values.bio,
+          image: imageUrl, // Add profile image URL
         });
       
       if (profileError) throw profileError;
@@ -170,11 +233,30 @@ const ProfileComplete = () => {
         activity_id: activityId,
       }));
       
-      const { error: activitiesError } = await supabase
-        .from('profile_activities')
-        .insert(activityInserts);
+      if (activityInserts.length > 0) {
+        const { error: activitiesError } = await supabase
+          .from('profile_activities')
+          .insert(activityInserts);
+        
+        if (activitiesError) throw activitiesError;
+      }
       
-      if (activitiesError) throw activitiesError;
+      // Add Greek life affiliation if selected
+      if (values.greekLife && values.greekLife !== 'none') {
+        try {
+          const { error: greekLifeError } = await supabase
+            .from('profile_greek_life')
+            .insert({
+              profile_id: profileData.id,
+              greek_life_id: values.greekLife,
+            });
+          
+          if (greekLifeError) throw greekLifeError;
+        } catch (error) {
+          console.error('Error adding Greek life affiliation:', error);
+          // Continue even if Greek life association fails
+        }
+      }
       
       toast({
         title: "Profile complete!",
@@ -231,6 +313,29 @@ const ProfileComplete = () => {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Profile Image Upload */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="relative cursor-pointer">
+                      <Avatar className="w-24 h-24">
+                        {imagePreview ? (
+                          <AvatarImage src={imagePreview} alt="Profile preview" />
+                        ) : (
+                          <AvatarFallback className="bg-muted flex items-center justify-center">
+                            <Upload className="h-8 w-8 text-muted-foreground" />
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <input
+                        type="file"
+                        id="profile-image"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">Click to upload your profile picture</p>
+                  </div>
+                  
                   <FormField
                     control={form.control}
                     name="bio"
@@ -319,6 +424,44 @@ const ProfileComplete = () => {
                             }}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="greekLife"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Greek Life</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Greek organization (if any)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectLabel>Fraternities</SelectLabel>
+                            <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
+                            <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
+                            <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
+                            <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
+                            <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
+                            <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
+                            <SelectLabel>Sororities</SelectLabel>
+                            <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
+                            <SelectItem value="chi-omega">Chi Omega</SelectItem>
+                            <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
+                            <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
+                            <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
+                            <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

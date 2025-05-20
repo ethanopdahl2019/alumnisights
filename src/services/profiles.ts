@@ -12,7 +12,7 @@ const parseSocialLinks = (socialLinks: any): Record<string, any> | null => {
   }
   
   // If it's a string, try to parse it
-  if (typeof socialLinks === 'string') {
+  if (typeof socialLinks === 'string' && socialLinks) {
     try {
       return JSON.parse(socialLinks);
     } catch (error) {
@@ -61,7 +61,8 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       *,
       school:schools(id, name, location, type, image, created_at),
       major:majors(*),
-      activities:profile_activities(activities(*))
+      activities:profile_activities(activities(*)),
+      greek_life:profile_greek_life(greek_life(*))
     `);
 
   if (error) {
@@ -77,7 +78,8 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
     },
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni',
-    social_links: parseSocialLinks(profile.social_links)
+    social_links: parseSocialLinks(profile.social_links),
+    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null
   }));
 }
 
@@ -88,7 +90,8 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
       *,
       school:schools(id, name, location, type, image, created_at),
       major:majors(*),
-      activities:profile_activities(activities(*))
+      activities:profile_activities(activities(*)),
+      greek_life:profile_greek_life(greek_life(*))
     `)
     .eq('id', id)
     .maybeSingle(); // more reliable than .single()
@@ -108,7 +111,8 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     },
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni',
-    social_links: parseSocialLinks(profile.social_links)
+    social_links: parseSocialLinks(profile.social_links),
+    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null
   };
 }
 
@@ -152,6 +156,20 @@ export async function getActivities() {
     
   if (error) {
     console.error('Error fetching activities:', error);
+    return [];
+  }
+  
+  return data;
+}
+
+export async function getGreekLifeOptions() {
+  const { data, error } = await supabase
+    .from('greek_life')
+    .select('*')
+    .order('name');
+    
+  if (error) {
+    console.error('Error fetching Greek life options:', error);
     return [];
   }
   
