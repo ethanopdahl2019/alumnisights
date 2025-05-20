@@ -123,12 +123,13 @@ const UserManagement = () => {
     return 'active';
   };
 
+  // Update this function to use only the available variants
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'active': return 'success';
-      case 'pending': return 'warning';
-      case 'banned': return 'destructive';
-      default: return 'secondary';
+      case 'active': return "success";
+      case 'pending': return "warning";
+      case 'banned': return "destructive";
+      default: return "secondary";
     }
   };
 
