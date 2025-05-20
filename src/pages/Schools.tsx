@@ -90,7 +90,7 @@ const Schools = () => {
     }
     
     return (
-      <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto">
+      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
         <GraduationCap className="h-8 w-8 text-slate-500" />
       </div>
     );
