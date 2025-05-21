@@ -4,28 +4,27 @@ import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { signIn, signUp } from '@/services/auth';
-import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { signUp, signIn } from '@/services/auth';
 
-// Define login form schema
+// Define form schemas with simplified requirements
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email' }),
   password: z.string().min(1, { message: 'Password is required' }),
 });
 
-// Define registration form schema
 const registerFormSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
   firstName: z.string().min(1, { message: 'First name is required' }),
   lastName: z.string().min(1, { message: 'Last name is required' }),
-  role: z.enum(['applicant', 'alumni']),
+  email: z.string().email({ message: 'Please enter a valid email' }),
+  password: z.string().min(1, { message: 'Password is required' }),
+  userType: z.enum(['applicant', 'alumni']),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -34,7 +33,8 @@ type RegisterFormValues = z.infer<typeof registerFormSchema>;
 const Auth = () => {
   console.log("[Auth] Component rendering");
   const [isLoading, setIsLoading] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<string>("login");
+  const [userType, setUserType] = useState<'applicant' | 'alumni'>('applicant');
   const navigate = useNavigate();
   
   // Login form
@@ -45,16 +45,16 @@ const Auth = () => {
       password: '',
     },
   });
-
+  
   // Register form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
-      email: '',
-      password: '',
       firstName: '',
       lastName: '',
-      role: 'applicant',
+      email: '',
+      password: '',
+      userType: 'applicant',
     },
   });
 
@@ -69,20 +69,18 @@ const Auth = () => {
       
       toast("Login successful");
       
-      // Check if user has a role, if not redirect to role selection
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', userData.user.id)
-        .single();
+      // Redirect based on user role
+      const role = userData.user?.user_metadata?.role;
+      console.log("[Auth] User role after login:", role);
       
-      if (!profile?.role) {
-        navigate('/role-selection');
-      } else if (profile.role === 'alumni') {
-        navigate('/mentor-dashboard');
-      } else if (profile.role === 'applicant') {
+      if (role === 'alumni') {
+        console.log("[Auth] User is an alumni, redirecting to alumni dashboard");
+        navigate('/alumni-dashboard');
+      } else if (role === 'applicant') {
+        console.log("[Auth] User is an applicant, redirecting to applicant dashboard");
         navigate('/applicant-dashboard');
       } else {
+        console.log("[Auth] User role not recognized, redirecting to home page");
         navigate('/');
       }
     } catch (error: any) {
@@ -93,42 +91,57 @@ const Auth = () => {
     }
   };
 
-  // Handle registration
+  // Handle register with redirect to profile completion
   const onRegisterSubmit = async (values: RegisterFormValues) => {
-    console.log("[Auth] Registration submission started with email:", values.email);
+    console.log("[Auth] Registration started:", values);
     setIsLoading(true);
     try {
-      const { email, password, firstName, lastName, role } = values;
+      const { email, password, firstName, lastName, userType } = values;
+
+      // Set the role based on user type
+      const role = userType;
       
-      // Register the user
+      console.log(`[Auth] Registering user as ${userType} with role ${role}`);
+
       const userData = await signUp({ 
         email, 
         password, 
-        options: { 
-          data: { 
-            first_name: firstName,
-            last_name: lastName,
-            role: role 
-          }
+        firstName, 
+        lastName,
+        metadata: {
+          role: role,
         }
       });
+
+      console.log("[Auth] Registration successful, user data:", userData);
       
-      console.log("[Auth] Registration successful for:", email, userData);
+      // Sign in the user after registration
+      console.log("[Auth] Signing in after registration");
+      await signIn({ email, password });
+      console.log("[Auth] Sign-in after registration completed");
       
-      toast("Registration successful! Complete your profile to get started.");
-      
-      // Redirect to the appropriate profile completion page based on role
-      if (role === 'alumni') {
+      toast("Registration successful");
+
+      // Redirect based on user type to appropriate profile completion page
+      if (userType === "alumni") {
+        console.log("[Auth] User is an alumni, redirecting to alumni profile completion");
         navigate('/alumni-profile-complete');
       } else {
+        console.log("[Auth] User is an applicant, redirecting to applicant profile completion");
         navigate('/applicant-profile-complete');
       }
     } catch (error: any) {
       console.error('[Auth] Registration error:', error);
-      toast("Registration failed: " + (error.message || "Failed to register. Please try again."));
+      toast("Registration failed: " + (error.message || "Failed to create account"));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUserTypeChange = (value: string) => {
+    console.log("[Auth] User type changed to:", value);
+    setUserType(value as 'applicant' | 'alumni');
+    registerForm.setValue('userType', value as 'applicant' | 'alumni');
   };
 
   return (
@@ -136,21 +149,20 @@ const Auth = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-center">Welcome</CardTitle>
-          <CardDescription className="text-center">Sign in to your account or create a new one</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" onValueChange={(value) => setAuthMode(value as 'login' | 'register')}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="login">
+            <TabsContent value="login" className="space-y-4">
               <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input 
-                    id="login-email" 
+                    id="email" 
                     type="email" 
                     placeholder="your@email.com" 
                     {...loginForm.register('email')} 
@@ -161,9 +173,9 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
+                  <Label htmlFor="password">Password</Label>
                   <Input 
-                    id="login-password" 
+                    id="password" 
                     type="password" 
                     placeholder="••••••••" 
                     {...loginForm.register('password')} 
@@ -179,27 +191,13 @@ const Auth = () => {
               </form>
             </TabsContent>
             
-            <TabsContent value="register">
+            <TabsContent value="register" className="space-y-4">
               <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="register-email">Email</Label>
-                  <Input 
-                    id="register-email" 
-                    type="email" 
-                    placeholder="your@email.com" 
-                    {...registerForm.register('email')} 
-                  />
-                  {registerForm.formState.errors.email && (
-                    <p className="text-red-500 text-sm">{registerForm.formState.errors.email.message}</p>
-                  )}
-                </div>
-                
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="register-first-name">First Name</Label>
+                    <Label htmlFor="firstName">First Name</Label>
                     <Input 
-                      id="register-first-name" 
-                      type="text" 
+                      id="firstName" 
                       placeholder="John" 
                       {...registerForm.register('firstName')} 
                     />
@@ -209,10 +207,9 @@ const Auth = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="register-last-name">Last Name</Label>
+                    <Label htmlFor="lastName">Last Name</Label>
                     <Input 
-                      id="register-last-name" 
-                      type="text" 
+                      id="lastName" 
                       placeholder="Doe" 
                       {...registerForm.register('lastName')} 
                     />
@@ -223,9 +220,22 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">Password</Label>
+                  <Label htmlFor="reg-email">Email</Label>
                   <Input 
-                    id="register-password" 
+                    id="reg-email" 
+                    type="email" 
+                    placeholder="your@email.com" 
+                    {...registerForm.register('email')} 
+                  />
+                  {registerForm.formState.errors.email && (
+                    <p className="text-red-500 text-sm">{registerForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="reg-password">Password</Label>
+                  <Input 
+                    id="reg-password" 
                     type="password" 
                     placeholder="••••••••" 
                     {...registerForm.register('password')} 
@@ -236,25 +246,21 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>I want to register as a:</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      type="button"
-                      variant={registerForm.watch('role') === 'applicant' ? 'default' : 'outline'}
-                      className="w-full"
-                      onClick={() => registerForm.setValue('role', 'applicant')}
-                    >
-                      Student Applicant
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={registerForm.watch('role') === 'alumni' ? 'default' : 'outline'}
-                      className="w-full"
-                      onClick={() => registerForm.setValue('role', 'alumni')}
-                    >
-                      Alumni Mentor
-                    </Button>
-                  </div>
+                  <Label>I am registering as:</Label>
+                  <RadioGroup 
+                    value={userType} 
+                    onValueChange={handleUserTypeChange}
+                    className="flex flex-col space-y-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="applicant" id="applicant" />
+                      <Label htmlFor="applicant" className="font-normal">Applicant</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="alumni" id="alumni" />
+                      <Label htmlFor="alumni" className="font-normal">Alumni</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={isLoading}>

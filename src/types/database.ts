@@ -1,4 +1,3 @@
-
 export interface School {
   id: string;
   name: string;
@@ -67,13 +66,19 @@ export interface ProfileWithDetails extends Profile {
     id: string;
     name: string;
     type: string;
-  } | string | null;
+  } | null;
 }
 
-// Updated types for authentication
+// New types for authentication
 export interface UserCredentials {
   email: string;
   password: string;
+}
+
+export interface UserRegistration extends UserCredentials {
+  firstName: string;
+  lastName: string;
+  metadata?: Record<string, any>;
 }
 
 export interface Company {
@@ -161,6 +166,7 @@ export interface LandingPage {
   content_blocks?: ContentBlock[];
 }
 
+// Add new interface for UniversityContent
 export interface UniversityContent {
   id: string;
   name: string;

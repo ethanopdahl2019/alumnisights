@@ -79,9 +79,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni',
     social_links: parseSocialLinks(profile.social_links),
-    // Fix: Handle both string and object types for greek_life
-    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : 
-                (typeof profile.greek_life === 'string' ? profile.greek_life : null)
+    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null
   }));
 }
 
@@ -114,9 +112,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni',
     social_links: parseSocialLinks(profile.social_links),
-    // Fix: Handle both string and object types for greek_life
-    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : 
-                (typeof profile.greek_life === 'string' ? profile.greek_life : null)
+    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null
   };
 }
 

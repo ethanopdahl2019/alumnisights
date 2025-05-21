@@ -65,27 +65,14 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
       id: activity.id,
       label: activity.name,
       type: activity.type as TagType
-    })) || [])
+    })) || []),
+    // Greek Life tag (if applicable)
+    ...(profile.greek_life ? [{
+      id: profile.greek_life.id,
+      label: profile.greek_life.name,
+      type: 'club' as TagType
+    }] : [])
   ];
-  
-  // Add Greek Life tag if applicable
-  if (profile.greek_life) {
-    // Check if greek_life is an object with id, name properties or a string
-    if (typeof profile.greek_life === 'object' && profile.greek_life !== null) {
-      tags.push({
-        id: profile.greek_life.id,
-        label: profile.greek_life.name,
-        type: 'club' as TagType
-      });
-    } else if (typeof profile.greek_life === 'string') {
-      // If it's a string, use it as both id and label
-      tags.push({
-        id: 'greek-life',
-        label: profile.greek_life,
-        type: 'club' as TagType
-      });
-    }
-  }
   
   // Determine the link destination based on whether it's the user's own profile
   // and whether they're a mentor or alumni

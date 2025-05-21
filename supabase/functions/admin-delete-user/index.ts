@@ -21,7 +21,7 @@ serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  // Verify the requesting user exists
+  // Verify requesting user is an admin
   try {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     
@@ -29,6 +29,14 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const isAdmin = user.user_metadata?.role === 'admin';
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Admin privileges required' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
