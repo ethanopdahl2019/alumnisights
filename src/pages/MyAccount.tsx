@@ -53,6 +53,10 @@ const MyAccount = () => {
               school: data.school || { id: '', name: '', location: null, type: null, image: null },
               major: data.major || { id: '', name: '', category: null },
               activities: data.activities?.map((pa: any) => pa.activities) || [],
+              // Cast role to the expected type with a fallback
+              role: (data.role === 'alumni' || data.role === 'applicant' 
+                ? data.role as 'applicant' | 'alumni' 
+                : 'applicant'),
               social_links: typeof data.social_links === 'string' && data.social_links 
                 ? JSON.parse(data.social_links) 
                 : (data.social_links || null),

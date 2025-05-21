@@ -56,7 +56,10 @@ const Browse = () => {
               image: profile.school?.image ?? null
             },
             activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
-            role: (profile.role === 'alumni' || profile.role === 'applicant' ? profile.role : 'applicant') as 'applicant' | 'alumni',
+            // Cast role to the expected type with a fallback
+            role: (profile.role === 'alumni' || profile.role === 'applicant' 
+              ? profile.role as 'applicant' | 'alumni' 
+              : 'applicant'),
             social_links: socialLinks,
             greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null
           };
