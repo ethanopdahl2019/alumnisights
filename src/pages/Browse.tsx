@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
@@ -7,6 +8,8 @@ import ProfileFilter from '@/components/ProfileFilter';
 import SearchInput from '@/components/SearchInput';
 import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
 import { getAllProfiles, getSchools, getMajors, getActivities } from '@/services/profiles';
+import { toast } from 'sonner';
+import ErrorLogger from '@/components/ErrorLogger';
 
 const Browse = () => {
   const [loading, setLoading] = useState(true);
@@ -28,12 +31,28 @@ const Browse = () => {
           getActivities()
         ]);
         
-        setProfiles(profilesData);
+        // Process profile data to ensure no nulls
+        const processedProfiles = profilesData.map(profile => ({
+          ...profile,
+          name: profile.name || 'N/A',
+          bio: profile.bio || 'N/A',
+          school_name: profile.school_name || 'N/A',
+          major_name: profile.major_name || 'N/A',
+          location: profile.location || 'N/A',
+          degree: profile.degree || 'N/A',
+          graduation_year: profile.graduation_year || 0,
+          // Ensure school and major are populated
+          school: profile.school || { name: profile.school_name || 'N/A', location: 'N/A' },
+          major: profile.major || { name: profile.major_name || 'N/A' }
+        }));
+        
+        setProfiles(processedProfiles);
         setSchools(schoolsData);
         setMajors(majorsData);
         setActivities(activitiesData);
       } catch (error) {
         console.error('Error loading browse data:', error);
+        toast.error('Error loading browse data: ' + (error as Error).message);
       } finally {
         setLoading(false);
       }
@@ -80,9 +99,9 @@ const Browse = () => {
     // Include visible alumni profiles only
     if (!profile.visible) return false;
     
-    const matchesSearch = profile.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.school?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.major?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (profile.name || 'N/A').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (profile.school?.name || profile.school_name || 'N/A').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (profile.major?.name || profile.major_name || 'N/A').toLowerCase().includes(searchTerm.toLowerCase());
 
     if (!matchesSearch) return false;
 
@@ -207,6 +226,7 @@ const Browse = () => {
         </div>
       </main>
       <Footer />
+      <ErrorLogger />
     </div>
   );
 };

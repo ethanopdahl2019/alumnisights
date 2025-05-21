@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -57,6 +56,16 @@ const SimpleProfileComplete = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    // Upload to new storage bucket
+    if (file && user) {
       setImageFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -140,7 +149,7 @@ const SimpleProfileComplete = () => {
     checkExistingProfile();
   }, [session, navigate, user, form]);
 
-  // Upload profile image to Supabase Storage
+  // Upload profile image to Supabase Storage in the new bucket
   const uploadProfileImage = async (userId: string): Promise<string | null> => {
     if (!imageFile && imagePreview && existingProfile?.image) {
       return existingProfile.image;
@@ -152,31 +161,33 @@ const SimpleProfileComplete = () => {
       const fileExt = imageFile.name.split('.').pop();
       const filePath = `${userId}/profile.${fileExt}`;
       
-      // Upload the image
+      // Upload the image to the new bucket
       const { data, error } = await supabase.storage
-        .from('profile-images')
+        .from('alumnidata_new')
         .upload(filePath, imageFile, {
           upsert: true
         });
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
       // Get public URL
       const { data: publicUrlData } = supabase.storage
-        .from('profile-images')
+        .from('alumnidata_new')
         .getPublicUrl(data.path);
       
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast("Failed to upload your profile image.");
+      toast.error("Failed to upload your profile image: " + (error as Error).message);
       return null;
     }
   };
   
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) {
-      toast("You need to be logged in to complete your profile.");
+      toast.error("You need to be logged in to complete your profile.");
       navigate('/auth');
       return;
     }
@@ -205,21 +216,21 @@ const SimpleProfileComplete = () => {
           .from('profiles')
           .update({
             name: name || existingProfile.name,
-            school_name: values.university,
-            major_name: values.major,
-            bio: values.bio,
+            school_name: values.university || 'N/A',
+            major_name: values.major || 'N/A',
+            bio: values.bio || 'N/A',
             image: imageUrl || existingProfile.image,
-            location: values.location,
+            location: values.location || 'N/A',
             graduation_year: graduationYear,
-            degree: values.degree, // Using string type from the updated database.ts
-            role: role as 'applicant' | 'alumni', // Cast to union type
-            visible: existingProfile.visible !== undefined ? existingProfile.visible : true // Preserve visibility or default to true
+            degree: values.degree, // Using string type
+            role: role as 'applicant' | 'alumni',
+            visible: existingProfile.visible !== undefined ? existingProfile.visible : true
           })
           .eq('id', existingProfile.id);
           
         if (profileError) throw profileError;
         
-        toast("Profile updated successfully!");
+        toast.success("Profile updated successfully!");
       } else {
         // Create new profile
         const { error: profileError } = await supabase
@@ -227,14 +238,14 @@ const SimpleProfileComplete = () => {
           .insert({
             user_id: user.id,
             name: name || user.email?.split('@')[0] || 'User',
-            school_name: values.university,
-            major_name: values.major,
-            bio: values.bio,
+            school_name: values.university || 'N/A',
+            major_name: values.major || 'N/A',
+            bio: values.bio || 'N/A',
             image: imageUrl,
-            location: values.location,
+            location: values.location || 'N/A',
             graduation_year: graduationYear,
-            degree: values.degree, // Using string type from the updated database.ts
-            role: role as 'applicant' | 'alumni', // Cast to union type
+            degree: values.degree, // Using string type
+            role: role as 'applicant' | 'alumni',
             visible: true, // Default to visible for new profiles
             school_id: '', // Adding required fields with empty values
             major_id: ''  // Adding required fields with empty values
@@ -242,7 +253,7 @@ const SimpleProfileComplete = () => {
         
         if (profileError) throw profileError;
         
-        toast("Profile created successfully!");
+        toast.success("Profile created successfully!");
       }
       
       // Redirect to appropriate page
@@ -253,7 +264,7 @@ const SimpleProfileComplete = () => {
       }
     } catch (error: any) {
       console.error('Error completing profile:', error);
-      toast("Failed to complete your profile: " + (error.message || "Please try again."));
+      toast.error("Failed to complete your profile: " + (error.message || "Please try again."));
     } finally {
       setIsLoading(false);
     }

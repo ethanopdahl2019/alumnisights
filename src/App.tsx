@@ -1,138 +1,67 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from '@/components/theme-provider';
-import { HelmetProvider } from "react-helmet-async";
-import { Toaster } from "@/components/ui/toaster";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Index from './pages/Index';
-import AuthProvider from '@/components/AuthProvider';
-import Auth from './pages/Auth';
-import Browse from './pages/Browse';
-import StudentDashboard from './pages/StudentDashboard';
-import MentorDashboard from './pages/MentorDashboard';
-import AlumniDashboard from './pages/AlumniDashboard';
-import UndergraduateAdmissions from './pages/UndergraduateAdmissions';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import "./App.css";
+import Index from "./pages/Index";
+import { AuthProvider } from './components/AuthProvider';
+import { Toaster } from './components/ui/sonner';
+import ErrorLoggerProvider from './components/ErrorLoggerProvider';
+import SimpleProfileComplete from './pages/SimpleProfileComplete';
 import MyAccount from './pages/MyAccount';
+import Browse from './pages/Browse';
 import ApplicantDashboard from './pages/ApplicantDashboard';
-import HowItWorks from './pages/HowItWorks';
-import MentorChat from './pages/MentorChat';
-import AlumniProfilePage from './pages/AlumniProfilePage';
-import ProfileComplete from './pages/ProfileComplete';
-import LandingPage from './pages/LandingPage';
+import MentorDashboard from './pages/MentorDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import FeaturedSchoolsPage from './pages/admin/FeaturedSchools';
-import BookingPage from './pages/BookingPage';
-import BookingSuccessPage from './pages/BookingSuccessPage';
-import UniversityPage from './pages/insights/universities/UniversityPage';
-import RegistrationControl from './pages/admin/RegistrationControl';
+import UserManagement from './pages/admin/UserManagement';
 import UniversityContentManager from './pages/insights/universities/UniversityContentManager';
 import UniversityContentEditor from './pages/insights/universities/UniversityContentEditor';
-import UserManagement from './pages/admin/UserManagement';
-import BookingManagement from './pages/admin/BookingManagement';
-import Analytics from './pages/admin/Analytics';
-import GraduateAdmissions from './pages/insights/GraduateAdmissions';
-import IndustryInsights from './pages/insights/IndustryInsights';
-import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
-import ContentProgress from './pages/admin/ContentProgress';
-import AlumniProfileComplete from './pages/AlumniProfileComplete';
-import ApplicantProfileComplete from './pages/ApplicantProfileComplete';
-import SimpleProfileComplete from './pages/SimpleProfileComplete';
-import Home from './pages/Index';
-import ProfileView from './pages/AlumniProfilePage';
-import Blog from './pages/Index';
-import BlogPost from './pages/Index';
-import About from './pages/Index';
-import Contact from './pages/Index';
-import Insights from './pages/Index';
-import UniversitiesList from './pages/Index';
-import UniversityDetail from './pages/insights/universities/UniversityPage';
-
-// Create a client
-const queryClient = new QueryClient();
+import NotFound from './pages/NotFound';
+import PasswordReset from './pages/PasswordReset';
+import Blog from './pages/insights/blog/Blog';
+import BlogPost from './pages/insights/blog/BlogPost';
+import BlogCategoryPage from './pages/insights/blog/BlogCategoryPage';
+import LandingPage from './pages/LandingPage';
+import UniversityLandingPage from './pages/UniversityLandingPage';
+import MajorLandingPage from './pages/MajorLandingPage';
+import Pricing from './pages/Pricing';
 
 function App() {
-  console.log("App rendering, checking routes");
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-          <HelmetProvider>
-            <Toaster />
-            <AuthProvider>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/student-dashboard" element={<StudentDashboard />} />
-                <Route path="/mentor-dashboard" element={<MentorDashboard />} />
-                <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
-                <Route path="/my-account" element={<MyAccount />} />
-                <Route path="/account" element={<MyAccount />} />
-                <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
-                <Route path="/how-it-works" element={<HowItWorks />} />
-                <Route path="/mentor-chat" element={<MentorChat />} />
-                <Route path="/alumni/:id" element={<AlumniProfilePage />} />
-                <Route path="/profile-complete" element={<SimpleProfileComplete />} />
-                <Route path="/applicant-profile-complete" element={<ApplicantProfileComplete />} />
-                <Route path="/alumni-profile-complete" element={<AlumniProfileComplete />} />
-                <Route path="/landing" element={<LandingPage />} />
-                <Route path="/booking/:id/:productId" element={<BookingPage />} />
-                <Route path="/booking-success" element={<BookingSuccessPage />} />
-                
-                {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/featured-schools" element={<FeaturedSchoolsPage />} />
-                <Route path="/admin/registration-control" element={<RegistrationControl />} />
-                <Route path="/admin/users" element={<UserManagement />} />
-                <Route path="/admin/bookings" element={<BookingManagement />} />
-                <Route path="/admin/requests" element={<AdminDashboard />} />
-                <Route path="/admin/analytics" element={<Analytics />} />
-                <Route path="/admin/emails" element={<AdminDashboard />} />
-                <Route path="/admin/schools" element={<AdminDashboard />} />
-                <Route path="/admin/companies" element={<AdminDashboard />} />
-                <Route path="/admin/majors" element={<AdminDashboard />} />
-                <Route path="/admin/activities" element={<AdminDashboard />} />
-                <Route path="/admin/calendar" element={<AdminDashboard />} />
-                <Route path="/admin/settings" element={<AdminDashboard />} />
-                <Route path="/admin/content-progress" element={<ContentProgress />} />
-                
-                {/* Schools Routes */}
-                <Route path="/schools" element={<UndergraduateAdmissions />} />
-                <Route path="/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-                <Route path="/schools/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-                <Route path="/schools/undergraduate-admissions/:id" element={<UniversityPage />} />
-                
-                {/* Insights Routes */}
-                <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
-                <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
-                <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
-                <Route path="/insights/industry" element={<IndustryInsights />} />
-                <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
-                <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
-                <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
-                <Route path="/" element={<Home />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/my-account" element={<MyAccount />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/profile/:id" element={<ProfileView />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/mentor-dashboard" element={<MentorDashboard />} />
-                <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
-                <Route path="/profile-complete" element={<SimpleProfileComplete />} />
-                <Route path="/applicant-profile-complete" element={<ApplicantProfileComplete />} />
-                <Route path="/alumni-profile-complete" element={<AlumniProfileComplete />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/insights/universities" element={<UniversitiesList />} />
-                <Route path="/insights/universities/:id" element={<UniversityDetail />} />
-              </Routes>
-            </AuthProvider>
-          </HelmetProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorLoggerProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/complete-profile" element={<SimpleProfileComplete />} />
+            <Route path="/my-account" element={<MyAccount />} />
+            <Route path="/browse" element={<Browse />} />
+            <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
+            <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/user-management" element={<UserManagement />} />
+            <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
+            <Route path="/insights/university-content-editor/:universityId" element={<UniversityContentEditor />} />
+            <Route path="/password-reset" element={<PasswordReset />} />
+            
+            {/* Blog Routes */}
+            <Route path="/insights/blog" element={<Blog />} />
+            <Route path="/insights/blog/:slug" element={<BlogPost />} />
+            <Route path="/insights/blog/category/:slug" element={<BlogCategoryPage />} />
+
+            {/* Landing Pages */}
+            <Route path="/landing/:slug" element={<LandingPage />} />
+            <Route path="/university/:slug" element={<UniversityLandingPage />} />
+            <Route path="/major/:slug" element={<MajorLandingPage />} />
+
+            {/* Pricing */}
+            <Route path="/pricing" element={<Pricing />} />
+            
+            {/* Not Found Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </AuthProvider>
+    </ErrorLoggerProvider>
   );
 }
 
