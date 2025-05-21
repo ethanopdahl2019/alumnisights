@@ -1,16 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Trash2, Search, MoreHorizontal, UserPlus, UserCheck, AlertTriangle } from 'lucide-react';
+import { Trash2, Search, MoreHorizontal, UserPlus, UserCheck, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { isAdmin } from '@/services/auth';
-import { fetchAllUsers, deleteUser, UserWithProfile } from '@/services/supabase/users';
+import { fetchAllUsers, deleteUser, UserWithProfile, toggleUserVisibility } from '@/services/supabase/users';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -26,7 +26,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -54,6 +53,7 @@ const UserManagement: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<UserWithProfile | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin(user))) {
@@ -106,6 +106,35 @@ const UserManagement: React.FC = () => {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
       setUserToDelete(null);
+    }
+  };
+
+  const handleToggleVisibility = async (userId: string, visible: boolean | undefined | null) => {
+    setIsTogglingVisibility(true);
+    try {
+      const success = await toggleUserVisibility(userId, !visible);
+      if (success) {
+        // Update the user in the local state
+        setUsers(users.map(user => {
+          if (user.id === userId && user.profile) {
+            return {
+              ...user,
+              profile: {
+                ...user.profile,
+                visible: !visible
+              }
+            };
+          }
+          return user;
+        }));
+        
+        toast.success(`User visibility has been ${!visible ? 'enabled' : 'disabled'}`);
+      }
+    } catch (error) {
+      console.error('Error toggling visibility:', error);
+      toast.error("Failed to update visibility");
+    } finally {
+      setIsTogglingVisibility(false);
     }
   };
 
@@ -208,6 +237,7 @@ const UserManagement: React.FC = () => {
                       <TableHead>Role</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Last Login</TableHead>
+                      <TableHead className="text-center">Browse Visible</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -236,6 +266,18 @@ const UserManagement: React.FC = () => {
                         </TableCell>
                         <TableCell>{formatDate(user.created_at)}</TableCell>
                         <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
+                        <TableCell className="text-center">
+                          {user.user_metadata?.role === 'alumni' && (
+                            <div className="flex justify-center">
+                              <Checkbox 
+                                id={`visibility-${user.id}`}
+                                checked={user.profile?.visible ?? false}
+                                onCheckedChange={() => handleToggleVisibility(user.id, user.profile?.visible)}
+                                disabled={isTogglingVisibility}
+                              />
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -245,6 +287,25 @@ const UserManagement: React.FC = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              {user.user_metadata?.role === 'alumni' && (
+                                <DropdownMenuItem 
+                                  className="cursor-pointer"
+                                  onClick={() => handleToggleVisibility(user.id, user.profile?.visible)}
+                                  disabled={isTogglingVisibility}
+                                >
+                                  {user.profile?.visible ? (
+                                    <>
+                                      <EyeOff className="mr-2 h-4 w-4" />
+                                      Hide from Browse
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      Show in Browse
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem 
                                 className="text-red-600 cursor-pointer"
                                 onClick={() => handleDeleteUser(user)}

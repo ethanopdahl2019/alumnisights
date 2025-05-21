@@ -215,7 +215,8 @@ const SimpleProfileComplete = () => {
             location: values.location,
             graduation_year: graduationYear,
             degree: values.degree,
-            role: role as 'applicant' | 'alumni' // Cast to union type
+            role: role as 'applicant' | 'alumni', // Cast to union type
+            visible: existingProfile.visible !== undefined ? existingProfile.visible : true // Preserve visibility or default to true
           })
           .eq('id', existingProfile.id);
           
@@ -237,6 +238,7 @@ const SimpleProfileComplete = () => {
             graduation_year: graduationYear,
             degree: values.degree,
             role: role as 'applicant' | 'alumni', // Cast to union type
+            visible: true, // Default to visible for new profiles
             school_id: '', // Adding required fields with empty values
             major_id: ''  // Adding required fields with empty values
           });

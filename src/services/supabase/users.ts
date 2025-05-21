@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -19,6 +18,7 @@ export interface UserWithProfile {
     bio?: string;
     role?: string;
     image?: string;
+    visible?: boolean;
     school?: {
       name: string;
       location: string;
@@ -123,6 +123,67 @@ export async function deleteUser(userId: string): Promise<boolean> {
   } catch (error) {
     console.error("Error deleting user:", error);
     toast.error("Failed to delete user: " + (error as Error).message);
+    return false;
+  }
+}
+
+// Toggle profile visibility in browse page
+export async function toggleUserVisibility(userId: string, visible: boolean): Promise<boolean> {
+  try {
+    // First find the profile associated with this user
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (profileError) {
+      throw profileError;
+    }
+    
+    if (!profileData) {
+      // Create a profile for this user if they don't have one yet
+      const { data: userData } = await supabase.auth.admin.getUserById(userId);
+      if (!userData?.user) {
+        throw new Error("User not found");
+      }
+      
+      const user = userData.user;
+      const metadata = user.user_metadata || {};
+      const name = `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim();
+      
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          name: name || user.email?.split('@')[0] || 'User',
+          role: 'alumni',
+          visible: visible,
+          // Add minimal required fields
+          school_id: '', 
+          major_id: ''
+        });
+      
+      if (insertError) {
+        throw insertError;
+      }
+      
+      return true;
+    }
+    
+    // Update existing profile
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ visible: visible })
+      .eq('id', profileData.id);
+    
+    if (updateError) {
+      throw updateError;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error toggling user visibility:", error);
     return false;
   }
 }

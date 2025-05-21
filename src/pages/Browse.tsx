@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
@@ -78,7 +77,8 @@ const Browse = () => {
   ];
 
   const filteredProfiles = profiles.filter((profile) => {
-    // Include alumni profiles (mentors) - role check is handled in getAllProfiles now
+    // Include visible alumni profiles only
+    if (!profile.visible) return false;
     
     const matchesSearch = profile.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       profile.school?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

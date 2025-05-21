@@ -1,4 +1,3 @@
-
 export interface School {
   id: string;
   name: string;
@@ -51,6 +50,7 @@ export interface Profile {
   school_name?: string | null;
   major_name?: string | null;
   degree?: string | null;  // Changed from enum to accept any string
+  visible?: boolean | null; // Added visible field to control Browse visibility
 }
 
 export interface ProfileWithDetails extends Profile {
