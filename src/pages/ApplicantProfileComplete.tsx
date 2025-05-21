@@ -75,45 +75,49 @@ const ApplicantProfileComplete = () => {
     setIsLoading(true);
     
     try {
-      // Update profile with selected dream schools
-      const { data: profile } = await supabase
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user!.id)
         .single();
       
-      if (!profile) {
-        // Create profile if it doesn't exist
+      let profileId;
+      
+      if (!existingProfile) {
+        // Create a basic profile for the applicant
+        // Note: We set null values for required fields temporarily
+        // These will be updated later in the applicant journey
         const { data: newProfile, error: profileError } = await supabase
           .from('profiles')
           .insert({
             user_id: user!.id,
             name: `${user!.user_metadata.first_name} ${user!.user_metadata.last_name}`,
-            role: 'applicant'
+            role: 'applicant',
+            // Add placeholder values for required fields
+            school_id: null,
+            major_id: null
           })
           .select('id')
           .single();
         
         if (profileError) throw profileError;
-        
-        // Store dream schools
-        for (const school of selectedSchools) {
-          await supabase
-            .from('applicant_dream_schools')
-            .insert({
-              profile_id: newProfile.id,
-              school_id: school.id
-            });
-        }
+        profileId = newProfile.id;
       } else {
-        // Store dream schools for existing profile
-        for (const school of selectedSchools) {
-          await supabase
-            .from('applicant_dream_schools')
-            .insert({
-              profile_id: profile.id,
-              school_id: school.id
-            });
+        profileId = existingProfile.id;
+      }
+      
+      // Store dream schools using raw SQL query since applicant_dream_schools 
+      // may not be included in the TypeScript types
+      for (const school of selectedSchools) {
+        const { error } = await supabase.rpc('add_dream_school', {
+          p_profile_id: profileId,
+          p_school_id: school.id
+        });
+        
+        if (error) {
+          console.error('Error adding dream school:', error);
+          throw error;
         }
       }
       
