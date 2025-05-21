@@ -211,7 +211,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl || existingProfile.image,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree as string, // Cast as string to ensure TypeScript accepts it
+            degree: values.degree, // Using string type from the updated database.ts
             role: role as 'applicant' | 'alumni', // Cast to union type
             visible: existingProfile.visible !== undefined ? existingProfile.visible : true // Preserve visibility or default to true
           })
@@ -233,7 +233,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree as string, // Cast as string to ensure TypeScript accepts it
+            degree: values.degree, // Using string type from the updated database.ts
             role: role as 'applicant' | 'alumni', // Cast to union type
             visible: true, // Default to visible for new profiles
             school_id: '', // Adding required fields with empty values
