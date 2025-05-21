@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import { HelmetProvider } from "react-helmet-async";
@@ -36,6 +35,16 @@ import ClubsAndGreekLife from './pages/insights/ClubsAndGreekLife';
 import ContentProgress from './pages/admin/ContentProgress';
 import AlumniProfileComplete from './pages/AlumniProfileComplete';
 import ApplicantProfileComplete from './pages/ApplicantProfileComplete';
+import SimpleProfileComplete from './pages/SimpleProfileComplete';
+import Home from './pages/Index';
+import ProfileView from './pages/AlumniProfilePage';
+import Blog from './pages/Index';
+import BlogPost from './pages/Index';
+import About from './pages/Index';
+import Contact from './pages/Index';
+import Insights from './pages/Index';
+import UniversitiesList from './pages/Index';
+import UniversityDetail from './pages/UniversityPage';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -50,7 +59,7 @@ function App() {
             <Toaster />
             <AuthProvider>
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<Home />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/browse" element={<Browse />} />
                 <Route path="/student-dashboard" element={<StudentDashboard />} />
@@ -62,9 +71,9 @@ function App() {
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/mentor-chat" element={<MentorChat />} />
                 <Route path="/alumni/:id" element={<AlumniProfilePage />} />
-                <Route path="/profile-complete" element={<ProfileComplete />} />
-                <Route path="/alumni-profile-complete" element={<AlumniProfileComplete />} />
+                <Route path="/profile-complete" element={<SimpleProfileComplete />} />
                 <Route path="/applicant-profile-complete" element={<ApplicantProfileComplete />} />
+                <Route path="/alumni-profile-complete" element={<AlumniProfileComplete />} />
                 <Route path="/landing" element={<LandingPage />} />
                 <Route path="/booking/:id/:productId" element={<BookingPage />} />
                 <Route path="/booking-success" element={<BookingSuccessPage />} />
@@ -101,6 +110,23 @@ function App() {
                 <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
                 <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
                 <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/my-account" element={<MyAccount />} />
+                <Route path="/browse" element={<Browse />} />
+                <Route path="/profile/:id" element={<ProfileView />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+                <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
+                <Route path="/profile-complete" element={<SimpleProfileComplete />} />
+                <Route path="/applicant-profile-complete" element={<ApplicantProfileComplete />} />
+                <Route path="/alumni-profile-complete" element={<AlumniProfileComplete />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/insights/universities" element={<UniversitiesList />} />
+                <Route path="/insights/universities/:id" element={<UniversityDetail />} />
               </Routes>
             </AuthProvider>
           </HelmetProvider>

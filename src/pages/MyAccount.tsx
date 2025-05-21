@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -137,11 +136,7 @@ const MyAccount = () => {
   
   // Determine the correct profile completion route
   const getProfileCompleteRoute = () => {
-    if (userRole === 'applicant') {
-      return '/applicant-profile-complete';
-    } else if (userRole === 'alumni') {
-      return '/profile-complete';
-    }
+    // Updated to use the new simple profile page
     return '/profile-complete';
   };
 

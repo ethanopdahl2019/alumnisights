@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, ProfileWithDetails, School } from '@/types/database';
 
@@ -65,6 +64,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
 }
 
 export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
+  // Modified to get all alumni regardless of how they were created
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select(`

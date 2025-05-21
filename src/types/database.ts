@@ -67,6 +67,8 @@ export interface ProfileWithDetails extends Profile {
     name: string;
     type: string;
   } | null;
+  school_name?: string | null;
+  major_name?: string | null;
 }
 
 // New types for authentication
