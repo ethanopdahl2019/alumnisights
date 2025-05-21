@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -21,12 +22,13 @@ import { getMajors, getActivities, getGreekLifeOptions } from '@/services/profil
 import { getUniversities } from '@/services/universities';
 import SearchInput from '@/components/SearchInput';
 
+// Modified schema to make fields optional
 const profileSchema = z.object({
-  bio: z.string().min(20, { message: "Bio should be at least 20 characters" }),
-  universityId: z.string().min(1, { message: "Please select your university" }),
-  degree: z.string().min(1, { message: "Please select your degree" }),
-  majorId: z.string().min(1, { message: "Please select your major" }),
-  activities: z.array(z.string()).min(1, { message: "Please select at least one activity" }),
+  bio: z.string().optional(),
+  universityId: z.string().optional(),
+  degree: z.string().optional(),
+  majorId: z.string().optional(),
+  activities: z.array(z.string()).optional(),
   greekLife: z.string().optional(),
   image: z.any().optional(),
 });
@@ -55,6 +57,7 @@ const ProfileComplete = () => {
   const [majorSearchTerm, setMajorSearchTerm] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingProfile, setExistingProfile] = useState<any>(null);
   
   const degrees = [
     { id: "bachelors", name: "Bachelor's Degree" },
@@ -95,19 +98,46 @@ const ProfileComplete = () => {
   const watchedValues = form.watch();
   
   useEffect(() => {
-    // Calculate form completion progress
-    let completedSteps = 0;
-    if (watchedValues.bio.length >= 20) completedSteps++;
-    if (watchedValues.universityId) completedSteps++;
-    if (watchedValues.degree) completedSteps++;
-    if (watchedValues.majorId) completedSteps++;
-    if (watchedValues.activities.length > 0) completedSteps++;
-    if (imagePreview) completedSteps++;
+    // Calculate form completion progress based on fields that have been filled
+    const calculateProgress = () => {
+      let completedSteps = 0;
+      let totalSteps = 0;
+      
+      if (watchedValues.bio) {
+        completedSteps++;
+      }
+      totalSteps++;
+      
+      if (watchedValues.universityId) {
+        completedSteps++;
+      }
+      totalSteps++;
+      
+      if (watchedValues.degree) {
+        completedSteps++;
+      }
+      totalSteps++;
+      
+      if (watchedValues.majorId) {
+        completedSteps++;
+      }
+      totalSteps++;
+      
+      if (watchedValues.activities && watchedValues.activities.length > 0) {
+        completedSteps++;
+      }
+      totalSteps++;
+      
+      if (imagePreview) {
+        completedSteps++;
+      }
+      totalSteps++;
+      
+      const progressValue = (completedSteps / totalSteps) * 100;
+      setProgress(progressValue);
+    };
     
-    // Calculate progress based on total possible steps (including image upload)
-    const progressValue = (completedSteps / 6) * 100;
-    setProgress(progressValue);
-    console.log("[ProfileComplete] Form progress:", progressValue);
+    calculateProgress();
   }, [watchedValues, imagePreview]);
   
   // Redirect if not logged in
@@ -121,23 +151,92 @@ const ProfileComplete = () => {
       console.log("[ProfileComplete] User is authenticated:", user?.email);
     }
     
-    // Load universities from the insights page data
-    const loadUniversities = () => {
+    // Check if user already has a profile
+    const checkExistingProfile = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          if (data) {
+            setExistingProfile(data);
+            
+            // Populate form with existing data
+            form.setValue('bio', data.bio || '');
+            form.setValue('universityId', data.school_id || '');
+            form.setValue('degree', data.degree || '');
+            form.setValue('majorId', data.major_id || '');
+            
+            if (data.image) {
+              setImagePreview(data.image);
+            }
+            
+            // Fetch activities for this profile
+            const { data: activitiesData } = await supabase
+              .from('profile_activities')
+              .select('activity_id')
+              .eq('profile_id', data.id);
+              
+            if (activitiesData) {
+              form.setValue('activities', activitiesData.map(item => item.activity_id));
+            }
+            
+            // Fetch greek life for this profile
+            const { data: greekLifeData } = await supabase
+              .from('profile_greek_life')
+              .select('greek_life_id')
+              .eq('profile_id', data.id)
+              .maybeSingle();
+              
+            if (greekLifeData) {
+              form.setValue('greekLife', greekLifeData.greek_life_id);
+            }
+            
+            // Set university search term
+            if (data.school_id) {
+              const { data: schoolData } = await supabase
+                .from('schools')
+                .select('name')
+                .eq('id', data.school_id)
+                .maybeSingle();
+                
+              if (schoolData) {
+                setUniversitySearchTerm(schoolData.name);
+              }
+            }
+            
+            // Set major search term
+            if (data.major_id) {
+              const { data: majorData } = await supabase
+                .from('majors')
+                .select('name')
+                .eq('id', data.major_id)
+                .maybeSingle();
+                
+              if (majorData) {
+                setMajorSearchTerm(majorData.name);
+              }
+            }
+          }
+        } catch (err) {
+          console.error("[ProfileComplete] Error checking for existing profile:", err);
+        }
+      }
+    };
+    
+    // Load universities from the services
+    const loadUniversities = async () => {
       console.log("[ProfileComplete] Loading universities");
-      const universitiesByLetter = getUniversities();
-      const allUniversities: any[] = [];
-      
-      // Flatten the university list from all letters
-      Object.values(universitiesByLetter).forEach(universities => {
-        universities.forEach(university => {
-          allUniversities.push(university);
-        });
-      });
-      
-      // Sort universities by name
-      allUniversities.sort((a, b) => a.name.localeCompare(b.name));
-      setUniversities(allUniversities);
-      console.log("[ProfileComplete] Universities loaded:", allUniversities.length);
+      try {
+        const universitiesData = await getUniversities();
+        setUniversities(universitiesData);
+        console.log("[ProfileComplete] Universities loaded:", universitiesData.length);
+      } catch (error) {
+        console.error('[ProfileComplete] Error loading universities:', error);
+      }
     };
     
     // Load majors, activities, and Greek Life options
@@ -159,7 +258,9 @@ const ProfileComplete = () => {
         setMajors(majorsData);
         setActivities(activitiesData);
         setGreekLifeOptions(greekLifeData || []);
-        loadUniversities();
+        
+        await loadUniversities();
+        await checkExistingProfile();
       } catch (error) {
         console.error('[ProfileComplete] Error loading form data:', error);
         toast("Failed to load profile data. Please try again later.");
@@ -167,10 +268,14 @@ const ProfileComplete = () => {
     };
     
     loadFormData();
-  }, [session, navigate, user]);
+  }, [session, navigate, user, form]);
 
   // Upload profile image to Supabase Storage
   const uploadProfileImage = async (userId: string): Promise<string | null> => {
+    if (!imageFile && imagePreview && existingProfile?.image) {
+      return existingProfile.image;
+    }
+    
     if (!imageFile) return null;
     
     try {
@@ -214,80 +319,134 @@ const ProfileComplete = () => {
     try {
       // Upload profile image if one is selected
       let imageUrl = null;
-      if (imageFile) {
+      if (imageFile || existingProfile?.image) {
         imageUrl = await uploadProfileImage(user.id);
       }
       
-      // Get school_id from session user metadata or from selected university
+      // Get school_id from selected university
+      const schoolId = values.universityId || undefined;
+      const majorId = values.majorId || undefined;
+      
+      // Create or update profile
       const metadata = user.user_metadata || {};
-      const schoolId = values.universityId;
+      const name = `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim();
       
-      if (!schoolId) {
-        throw new Error("School information not found. Please try again.");
-      }
-      
-      // Create profile
-      console.log("[ProfileComplete] Creating profile for user:", user.id);
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: user.id,
-          name: `${metadata.first_name} ${metadata.last_name}`,
-          school_id: schoolId,
-          major_id: values.majorId,
-          bio: values.bio,
-          image: imageUrl, // Add profile image URL
-          role: 'alumni'   // Make sure role is set to alumni for browse section visibility
-        });
-      
-      if (profileError) throw profileError;
-      
-      // Get the newly created profile
-      console.log("[ProfileComplete] Getting created profile");
-      const { data: profileData, error: fetchError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (fetchError) throw fetchError;
-      
-      console.log("[ProfileComplete] Profile created successfully:", profileData);
-      
-      // Add activities to profile
-      const activityInserts = values.activities.map(activityId => ({
-        profile_id: profileData.id,
-        activity_id: activityId,
-      }));
-      
-      if (activityInserts.length > 0) {
-        console.log("[ProfileComplete] Adding activities to profile:", activityInserts.length);
-        const { error: activitiesError } = await supabase
-          .from('profile_activities')
-          .insert(activityInserts);
+      if (existingProfile) {
+        // Update existing profile
+        console.log("[ProfileComplete] Updating profile for user:", user.id);
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            name: name || existingProfile.name,
+            school_id: schoolId,
+            major_id: majorId,
+            bio: values.bio || existingProfile.bio,
+            image: imageUrl || existingProfile.image,
+            role: 'alumni' // Make sure role is set to alumni for browse section visibility
+          })
+          .eq('id', existingProfile.id);
+          
+        if (profileError) throw profileError;
         
-        if (activitiesError) throw activitiesError;
-      }
-      
-      // Add Greek life affiliation if selected
-      if (values.greekLife && values.greekLife !== 'none') {
-        console.log("[ProfileComplete] Adding Greek life affiliation:", values.greekLife);
-        try {
-          const { error: greekLifeError } = await supabase
+        // If activities were selected, update them
+        if (values.activities && values.activities.length > 0) {
+          // First delete existing activities
+          await supabase
+            .from('profile_activities')
+            .delete()
+            .eq('profile_id', existingProfile.id);
+            
+          // Then add new activities
+          const activityInserts = values.activities.map(activityId => ({
+            profile_id: existingProfile.id,
+            activity_id: activityId,
+          }));
+          
+          if (activityInserts.length > 0) {
+            const { error: activitiesError } = await supabase
+              .from('profile_activities')
+              .insert(activityInserts);
+              
+            if (activitiesError) throw activitiesError;
+          }
+        }
+        
+        // Update Greek life if selected
+        if (values.greekLife && values.greekLife !== 'none') {
+          // First delete existing greek life
+          await supabase
+            .from('profile_greek_life')
+            .delete()
+            .eq('profile_id', existingProfile.id);
+            
+          // Then add new greek life
+          await supabase
             .from('profile_greek_life')
             .insert({
-              profile_id: profileData.id,
+              profile_id: existingProfile.id,
               greek_life_id: values.greekLife,
             });
-          
-          if (greekLifeError) throw greekLifeError;
-        } catch (error) {
-          console.error('[ProfileComplete] Error adding Greek life affiliation:', error);
-          // Continue even if Greek life association fails
         }
+        
+        toast("Profile updated successfully!");
+      } else {
+        // Create new profile
+        console.log("[ProfileComplete] Creating profile for user:", user.id);
+        const { data: newProfile, error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            name: name || user.email?.split('@')[0] || 'User',
+            school_id: schoolId,
+            major_id: majorId,
+            bio: values.bio,
+            image: imageUrl,
+            role: 'alumni' // Make sure role is set to alumni for browse section visibility
+          })
+          .select('id')
+          .single();
+        
+        if (profileError) throw profileError;
+        
+        console.log("[ProfileComplete] Profile created successfully:", newProfile);
+        
+        // Add activities to profile if selected
+        if (values.activities && values.activities.length > 0) {
+          const activityInserts = values.activities.map(activityId => ({
+            profile_id: newProfile.id,
+            activity_id: activityId,
+          }));
+          
+          if (activityInserts.length > 0) {
+            console.log("[ProfileComplete] Adding activities to profile:", activityInserts.length);
+            const { error: activitiesError } = await supabase
+              .from('profile_activities')
+              .insert(activityInserts);
+            
+            if (activitiesError) throw activitiesError;
+          }
+        }
+        
+        // Add Greek life affiliation if selected
+        if (values.greekLife && values.greekLife !== 'none') {
+          console.log("[ProfileComplete] Adding Greek life affiliation:", values.greekLife);
+          try {
+            const { error: greekLifeError } = await supabase
+              .from('profile_greek_life')
+              .insert({
+                profile_id: newProfile.id,
+                greek_life_id: values.greekLife,
+              });
+            
+            if (greekLifeError) throw greekLifeError;
+          } catch (error) {
+            console.error('[ProfileComplete] Error adding Greek life affiliation:', error);
+            // Continue even if Greek life association fails
+          }
+        }
+        
+        toast("Profile complete! Your profile has been set up successfully.");
       }
-      
-      toast("Profile complete! Your profile has been set up successfully.");
       
       // Redirect to profile page or appropriate dashboard
       console.log("[ProfileComplete] Redirecting to alumni dashboard");
@@ -330,7 +489,7 @@ const ProfileComplete = () => {
             <CardHeader>
               <CardTitle>Your Information</CardTitle>
               <CardDescription>
-                This information will be displayed on your public profile
+                This information will be displayed on your public profile. Fill in as many fields as you'd like.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -388,7 +547,10 @@ const ProfileComplete = () => {
                             value={universitySearchTerm}
                             onChange={setUniversitySearchTerm}
                             placeholder="Type to search universities..."
-                            options={universities}
+                            options={universities.map(uni => ({
+                              id: uni.id,
+                              name: uni.name
+                            }))}
                             onOptionSelect={(university) => {
                               form.setValue("universityId", university.id);
                               setUniversitySearchTerm(university.name);
@@ -408,7 +570,7 @@ const ProfileComplete = () => {
                         <FormLabel>Degree</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
-                          defaultValue={field.value}
+                          value={field.value}
                           disabled={isLoading}
                         >
                           <FormControl>
@@ -440,7 +602,10 @@ const ProfileComplete = () => {
                             value={majorSearchTerm}
                             onChange={setMajorSearchTerm}
                             placeholder="Type to search majors..."
-                            options={filteredMajors}
+                            options={filteredMajors.map(major => ({
+                              id: major.id,
+                              name: major.name
+                            }))}
                             onOptionSelect={(major) => {
                               form.setValue("majorId", major.id);
                               setMajorSearchTerm(major.name);
@@ -460,7 +625,7 @@ const ProfileComplete = () => {
                         <FormLabel>Greek Life</FormLabel>
                         <Select 
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -470,19 +635,19 @@ const ProfileComplete = () => {
                           <SelectContent>
                             <SelectItem value="none">None</SelectItem>
                             <SelectLabel>Fraternities</SelectLabel>
-                            <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
-                            <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
-                            <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
-                            <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
-                            <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
-                            <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
+                            {greekLifeOptions
+                              .filter(org => org.type === 'fraternity')
+                              .map(org => (
+                                <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                              ))
+                            }
                             <SelectLabel>Sororities</SelectLabel>
-                            <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
-                            <SelectItem value="chi-omega">Chi Omega</SelectItem>
-                            <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
-                            <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
-                            <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
-                            <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
+                            {greekLifeOptions
+                              .filter(org => org.type === 'sorority')
+                              .map(org => (
+                                <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                              ))
+                            }
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -516,10 +681,11 @@ const ProfileComplete = () => {
                                     <Checkbox
                                       checked={field.value?.includes(activity.id)}
                                       onCheckedChange={(checked) => {
+                                        const currentActivities = field.value || [];
                                         return checked
-                                          ? field.onChange([...field.value, activity.id])
+                                          ? field.onChange([...currentActivities, activity.id])
                                           : field.onChange(
-                                              field.value?.filter(
+                                              currentActivities.filter(
                                                 (value) => value !== activity.id
                                               )
                                             );
@@ -549,10 +715,9 @@ const ProfileComplete = () => {
                     </Button>
                     <Button 
                       type="submit" 
-                      disabled={isLoading || progress < 100}
-                      className={progress < 100 ? "opacity-70" : ""}
+                      disabled={isLoading}
                     >
-                      {isLoading ? "Saving..." : "Complete Profile"}
+                      {isLoading ? "Saving..." : existingProfile ? "Update Profile" : "Complete Profile"}
                     </Button>
                   </div>
                 </form>

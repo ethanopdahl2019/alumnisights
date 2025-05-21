@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileCard from '@/components/ProfileCard';
 import ProfileFilter from '@/components/ProfileFilter';
 import SearchInput from '@/components/SearchInput';
+import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
+import { getAllProfiles, getSchools, getMajors, getActivities } from '@/services/profiles';
 
 const Browse = () => {
   const [loading, setLoading] = useState(true);
@@ -20,66 +20,24 @@ const Browse = () => {
   
   useEffect(() => {
     const loadData = async () => {
-      const [profilesData, schoolsData, majorsData, activitiesData] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select(`
-            *,
-            school:schools(id, name, location, type, image, created_at),
-            major:majors(*),
-            activities:profile_activities(activities(*)),
-            greek_life:profile_greek_life(greek_life(*))
-          `),
-        supabase.from('schools').select('id, name, location, type, image, created_at'),
-        supabase.from('majors').select('*'),
-        supabase.from('activities').select('*')
-      ]);
-
-      // Process profile data
-      if (profilesData.data) {
-        const processedProfiles: ProfileWithDetails[] = profilesData.data.map((profile: any) => {
-          // Parse social_links if it's a string
-          let socialLinks = profile.social_links;
-          if (typeof socialLinks === 'string' && socialLinks) {
-            try {
-              socialLinks = JSON.parse(socialLinks);
-            } catch (error) {
-              console.error('Error parsing social links:', error);
-              socialLinks = null;
-            }
-          }
-          
-          return {
-            ...profile,
-            school: {
-              ...profile.school,
-              image: profile.school?.image ?? null
-            },
-            activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
-            // Cast role to the expected type with a fallback
-            role: (profile.role === 'alumni' || profile.role === 'applicant' 
-              ? profile.role as 'applicant' | 'alumni' 
-              : 'applicant'),
-            social_links: socialLinks,
-            greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null
-          };
-        });
+      try {
+        // Use the service functions to fetch data
+        const [profilesData, schoolsData, majorsData, activitiesData] = await Promise.all([
+          getAllProfiles(),
+          getSchools(),
+          getMajors(),
+          getActivities()
+        ]);
         
-        setProfiles(processedProfiles);
+        setProfiles(profilesData);
+        setSchools(schoolsData);
+        setMajors(majorsData);
+        setActivities(activitiesData);
+      } catch (error) {
+        console.error('Error loading browse data:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      if (schoolsData.data) {
-        setSchools(
-          schoolsData.data.map((school: any) => ({
-            ...school,
-            image: school.image ?? null
-          }))
-        );
-      }
-      if (majorsData.data) setMajors(majorsData.data);
-      if (activitiesData.data) setActivities(activitiesData.data);
-      
-      setLoading(false);
     };
 
     loadData();
@@ -120,10 +78,7 @@ const Browse = () => {
   ];
 
   const filteredProfiles = profiles.filter((profile) => {
-    // Include alumni profiles (mentors)
-    const isAlumni = profile.role === 'alumni';
-    
-    if (!isAlumni) return false;
+    // Include alumni profiles (mentors) - role check is handled in getAllProfiles now
     
     const matchesSearch = profile.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       profile.school?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

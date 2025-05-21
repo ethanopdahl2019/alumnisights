@@ -73,7 +73,8 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       major:majors(*),
       activities:profile_activities(activities(*)),
       greek_life:profile_greek_life(greek_life(*))
-    `);
+    `)
+    .eq('role', 'alumni'); // Only fetch alumni profiles for browsing
 
   if (error) {
     console.error('Error fetching profiles:', error);

@@ -19,6 +19,7 @@ const MyAccount = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileWithDetails | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [profileCompletion, setProfileCompletion] = useState(0);
 
   useEffect(() => {
     // Redirect if not logged in
@@ -65,6 +66,9 @@ const MyAccount = () => {
                 : null
             };
             setProfile(profileData);
+            
+            // Calculate profile completion percentage
+            calculateProfileCompletion(profileData);
           }
         } catch (error) {
           console.error('Error in profile fetch:', error);
@@ -76,6 +80,25 @@ const MyAccount = () => {
       fetchProfile();
     }
   }, [user, loading, navigate]);
+
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = (profile: ProfileWithDetails) => {
+    const fields = [
+      profile.bio,
+      profile.school?.name,
+      profile.major?.name,
+      profile.image,
+      profile.location,
+      profile.graduation_year,
+      profile.activities?.length > 0
+    ];
+    
+    const completedFields = fields.filter(Boolean).length;
+    const totalFields = fields.length;
+    const percentage = Math.round((completedFields / totalFields) * 100);
+    
+    setProfileCompletion(percentage);
+  };
 
   if (loading || isLoadingProfile) {
     return (
@@ -111,6 +134,16 @@ const MyAccount = () => {
       : userRole === 'admin' 
         ? 'Administrator' 
         : 'User';
+  
+  // Determine the correct profile completion route
+  const getProfileCompleteRoute = () => {
+    if (userRole === 'applicant') {
+      return '/applicant-profile-complete';
+    } else if (userRole === 'alumni') {
+      return '/profile-complete';
+    }
+    return '/profile-complete';
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -134,11 +167,7 @@ const MyAccount = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => navigate(
-                          userRole === 'applicant' 
-                            ? '/applicant-profile-complete' 
-                            : '/profile-complete'
-                        )}
+                        onClick={() => navigate(getProfileCompleteRoute())}
                       >
                         <PenSquare className="h-4 w-4 mr-2" /> Edit Profile
                       </Button>
@@ -165,6 +194,19 @@ const MyAccount = () => {
                       <span className="inline-block mt-2 px-3 py-1 rounded-full text-xs bg-primary/10 text-primary">
                         {roleName}
                       </span>
+                      {profile && (
+                        <div className="mt-2 text-center">
+                          <p className="text-sm text-gray-500">
+                            Profile completion: {profileCompletion}%
+                          </p>
+                          <div className="w-full h-1 mt-1 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary" 
+                              style={{ width: `${profileCompletion}%` }} 
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1">
@@ -176,11 +218,7 @@ const MyAccount = () => {
                           </p>
                           <Button 
                             className="mt-4" 
-                            onClick={() => navigate(
-                              userRole === 'applicant' 
-                                ? '/applicant-profile-complete' 
-                                : '/profile-complete'
-                            )}
+                            onClick={() => navigate(getProfileCompleteRoute())}
                           >
                             Complete Profile
                           </Button>
@@ -195,7 +233,7 @@ const MyAccount = () => {
                           )}
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            {profile.school && (
+                            {profile.school?.name && (
                               <div className="flex items-center gap-2">
                                 <School className="h-5 w-5 text-gray-400" />
                                 <div>
@@ -205,7 +243,7 @@ const MyAccount = () => {
                               </div>
                             )}
                             
-                            {profile.major && (
+                            {profile.major?.name && (
                               <div className="flex items-center gap-2">
                                 <BookOpen className="h-5 w-5 text-gray-400" />
                                 <div>
@@ -240,12 +278,12 @@ const MyAccount = () => {
                             <div className="mt-4">
                               <h3 className="text-sm font-medium text-gray-500 mb-2">Activities & Interests</h3>
                               <div className="flex flex-wrap gap-2">
-                                {profile.activities.map((activityItem: any) => (
+                                {profile.activities.map((activity: any) => (
                                   <span 
-                                    key={activityItem.activities.id} 
+                                    key={activity.id} 
                                     className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs"
                                   >
-                                    {activityItem.activities.name}
+                                    {activity.name}
                                   </span>
                                 ))}
                               </div>
