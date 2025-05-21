@@ -236,7 +236,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree,
+            degree: values.degree as string, // Just treat it as a string
             role: role as 'applicant' | 'alumni', // Cast to union type
             school_id: '', // Adding required fields with empty values
             major_id: ''  // Adding required fields with empty values
