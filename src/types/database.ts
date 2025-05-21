@@ -1,4 +1,3 @@
-
 export interface School {
   id: string;
   name: string;
@@ -50,7 +49,7 @@ export interface Profile {
   achievements?: string[] | null;
   school_name?: string | null;
   major_name?: string | null;
-  degree?: string | null;
+  degree?: string | null;  // Changed from enum to accept any string
 }
 
 export interface ProfileWithDetails extends Profile {
