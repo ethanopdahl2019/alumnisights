@@ -1,5 +1,16 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials } from '@/types/database';
+
+// Create type for sign up parameters
+type SignUpParams = {
+  email: string;
+  password: string;
+  options?: {
+    data?: Record<string, any>;
+    redirectTo?: string;
+  };
+};
 
 export async function signIn({ email, password }: UserCredentials) {
   console.log("[auth.ts] Starting signin process for:", email);
@@ -18,6 +29,26 @@ export async function signIn({ email, password }: UserCredentials) {
   console.log("[auth.ts] User metadata:", data.user?.user_metadata);
   console.log("[auth.ts] User role:", data.user?.user_metadata?.role);
   console.log("[auth.ts] User type:", data.user?.user_metadata?.user_type);
+  return data;
+}
+
+export async function signUp({ email, password, options }: SignUpParams) {
+  console.log("[auth.ts] Starting signup process for:", email);
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options
+  });
+
+  if (error) {
+    console.error("[auth.ts] Signup error:", error);
+    throw error;
+  }
+
+  console.log("[auth.ts] Signup successful for:", email);
+  console.log("[auth.ts] User metadata:", data.user?.user_metadata);
+  
   return data;
 }
 
