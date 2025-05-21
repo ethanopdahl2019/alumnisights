@@ -44,7 +44,7 @@ import About from './pages/Index';
 import Contact from './pages/Index';
 import Insights from './pages/Index';
 import UniversitiesList from './pages/Index';
-import UniversityDetail from './pages/UniversityPage';
+import UniversityDetail from './pages/insights/universities/UniversityPage';
 
 // Create a client
 const queryClient = new QueryClient();

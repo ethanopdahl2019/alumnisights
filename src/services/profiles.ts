@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, ProfileWithDetails, School } from '@/types/database';
 
@@ -37,7 +38,10 @@ const transformProfileData = (profile: any): ProfileWithDetails => {
       ? profile.role as 'applicant' | 'alumni' 
       : 'applicant'),
     social_links: parseSocialLinks(profile.social_links),
-    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null
+    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null,
+    // Ensure school_name and major_name are available
+    school_name: profile.school_name || profile.school?.name || null,
+    major_name: profile.major_name || profile.major?.name || null
   };
 };
 

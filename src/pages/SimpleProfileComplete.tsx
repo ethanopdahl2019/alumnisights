@@ -200,6 +200,9 @@ const SimpleProfileComplete = () => {
       // Determine role
       const role = metadata.role || 'applicant';
       
+      // Convert graduation year to number if present
+      const graduationYear = values.graduationYear ? parseInt(values.graduationYear, 10) : null;
+      
       if (existingProfile) {
         // Update existing profile
         const { error: profileError } = await supabase
@@ -211,9 +214,9 @@ const SimpleProfileComplete = () => {
             bio: values.bio,
             image: imageUrl || existingProfile.image,
             location: values.location,
-            graduation_year: values.graduationYear,
+            graduation_year: graduationYear,
             degree: values.degree,
-            role: role // Keep existing role
+            role: role as 'applicant' | 'alumni' // Cast to union type
           })
           .eq('id', existingProfile.id);
           
@@ -232,9 +235,9 @@ const SimpleProfileComplete = () => {
             bio: values.bio,
             image: imageUrl,
             location: values.location,
-            graduation_year: values.graduationYear,
+            graduation_year: graduationYear,
             degree: values.degree,
-            role: role // Use role from metadata
+            role: role as 'applicant' | 'alumni' // Cast to union type
           });
         
         if (profileError) throw profileError;
