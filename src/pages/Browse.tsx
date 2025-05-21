@@ -32,19 +32,36 @@ const Browse = () => {
         ]);
         
         // Process profile data to ensure no nulls
-        const processedProfiles = profilesData.map(profile => ({
-          ...profile,
-          name: profile.name || 'N/A',
-          bio: profile.bio || 'N/A',
-          school_name: profile.school_name || 'N/A',
-          major_name: profile.major_name || 'N/A',
-          location: profile.location || 'N/A',
-          degree: profile.degree || 'N/A',
-          graduation_year: profile.graduation_year || 0,
-          // Ensure school and major are populated
-          school: profile.school || { name: profile.school_name || 'N/A', location: 'N/A' },
-          major: profile.major || { name: profile.major_name || 'N/A' }
-        }));
+        const processedProfiles = profilesData.map(profile => {
+          const defaultSchool: School = {
+            id: profile.school_id || '',
+            name: profile.school_name || 'N/A',
+            location: 'N/A',
+            type: null,
+            image: null,
+          };
+          
+          const defaultMajor: Major = {
+            id: profile.major_id || '',
+            name: profile.major_name || 'N/A',
+            category: null,
+          };
+          
+          return {
+            ...profile,
+            name: profile.name || 'N/A',
+            bio: profile.bio || 'N/A',
+            school_name: profile.school_name || 'N/A',
+            major_name: profile.major_name || 'N/A',
+            location: profile.location || 'N/A',
+            degree: profile.degree || 'N/A',
+            graduation_year: profile.graduation_year || 0,
+            // Ensure school and major are proper types
+            school: profile.school || defaultSchool,
+            major: profile.major || defaultMajor,
+            activities: profile.activities || []
+          } as ProfileWithDetails;
+        });
         
         setProfiles(processedProfiles);
         setSchools(schoolsData);
