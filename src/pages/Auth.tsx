@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { signIn } from '@/services/auth';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define login form schema
 const loginFormSchema = z.object({
