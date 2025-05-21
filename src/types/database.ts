@@ -1,4 +1,3 @@
-
 export interface School {
   id: string;
   name: string;
@@ -73,6 +72,7 @@ export interface ProfileWithDetails extends Profile {
   } | null;
   school_name?: string | null;
   major_name?: string | null;
+  degree?: string | null;
 }
 
 // New types for authentication
