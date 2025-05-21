@@ -223,7 +223,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl || existingProfile.image,
             location: values.location || 'N/A',
             graduation_year: graduationYear,
-            degree: values.degree || null, // Store as string without type casting
+            degree: values.degree || null,  // Store as string without type constraint
             role: role as 'applicant' | 'alumni',
             visible: existingProfile.visible !== undefined ? existingProfile.visible : true
           })
@@ -245,7 +245,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl,
             location: values.location || 'N/A',
             graduation_year: graduationYear,
-            degree: values.degree || null, // Store as string without type casting
+            degree: values.degree || null,  // Store as string without type constraint
             role: role as 'applicant' | 'alumni',
             visible: true, // Default to visible for new profiles
             school_id: '', // Adding required fields with empty values
