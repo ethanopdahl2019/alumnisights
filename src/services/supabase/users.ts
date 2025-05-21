@@ -129,7 +129,7 @@ export async function deleteUser(userId: string): Promise<boolean> {
 }
 
 // Toggle profile visibility in browse page
-export async function toggleUserVisibility(userId: string, visible: boolean | undefined | null): Promise<boolean> {
+export async function toggleUserVisibility(userId: string, visible: boolean): Promise<boolean> {
   try {
     // First find the profile associated with this user
     const { data: profileData, error: profileError } = await supabase
@@ -144,12 +144,7 @@ export async function toggleUserVisibility(userId: string, visible: boolean | un
     
     if (!profileData) {
       // Create a profile for this user if they don't have one yet
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        throw userError;
-      }
-      
+      const { data: userData } = await supabase.auth.admin.getUserById(userId);
       if (!userData?.user) {
         throw new Error("User not found");
       }
@@ -167,37 +162,11 @@ export async function toggleUserVisibility(userId: string, visible: boolean | un
           visible: visible,
           // Add minimal required fields
           school_id: '', 
-          major_id: '',
-          // Add default values for required fields
-          school_name: 'N/A',
-          major_name: 'N/A',
-          bio: 'N/A',
-          location: 'N/A'
+          major_id: ''
         });
       
       if (insertError) {
         throw insertError;
-      }
-      
-      // Save profile data to new storage bucket
-      if (user.id) {
-        try {
-          const dummyData = JSON.stringify({
-            name: name || user.email?.split('@')[0] || 'User',
-            visible: visible,
-            created: new Date().toISOString()
-          });
-          
-          const filePath = `${user.id}/profile.json`;
-          await supabase.storage
-            .from('alumnidata_new')
-            .upload(filePath, new Blob([dummyData], { type: 'application/json' }), {
-              upsert: true
-            });
-        } catch (storageError) {
-          console.error("Error storing profile data:", storageError);
-          // Don't throw, just log it since the profile is already created in the database
-        }
       }
       
       return true;
@@ -216,7 +185,6 @@ export async function toggleUserVisibility(userId: string, visible: boolean | un
     return true;
   } catch (error) {
     console.error("Error toggling user visibility:", error);
-    toast.error("Failed to toggle visibility: " + (error as Error).message);
     return false;
   }
 }

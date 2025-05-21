@@ -43,8 +43,6 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import ErrorLogger from '@/components/ErrorLogger';
-import { errorLogger } from '@/components/ErrorLogger';
 
 const UserManagement: React.FC = () => {
   const { user, loading } = useAuth();
@@ -55,7 +53,7 @@ const UserManagement: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<UserWithProfile | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isTogglingVisibility, setIsTogglingVisibility] = useState<{[key: string]: boolean}>({});
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin(user))) {
@@ -77,7 +75,6 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       console.error('Error loading users:', error);
       toast.error("Failed to load users");
-      errorLogger.logError(`Failed to load users: ${(error as Error).message}`);
     } finally {
       setIsLoading(false);
     }
@@ -113,9 +110,7 @@ const UserManagement: React.FC = () => {
   };
 
   const handleToggleVisibility = async (userId: string, visible: boolean | undefined | null) => {
-    // Create a per-user loading state
-    setIsTogglingVisibility(prev => ({ ...prev, [userId]: true }));
-    
+    setIsTogglingVisibility(true);
     try {
       const success = await toggleUserVisibility(userId, !visible);
       if (success) {
@@ -138,9 +133,8 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       console.error('Error toggling visibility:', error);
       toast.error("Failed to update visibility");
-      errorLogger.logError(`Failed to toggle visibility: ${(error as Error).message}`);
     } finally {
-      setIsTogglingVisibility(prev => ({ ...prev, [userId]: false }));
+      setIsTogglingVisibility(false);
     }
   };
 
@@ -178,11 +172,26 @@ const UserManagement: React.FC = () => {
   };
 
   if (loading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   if (!user || !isAdmin(user)) {
-    return null;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <AlertTriangle className="h-16 w-16 text-yellow-500 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+        <p className="text-gray-600 mb-4 text-center">
+          You don't have permission to access this page.
+        </p>
+        <Button onClick={() => navigate('/')}>
+          Go back to home
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -264,8 +273,7 @@ const UserManagement: React.FC = () => {
                                 id={`visibility-${user.id}`}
                                 checked={user.profile?.visible ?? false}
                                 onCheckedChange={() => handleToggleVisibility(user.id, user.profile?.visible)}
-                                disabled={isTogglingVisibility[user.id]}
-                                className="cursor-pointer h-5 w-5"
+                                disabled={isTogglingVisibility}
                               />
                             </div>
                           )}
@@ -283,7 +291,7 @@ const UserManagement: React.FC = () => {
                                 <DropdownMenuItem 
                                   className="cursor-pointer"
                                   onClick={() => handleToggleVisibility(user.id, user.profile?.visible)}
-                                  disabled={isTogglingVisibility[user.id]}
+                                  disabled={isTogglingVisibility}
                                 >
                                   {user.profile?.visible ? (
                                     <>
@@ -350,7 +358,6 @@ const UserManagement: React.FC = () => {
       </Dialog>
       
       <Footer />
-      <ErrorLogger />
     </div>
   );
 };

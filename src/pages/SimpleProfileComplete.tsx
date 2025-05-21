@@ -64,16 +64,6 @@ const SimpleProfileComplete = () => {
       };
       reader.readAsDataURL(file);
     }
-    
-    // Upload to new storage bucket
-    if (file && user) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
   };
   
   // Watch form values to update progress
@@ -150,7 +140,7 @@ const SimpleProfileComplete = () => {
     checkExistingProfile();
   }, [session, navigate, user, form]);
 
-  // Upload profile image to Supabase Storage in the new bucket
+  // Upload profile image to Supabase Storage
   const uploadProfileImage = async (userId: string): Promise<string | null> => {
     if (!imageFile && imagePreview && existingProfile?.image) {
       return existingProfile.image;
@@ -162,33 +152,31 @@ const SimpleProfileComplete = () => {
       const fileExt = imageFile.name.split('.').pop();
       const filePath = `${userId}/profile.${fileExt}`;
       
-      // Upload the image to the new bucket
+      // Upload the image
       const { data, error } = await supabase.storage
-        .from('alumnidata_new')
+        .from('profile-images')
         .upload(filePath, imageFile, {
           upsert: true
         });
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       // Get public URL
       const { data: publicUrlData } = supabase.storage
-        .from('alumnidata_new')
+        .from('profile-images')
         .getPublicUrl(data.path);
       
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error("Failed to upload your profile image: " + (error as Error).message);
+      toast("Failed to upload your profile image.");
       return null;
     }
   };
   
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) {
-      toast.error("You need to be logged in to complete your profile.");
+      toast("You need to be logged in to complete your profile.");
       navigate('/auth');
       return;
     }
@@ -217,21 +205,21 @@ const SimpleProfileComplete = () => {
           .from('profiles')
           .update({
             name: name || existingProfile.name,
-            school_name: values.university || 'N/A',
-            major_name: values.major || 'N/A',
-            bio: values.bio || 'N/A',
+            school_name: values.university,
+            major_name: values.major,
+            bio: values.bio,
             image: imageUrl || existingProfile.image,
-            location: values.location || 'N/A',
+            location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree || null,  // Store as string without type constraint
-            role: role as 'applicant' | 'alumni',
-            visible: existingProfile.visible !== undefined ? existingProfile.visible : true
+            degree: values.degree, // Using string type from the updated database.ts
+            role: role as 'applicant' | 'alumni', // Cast to union type
+            visible: existingProfile.visible !== undefined ? existingProfile.visible : true // Preserve visibility or default to true
           })
           .eq('id', existingProfile.id);
           
         if (profileError) throw profileError;
         
-        toast.success("Profile updated successfully!");
+        toast("Profile updated successfully!");
       } else {
         // Create new profile
         const { error: profileError } = await supabase
@@ -239,14 +227,14 @@ const SimpleProfileComplete = () => {
           .insert({
             user_id: user.id,
             name: name || user.email?.split('@')[0] || 'User',
-            school_name: values.university || 'N/A',
-            major_name: values.major || 'N/A',
-            bio: values.bio || 'N/A',
+            school_name: values.university,
+            major_name: values.major,
+            bio: values.bio,
             image: imageUrl,
-            location: values.location || 'N/A',
+            location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree || null,  // Store as string without type constraint
-            role: role as 'applicant' | 'alumni',
+            degree: values.degree, // Using string type from the updated database.ts
+            role: role as 'applicant' | 'alumni', // Cast to union type
             visible: true, // Default to visible for new profiles
             school_id: '', // Adding required fields with empty values
             major_id: ''  // Adding required fields with empty values
@@ -254,7 +242,7 @@ const SimpleProfileComplete = () => {
         
         if (profileError) throw profileError;
         
-        toast.success("Profile created successfully!");
+        toast("Profile created successfully!");
       }
       
       // Redirect to appropriate page
@@ -265,7 +253,7 @@ const SimpleProfileComplete = () => {
       }
     } catch (error: any) {
       console.error('Error completing profile:', error);
-      toast.error("Failed to complete your profile: " + (error.message || "Please try again."));
+      toast("Failed to complete your profile: " + (error.message || "Please try again."));
     } finally {
       setIsLoading(false);
     }
