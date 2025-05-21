@@ -37,7 +37,8 @@ const MyAccount = () => {
               *,
               school:schools(*),
               major:majors(*),
-              activities:profile_activities(activities(*))
+              activities:profile_activities(activities(*)),
+              greek_life:profile_greek_life(greek_life(*))
             `)
             .eq('user_id', user.id)
             .single();
@@ -46,7 +47,20 @@ const MyAccount = () => {
             console.error('Error fetching profile:', error);
             toast.error('Failed to load your profile');
           } else if (data) {
-            setProfile(data as ProfileWithDetails);
+            // Transform the data to match ProfileWithDetails
+            const profileData: ProfileWithDetails = {
+              ...data,
+              school: data.school || { id: '', name: '', location: null, type: null, image: null },
+              major: data.major || { id: '', name: '', category: null },
+              activities: data.activities?.map((pa: any) => pa.activities) || [],
+              social_links: typeof data.social_links === 'string' && data.social_links 
+                ? JSON.parse(data.social_links) 
+                : (data.social_links || null),
+              greek_life: data.greek_life?.length > 0 
+                ? data.greek_life[0].greek_life 
+                : null
+            };
+            setProfile(profileData);
           }
         } catch (error) {
           console.error('Error in profile fetch:', error);

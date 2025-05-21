@@ -27,7 +27,8 @@ const Browse = () => {
             *,
             school:schools(id, name, location, type, image, created_at),
             major:majors(*),
-            activities:profile_activities(activities(*))
+            activities:profile_activities(activities(*)),
+            greek_life:profile_greek_life(greek_life(*))
           `),
         supabase.from('schools').select('id, name, location, type, image, created_at'),
         supabase.from('majors').select('*'),
@@ -36,7 +37,7 @@ const Browse = () => {
 
       // Process profile data
       if (profilesData.data) {
-        const processedProfiles = profilesData.data.map(profile => {
+        const processedProfiles: ProfileWithDetails[] = profilesData.data.map((profile: any) => {
           // Parse social_links if it's a string
           let socialLinks = profile.social_links;
           if (typeof socialLinks === 'string' && socialLinks) {
@@ -55,13 +56,13 @@ const Browse = () => {
               image: profile.school?.image ?? null
             },
             activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
-            // Explicitly cast the role to the correct type
             role: (profile.role === 'alumni' || profile.role === 'applicant' ? profile.role : 'applicant') as 'applicant' | 'alumni',
-            social_links: socialLinks
+            social_links: socialLinks,
+            greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null
           };
         });
         
-        setProfiles(processedProfiles as ProfileWithDetails[]);
+        setProfiles(processedProfiles);
       }
       
       if (schoolsData.data) {
