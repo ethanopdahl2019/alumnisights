@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getCurrentSession, getCurrentUser, onAuthStateChange, isAdmin } from '@/services/auth';
 import { Session, User } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 type AuthContextType = {
   session: Session | null;
@@ -38,6 +39,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       const currentUser = session?.user ?? null;
       setUser(currentUser);
+      
+      // Show toast notifications for sign in/out events
+      if (event === 'SIGNED_IN') {
+        toast.success(`Welcome, ${currentUser?.user_metadata?.first_name || currentUser?.email || 'User'}!`);
+      } else if (event === 'SIGNED_OUT') {
+        toast.success('You have been signed out');
+      } else if (event === 'USER_UPDATED') {
+        toast.success('Your profile has been updated');
+      } else if (event === 'PASSWORD_RECOVERY') {
+        toast.info('Password reset initiated');
+      }
       
       // Check admin status whenever the user changes
       if (currentUser) {
@@ -76,6 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       })
       .catch((error) => {
         console.error("[AuthProvider] Error getting session or user:", error);
+        toast.error("Error connecting to authentication service");
         setLoading(false);
       });
 

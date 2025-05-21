@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getMajors } from '@/services/profiles';
-import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
+import { getUniversities } from '@/services/universities';
 import SearchInput from '@/components/SearchInput';
 
 const profileSchema = z.object({
@@ -114,37 +114,22 @@ const ApplicantProfileComplete = () => {
       }
     }
     
-    // Load universities from the insights page data
-    const loadUniversities = () => {
-      console.log("[ApplicantProfileComplete] Loading universities");
-      const universitiesByLetter = getUniversitiesByLetter();
-      const allUniversities: any[] = [];
-      
-      // Flatten the university list from all letters
-      Object.values(universitiesByLetter).forEach(universities => {
-        universities.forEach(university => {
-          allUniversities.push(university);
-        });
-      });
-      
-      // Sort universities by name
-      allUniversities.sort((a, b) => a.name.localeCompare(b.name));
-      setUniversities(allUniversities);
-      console.log("[ApplicantProfileComplete] Universities loaded:", allUniversities.length);
-    };
-    
-    // Load majors
+    // Load universities and majors
     const loadFormData = async () => {
-      console.log("[ApplicantProfileComplete] Loading form data (majors, etc.)");
+      console.log("[ApplicantProfileComplete] Loading form data (majors, universities, etc.)");
       try {
-        const majorsData = await getMajors();
+        const [majorsData, universitiesData] = await Promise.all([
+          getMajors(),
+          getUniversities()
+        ]);
         
         console.log("[ApplicantProfileComplete] Data loaded:", { 
-          majorsCount: majorsData.length
+          majorsCount: majorsData.length,
+          universitiesCount: universitiesData.length
         });
         
         setMajors(majorsData);
-        loadUniversities();
+        setUniversities(universitiesData);
       } catch (error) {
         console.error('[ApplicantProfileComplete] Error loading form data:', error);
         toast("Failed to load profile data. Please try again later.");
@@ -213,7 +198,7 @@ const ApplicantProfileComplete = () => {
       
       // Create profile
       console.log("[ApplicantProfileComplete] Creating profile for user:", user.id);
-      const { error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert({
           user_id: user.id,
@@ -223,9 +208,31 @@ const ApplicantProfileComplete = () => {
           bio: `Goals: ${values.goals}\n\nInterests: ${values.interests}`,
           image: imageUrl,
           role: 'applicant'
-        });
+        })
+        .select()
+        .single();
       
       if (profileError) throw profileError;
+      
+      // Add dream school
+      if (profileData && schoolId) {
+        try {
+          // First, check if applicant_dream_schools exists in the database schema
+          const { error: dreamSchoolError } = await supabase
+            .from('applicant_dream_schools')
+            .insert({
+              profile_id: profileData.id,
+              school_id: schoolId
+            });
+            
+          if (dreamSchoolError) {
+            console.error("[ApplicantProfileComplete] Error adding dream school:", dreamSchoolError);
+          }
+        } catch (error) {
+          console.error('[ApplicantProfileComplete] Error adding dream school:', error);
+          // Continue even if dream school addition fails
+        }
+      }
       
       toast("Profile complete! Your applicant profile has been set up successfully.");
       

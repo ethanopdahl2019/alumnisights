@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -19,7 +18,7 @@ import { cn } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getMajors, getActivities, getGreekLifeOptions } from '@/services/profiles';
-import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
+import { getUniversities } from '@/services/universities';
 import SearchInput from '@/components/SearchInput';
 
 const profileSchema = z.object({
@@ -125,7 +124,7 @@ const ProfileComplete = () => {
     // Load universities from the insights page data
     const loadUniversities = () => {
       console.log("[ProfileComplete] Loading universities");
-      const universitiesByLetter = getUniversitiesByLetter();
+      const universitiesByLetter = getUniversities();
       const allUniversities: any[] = [];
       
       // Flatten the university list from all letters
@@ -238,6 +237,7 @@ const ProfileComplete = () => {
           major_id: values.majorId,
           bio: values.bio,
           image: imageUrl, // Add profile image URL
+          role: 'alumni'   // Make sure role is set to alumni for browse section visibility
         });
       
       if (profileError) throw profileError;

@@ -1,495 +1,284 @@
 
-import React, { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
-import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { useAuth } from "@/components/AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { User, Calendar, BadgeCheck, ShieldCheck, Key } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { ProfileWithDetails } from '@/types/database';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { toast } from 'sonner';
+import { Loader2, User, PenSquare, School, BookOpen, MapPin, Briefcase, Award } from 'lucide-react';
 
 const MyAccount = () => {
-  const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [badges, setBadges] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [accessCode, setAccessCode] = useState("");
-  const [requestType, setRequestType] = useState("admin");
-  const [requestReason, setRequestReason] = useState("");
-  const [accessDialogOpen, setAccessDialogOpen] = useState(false);
-  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
-  const isAdmin = user?.user_metadata?.role === 'admin';
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<ProfileWithDetails | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   useEffect(() => {
-    if (!user && !loading) {
-      toast.error("Please sign in to view your account");
-      navigate("/auth");
+    // Redirect if not logged in
+    if (!loading && !user) {
+      navigate('/auth');
       return;
     }
 
-    const fetchUserData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch profile data
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*, school:schools(name), major:majors(name)")
-          .eq("user_id", user?.id)
-          .single();
-
-        if (profileError) throw profileError;
-        setProfile(profileData);
-
-        // Fetch user's bookings
-        const { data: bookingsData, error: bookingsError } = await supabase
-          .from("bookings")
-          .select(`
-            *,
-            booking_option:booking_options(*),
-            profile:profiles(id, name, image, school:schools(name))
-          `)
-          .eq("user_id", user?.id)
-          .order("scheduled_at", { ascending: false });
-
-        if (bookingsError) throw bookingsError;
-        setBookings(bookingsData || []);
-
-        // Fetch user's badges (from user_tags table)
-        const { data: badgesData, error: badgesError } = await supabase
-          .from("user_tags")
-          .select("*, tag:tags(*)")
-          .eq("user_id", user?.id);
-
-        if (badgesError) throw badgesError;
-        setBadges(badgesData || []);
-
-      } catch (error) {
-        console.error("Error fetching account data:", error);
-        toast.error("Failed to load account data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+    // Fetch user profile if logged in
     if (user) {
-      fetchUserData();
+      const fetchProfile = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select(`
+              *,
+              school:schools(*),
+              major:majors(*),
+              activities:profile_activities(activities(*))
+            `)
+            .eq('user_id', user.id)
+            .single();
+
+          if (error) {
+            console.error('Error fetching profile:', error);
+            toast.error('Failed to load your profile');
+          } else if (data) {
+            setProfile(data as ProfileWithDetails);
+          }
+        } catch (error) {
+          console.error('Error in profile fetch:', error);
+        } finally {
+          setIsLoadingProfile(false);
+        }
+      };
+
+      fetchProfile();
     }
   }, [user, loading, navigate]);
 
-  const handleAccessCodeSubmit = async () => {
-    setIsLoading(true);
-    try {
-      // Check if the access code matches (hardcoded for now: "password")
-      if (accessCode === "password") {
-        // Update user metadata to make them an admin
-        const { data, error } = await supabase.auth.updateUser({
-          data: { role: 'admin' }
-        });
-
-        if (error) throw error;
-        
-        toast.success("Admin access granted!");
-        
-        // Reload the page to reflect the changes
-        window.location.reload();
-      } else {
-        toast.error("Invalid access code");
-      }
-    } catch (error) {
-      console.error("Error granting admin access:", error);
-      toast.error("Failed to process access code");
-    } finally {
-      setIsLoading(false);
-      setAccessDialogOpen(false);
-    }
-  };
-
-  const handleRequestSubmit = async () => {
-    setIsLoading(true);
-    try {
-      // Create a new admin request in the database
-      // Use type assertion with 'as any' to bypass TypeScript checking for now
-      const { error } = await (supabase
-        .from("admin_requests" as any)
-        .insert({
-          user_id: user?.id,
-          request_type: requestType,
-          reason: requestReason,
-          status: 'pending'
-        } as any));
-
-      if (error) throw error;
-      
-      toast.success(`Your request for ${requestType} status has been submitted!`);
-    } catch (error) {
-      console.error("Error submitting request:", error);
-      toast.error("Failed to submit request");
-    } finally {
-      setIsLoading(false);
-      setRequestDialogOpen(false);
-      setRequestReason("");
-    }
-  };
-
-  if (loading || isLoading) {
+  if (loading || isLoadingProfile) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="container-custom py-12 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div>
-          <p className="mt-4 text-navy">Loading your account information...</p>
-        </div>
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
+            <p className="mt-4 text-lg">Loading your account...</p>
+          </div>
+        </main>
         <Footer />
       </div>
     );
   }
 
-  if (!user) {
-    return null; // Redirect handled in useEffect
-  }
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
-    }).format(date);
+  const getInitials = (name: string | null) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
 
-  return (
-    <div className="min-h-screen bg-white">
-      <Helmet>
-        <title>My Account | AlumniSights</title>
-        <meta name="description" content="View your account details, bookings, and badges" />
-      </Helmet>
+  const metadata = user?.user_metadata || {};
+  const userRole = metadata?.role || 'user';
+  const roleName = userRole === 'applicant' 
+    ? 'Applicant' 
+    : userRole === 'alumni' 
+      ? 'Alumni/Mentor' 
+      : userRole === 'admin' 
+        ? 'Administrator' 
+        : 'User';
 
+  return (
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      
-      <main className="container-custom py-12">
+      <main className="flex-grow container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-navy mb-2">My Account</h1>
-          <p className="text-gray-600 mb-8">View and manage your account details</p>
-          
-          <Tabs defaultValue="personal-info" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="personal-info">
-                <User className="h-4 w-4 mr-2" /> Personal Info
-              </TabsTrigger>
-              <TabsTrigger value="bookings">
-                <Calendar className="h-4 w-4 mr-2" /> Bookings
-              </TabsTrigger>
-              <TabsTrigger value="badges">
-                <BadgeCheck className="h-4 w-4 mr-2" /> Badges
-              </TabsTrigger>
-              <TabsTrigger value="account-status">
-                <ShieldCheck className="h-4 w-4 mr-2" /> Account Status
-              </TabsTrigger>
+          <h1 className="text-3xl font-bold mb-8">My Account</h1>
+
+          <Tabs defaultValue="profile">
+            <TabsList className="mb-6">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="personal-info" className="mt-6">
-              <Card>
+
+            <TabsContent value="profile">
+              <Card className="mb-8">
                 <CardHeader>
-                  <CardTitle>Personal Information</CardTitle>
-                  <CardDescription>
-                    Your personal details and profile information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      {profile?.image ? (
-                        <img 
-                          src={profile.image} 
-                          alt="Profile" 
-                          className="h-16 w-16 rounded-full object-cover border border-gray-200"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
-                          <User className="h-8 w-8 text-gray-400" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-semibold text-lg">
-                          {profile?.name || user.user_metadata?.first_name || "User"}
-                        </h3>
-                        <p className="text-gray-600">{user.email}</p>
-                      </div>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Role</p>
-                        <p>{profile?.role || "Applicant"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Location</p>
-                        <p>{profile?.location || "Not specified"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">School</p>
-                        <p>{profile?.school?.name || "Not specified"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Major</p>
-                        <p>{profile?.major?.name || "Not specified"}</p>
-                      </div>
-                      {profile?.graduation_year && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Graduation Year</p>
-                          <p>{profile.graduation_year}</p>
-                        </div>
-                      )}
-                      {profile?.headline && (
-                        <div className="col-span-2">
-                          <p className="text-sm font-medium text-gray-500">Headline</p>
-                          <p>{profile.headline}</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {profile?.bio && (
-                      <>
-                        <Separator />
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Bio</p>
-                          <p className="whitespace-pre-line">{profile.bio}</p>
-                        </div>
-                      </>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>User Profile</CardTitle>
+                    {profile && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => navigate(
+                          userRole === 'applicant' 
+                            ? '/applicant-profile-complete' 
+                            : '/profile-complete'
+                        )}
+                      >
+                        <PenSquare className="h-4 w-4 mr-2" /> Edit Profile
+                      </Button>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="bookings" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Bookings</CardTitle>
                   <CardDescription>
-                    Sessions you've booked with alumni
+                    Your personal information and profile details
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {bookings.length > 0 ? (
-                    <div className="space-y-4">
-                      {bookings.map((booking) => (
-                        <div 
-                          key={booking.id} 
-                          className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border rounded-md"
-                        >
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              {booking.profile?.image ? (
-                                <img 
-                                  src={booking.profile.image} 
-                                  alt={booking.profile.name} 
-                                  className="h-8 w-8 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                                  <User className="h-4 w-4 text-gray-400" />
-                                </div>
-                              )}
-                              <h3 className="font-medium">{booking.profile?.name}</h3>
+                  <div className="flex flex-col md:flex-row gap-8">
+                    <div className="flex flex-col items-center">
+                      <Avatar className="h-32 w-32 mb-4">
+                        {profile?.image ? (
+                          <AvatarImage src={profile.image} alt={profile.name} />
+                        ) : (
+                          <AvatarFallback className="text-2xl">
+                            {getInitials(user?.user_metadata?.first_name + ' ' + user?.user_metadata?.last_name)}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <h3 className="text-lg font-semibold">{metadata.first_name} {metadata.last_name}</h3>
+                      <p className="text-gray-500">{user?.email}</p>
+                      <span className="inline-block mt-2 px-3 py-1 rounded-full text-xs bg-primary/10 text-primary">
+                        {roleName}
+                      </span>
+                    </div>
+
+                    <div className="flex-1">
+                      {!profile ? (
+                        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800 mt-4">
+                          <p className="font-medium">Your profile is not complete</p>
+                          <p className="mt-2 text-sm">
+                            Please complete your profile to get the most out of our platform.
+                          </p>
+                          <Button 
+                            className="mt-4" 
+                            onClick={() => navigate(
+                              userRole === 'applicant' 
+                                ? '/applicant-profile-complete' 
+                                : '/profile-complete'
+                            )}
+                          >
+                            Complete Profile
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {profile.bio && (
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-500 mb-1">Bio</h3>
+                              <p className="whitespace-pre-line">{profile.bio}</p>
                             </div>
-                            <p className="text-sm text-gray-600">
-                              {booking.booking_option?.title} ({booking.booking_option?.duration})
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {formatDateTime(booking.scheduled_at)}
-                            </p>
+                          )}
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            {profile.school && (
+                              <div className="flex items-center gap-2">
+                                <School className="h-5 w-5 text-gray-400" />
+                                <div>
+                                  <p className="text-sm font-medium">University</p>
+                                  <p>{profile.school.name}</p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {profile.major && (
+                              <div className="flex items-center gap-2">
+                                <BookOpen className="h-5 w-5 text-gray-400" />
+                                <div>
+                                  <p className="text-sm font-medium">Major</p>
+                                  <p>{profile.major.name}</p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {profile.location && (
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-5 w-5 text-gray-400" />
+                                <div>
+                                  <p className="text-sm font-medium">Location</p>
+                                  <p>{profile.location}</p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {profile.graduation_year && (
+                              <div className="flex items-center gap-2">
+                                <Award className="h-5 w-5 text-gray-400" />
+                                <div>
+                                  <p className="text-sm font-medium">Graduation Year</p>
+                                  <p>{profile.graduation_year}</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
-                          <Badge 
-                            className="mt-2 sm:mt-0"
-                            variant={booking.status === 'confirmed' ? 'default' : 
-                              booking.status === 'pending' ? 'secondary' : 'outline'}
-                          >
-                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <p className="text-gray-500">You don't have any bookings yet</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="badges" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Badges</CardTitle>
-                  <CardDescription>
-                    Special badges and recognitions earned
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {badges.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {badges.map((badge) => (
-                        <Badge key={badge.id} className="py-2 px-3">
-                          {badge.tag?.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <p className="text-gray-500">You don't have any badges yet</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="account-status" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account Status</CardTitle>
-                  <CardDescription>
-                    Information about your account access and privileges
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <div className="mr-4">
-                        {isAdmin ? (
-                          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <ShieldCheck className="h-5 w-5 text-blue-600" />
-                          </div>
-                        ) : (
-                          <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                            <User className="h-5 w-5 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {isAdmin ? "Administrator Account" : "Standard Account"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {isAdmin 
-                            ? "You have administrative privileges on the platform" 
-                            : "You have standard user access to the platform"}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {isAdmin && (
-                      <div className="bg-blue-50 p-4 rounded-md mt-4">
-                        <p className="text-sm">
-                          As an administrator, you have access to the {" "}
-                          <a 
-                            href="/admin/dashboard" 
-                            className="text-blue-600 font-medium hover:underline"
-                          >
-                            Admin Dashboard
-                          </a>
-                          {" "} where you can manage users, content, and site analytics.
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div className="pt-4 space-y-3">
-                      <Dialog open={accessDialogOpen} onOpenChange={setAccessDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="w-full flex items-center">
-                            <Key className="mr-2 h-4 w-4" />
-                            Enter Access Code
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Enter Admin Access Code</DialogTitle>
-                            <DialogDescription>
-                              Enter the admin access code to gain administrator privileges.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="py-4">
-                            <Input
-                              type="password"
-                              placeholder="Access Code"
-                              value={accessCode}
-                              onChange={(e) => setAccessCode(e.target.value)}
-                              className="mb-2"
-                            />
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setAccessDialogOpen(false)}>
-                              Cancel
-                            </Button>
-                            <Button onClick={handleAccessCodeSubmit}>
-                              Submit
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-
-                      <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="w-full">
-                            Request Special Status
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Request Special Status</DialogTitle>
-                            <DialogDescription>
-                              Submit a request for verified status or admin privileges.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="py-4 space-y-4">
-                            <RadioGroup value={requestType} onValueChange={setRequestType}>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="admin" id="admin" />
-                                <Label htmlFor="admin">Admin Status</Label>
+                          {profile.activities && profile.activities.length > 0 && (
+                            <div className="mt-4">
+                              <h3 className="text-sm font-medium text-gray-500 mb-2">Activities & Interests</h3>
+                              <div className="flex flex-wrap gap-2">
+                                {profile.activities.map((activityItem: any) => (
+                                  <span 
+                                    key={activityItem.activities.id} 
+                                    className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs"
+                                  >
+                                    {activityItem.activities.name}
+                                  </span>
+                                ))}
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="verified" id="verified" />
-                                <Label htmlFor="verified">Verified Status</Label>
-                              </div>
-                            </RadioGroup>
-                            
-                            <div className="space-y-2">
-                              <Label htmlFor="reason">Reason for Request</Label>
-                              <textarea
-                                id="reason"
-                                placeholder="Please explain why you are requesting this status..."
-                                value={requestReason}
-                                onChange={(e) => setRequestReason(e.target.value)}
-                                className="w-full min-h-[100px] p-2 border rounded-md"
-                              />
                             </div>
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setRequestDialogOpen(false)}>
-                              Cancel
-                            </Button>
-                            <Button onClick={handleRequestSubmit} disabled={!requestReason.trim()}>
-                              Submit Request
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                          )}
+                        </div>
+                      )}
                     </div>
+                  </div>
+                </CardContent>
+                {userRole === 'alumni' && profile && (
+                  <CardFooter className="flex justify-end border-t pt-4">
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/mentor-dashboard')}
+                    >
+                      Go to Mentor Dashboard
+                    </Button>
+                  </CardFooter>
+                )}
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                  <CardDescription>
+                    Manage your account preferences
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Email Address</h3>
+                    <p className="text-gray-600">{user?.email}</p>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Account Type</h3>
+                    <p className="text-gray-600">{roleName}</p>
+                  </div>
+
+                  <Separator />
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Danger Zone</h3>
+                    <Button variant="destructive">
+                      Delete Account
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -497,7 +286,6 @@ const MyAccount = () => {
           </Tabs>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

@@ -126,6 +126,42 @@ export type Database = {
           },
         ]
       }
+      applicant_dream_schools: {
+        Row: {
+          created_at: string | null
+          id: string
+          profile_id: string
+          school_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          profile_id: string
+          school_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_dream_schools_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicant_dream_schools_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applicants: {
         Row: {
           created_at: string
@@ -867,11 +903,14 @@ export type Database = {
       profiles: {
         Row: {
           achievements: string[] | null
+          avatar: string | null
           bio: string | null
+          clubs: string[] | null
           created_at: string | null
           degree: Database["public"]["Enums"]["degree_type"] | null
           featured: boolean | null
           graduation_year: number | null
+          greek_life: string | null
           headline: string | null
           id: string
           image: string | null
@@ -884,15 +923,19 @@ export type Database = {
           role: string | null
           school_id: string
           social_links: Json | null
+          sport: string | null
           user_id: string
         }
         Insert: {
           achievements?: string[] | null
+          avatar?: string | null
           bio?: string | null
+          clubs?: string[] | null
           created_at?: string | null
           degree?: Database["public"]["Enums"]["degree_type"] | null
           featured?: boolean | null
           graduation_year?: number | null
+          greek_life?: string | null
           headline?: string | null
           id?: string
           image?: string | null
@@ -905,15 +948,19 @@ export type Database = {
           role?: string | null
           school_id: string
           social_links?: Json | null
+          sport?: string | null
           user_id: string
         }
         Update: {
           achievements?: string[] | null
+          avatar?: string | null
           bio?: string | null
+          clubs?: string[] | null
           created_at?: string | null
           degree?: Database["public"]["Enums"]["degree_type"] | null
           featured?: boolean | null
           graduation_year?: number | null
+          greek_life?: string | null
           headline?: string | null
           id?: string
           image?: string | null
@@ -926,6 +973,7 @@ export type Database = {
           role?: string | null
           school_id?: string
           social_links?: Json | null
+          sport?: string | null
           user_id?: string
         }
         Relationships: [
