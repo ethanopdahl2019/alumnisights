@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -24,7 +25,7 @@ const profileSchema = z.object({
   major: z.string().optional(), 
   bio: z.string().optional(),
   location: z.string().optional(),
-  graduationYear: z.string().optional().transform(val => val ? Number(val) : undefined),
+  graduationYear: z.string().optional(),
   image: z.any().optional(),
 });
 

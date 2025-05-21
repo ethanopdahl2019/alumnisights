@@ -41,7 +41,8 @@ const transformProfileData = (profile: any): ProfileWithDetails => {
     greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null,
     // Ensure school_name and major_name are available
     school_name: profile.school_name || profile.school?.name || null,
-    major_name: profile.major_name || profile.major?.name || null
+    major_name: profile.major_name || profile.major?.name || null,
+    degree: profile.degree || null
   };
 };
 
