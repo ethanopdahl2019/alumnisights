@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -70,36 +71,32 @@ const SimpleProfileComplete = () => {
   
   useEffect(() => {
     // Calculate form completion progress based on filled fields
-    const calculateProgress = () => {
-      let completedSteps = 0;
-      let totalSteps = 0;
-      
-      if (watchedValues.bio) completedSteps++;
-      totalSteps++;
-      
-      if (watchedValues.university) completedSteps++;
-      totalSteps++;
-      
-      if (watchedValues.degree) completedSteps++;
-      totalSteps++;
-      
-      if (watchedValues.major) completedSteps++;
-      totalSteps++;
-      
-      if (watchedValues.location) completedSteps++;
-      totalSteps++;
-      
-      if (watchedValues.graduationYear) completedSteps++;
-      totalSteps++;
-      
-      if (imagePreview) completedSteps++;
-      totalSteps++;
-      
-      const progressValue = (completedSteps / totalSteps) * 100;
-      setProgress(progressValue);
-    };
+    let completedSteps = 0;
+    let totalSteps = 0;
     
-    calculateProgress();
+    if (watchedValues.bio) completedSteps++;
+    totalSteps++;
+    
+    if (watchedValues.university) completedSteps++;
+    totalSteps++;
+    
+    if (watchedValues.degree) completedSteps++;
+    totalSteps++;
+    
+    if (watchedValues.major) completedSteps++;
+    totalSteps++;
+    
+    if (watchedValues.location) completedSteps++;
+    totalSteps++;
+    
+    if (watchedValues.graduationYear) completedSteps++;
+    totalSteps++;
+    
+    if (imagePreview) completedSteps++;
+    totalSteps++;
+    
+    const progressValue = (completedSteps / totalSteps) * 100;
+    setProgress(progressValue);
   }, [watchedValues, imagePreview]);
   
   // Redirect if not logged in
@@ -214,7 +211,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl || existingProfile.image,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree,
+            degree: values.degree, // Using string degree directly
             role: role as 'applicant' | 'alumni', // Cast to union type
             visible: existingProfile.visible !== undefined ? existingProfile.visible : true // Preserve visibility or default to true
           })
@@ -236,7 +233,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree,
+            degree: values.degree, // Using string degree directly
             role: role as 'applicant' | 'alumni', // Cast to union type
             visible: true, // Default to visible for new profiles
             school_id: '', // Adding required fields with empty values

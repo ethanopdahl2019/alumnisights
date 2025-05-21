@@ -49,7 +49,7 @@ export interface Profile {
   achievements?: string[] | null;
   school_name?: string | null;
   major_name?: string | null;
-  degree?: string | null;  // Changed from enum to accept any string
+  degree?: string | null;  // Changed to accept any string
   visible?: boolean | null; // Added visible field to control Browse visibility
 }
 
@@ -73,7 +73,7 @@ export interface ProfileWithDetails extends Profile {
   } | null;
   school_name?: string | null;
   major_name?: string | null;
-  degree?: string | null;
+  degree?: string | null;  // Changed to accept any string
 }
 
 // New types for authentication
