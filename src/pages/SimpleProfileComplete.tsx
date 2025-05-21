@@ -237,7 +237,9 @@ const SimpleProfileComplete = () => {
             location: values.location,
             graduation_year: graduationYear,
             degree: values.degree,
-            role: role as 'applicant' | 'alumni' // Cast to union type
+            role: role as 'applicant' | 'alumni', // Cast to union type
+            school_id: '', // Adding required fields with empty values
+            major_id: ''  // Adding required fields with empty values
           });
         
         if (profileError) throw profileError;
