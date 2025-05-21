@@ -916,15 +916,18 @@ export type Database = {
           image: string | null
           location: string | null
           major_id: string
+          major_name: string | null
           name: string
           price_15_min: number | null
           price_30_min: number | null
           price_60_min: number | null
           role: string | null
           school_id: string
+          school_name: string | null
           social_links: Json | null
           sport: string | null
           user_id: string
+          visible: boolean | null
         }
         Insert: {
           achievements?: string[] | null
@@ -941,15 +944,18 @@ export type Database = {
           image?: string | null
           location?: string | null
           major_id: string
+          major_name?: string | null
           name: string
           price_15_min?: number | null
           price_30_min?: number | null
           price_60_min?: number | null
           role?: string | null
           school_id: string
+          school_name?: string | null
           social_links?: Json | null
           sport?: string | null
           user_id: string
+          visible?: boolean | null
         }
         Update: {
           achievements?: string[] | null
@@ -966,15 +972,18 @@ export type Database = {
           image?: string | null
           location?: string | null
           major_id?: string
+          major_name?: string | null
           name?: string
           price_15_min?: number | null
           price_30_min?: number | null
           price_60_min?: number | null
           role?: string | null
           school_id?: string
+          school_name?: string | null
           social_links?: Json | null
           sport?: string | null
           user_id?: string
+          visible?: boolean | null
         }
         Relationships: [
           {
