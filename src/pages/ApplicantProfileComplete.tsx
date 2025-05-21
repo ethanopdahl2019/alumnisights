@@ -107,13 +107,16 @@ const ApplicantProfileComplete = () => {
         profileId = existingProfile.id;
       }
       
-      // Store dream schools using raw SQL query since applicant_dream_schools 
-      // may not be included in the TypeScript types
+      // Store dream schools using a direct call to the add_dream_school function
+      // Instead of using rpc which has TypeScript limitations, we'll use a direct 
+      // SQL query through the functions endpoint
       for (const school of selectedSchools) {
-        const { error } = await supabase.rpc('add_dream_school', {
-          p_profile_id: profileId,
-          p_school_id: school.id
-        });
+        const { error } = await supabase
+          .from('applicant_dream_schools')
+          .insert({
+            profile_id: profileId,
+            school_id: school.id
+          });
         
         if (error) {
           console.error('Error adding dream school:', error);
