@@ -1,36 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { UserCredentials, UserRegistration } from '@/types/database';
-
-export async function signUp({ email, password, firstName, lastName, metadata = {} }: UserRegistration) {
-  console.log("[auth.ts] Starting signup process with metadata:", metadata);
-  
-  // Set default role if not provided
-  if (!metadata.role) {
-    metadata.role = 'student';
-  }
-  
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-        ...metadata
-      }
-    }
-  });
-
-  if (error) {
-    console.error("[auth.ts] Signup error:", error);
-    throw error;
-  }
-
-  console.log("[auth.ts] Signup successful:", data);
-  console.log("[auth.ts] User role in metadata:", data.user?.user_metadata?.role);
-  console.log("[auth.ts] User type in metadata:", data.user?.user_metadata?.user_type);
-  return data;
-}
+import { UserCredentials } from '@/types/database';
 
 export async function signIn({ email, password }: UserCredentials) {
   console.log("[auth.ts] Starting signin process for:", email);
@@ -136,47 +106,4 @@ export async function updateUserMetadata(metadata: Record<string, any>) {
   
   console.log("[auth.ts] User metadata updated successfully");
   return data;
-}
-
-// Enhanced function to check admin status using both metadata and database function
-export async function refreshAndCheckAdmin(user: any): Promise<boolean> {
-  if (!user) return false;
-  
-  console.log("[auth.ts] Checking admin status for:", user?.email);
-  
-  // First check if user already has admin role in metadata
-  if (getUserRole(user) === 'admin') {
-    // Double check with the database function for extra security
-    try {
-      const { data, error } = await supabase.rpc('is_admin');
-      if (error) {
-        console.error('[auth.ts] Error calling is_admin function:', error);
-        // Fall back to metadata-based check
-        return getUserRole(user) === 'admin';
-      }
-      console.log("[auth.ts] Database is_admin check result:", data);
-      return !!data; // Convert to boolean
-    } catch (error) {
-      console.error('[auth.ts] Error checking admin status via RPC:', error);
-      // Fall back to metadata-based check
-      return getUserRole(user) === 'admin';
-    }
-  }
-  
-  // If not found in metadata, refresh the user data
-  try {
-    console.log("[auth.ts] Admin role not found in metadata, refreshing session");
-    const { data, error } = await supabase.auth.refreshSession();
-    if (error) {
-      console.error('[auth.ts] Error refreshing session:', error);
-      return false;
-    }
-    
-    const refreshedUser = data.user;
-    console.log("[auth.ts] Session refreshed, checking admin status again");
-    return getUserRole(refreshedUser) === 'admin';
-  } catch (error) {
-    console.error('[auth.ts] Error checking admin status:', error);
-    return false;
-  }
 }

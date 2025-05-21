@@ -23,7 +23,11 @@ const RoleSelectionDialog = ({ isOpen, onClose }: RoleSelectionDialogProps) => {
   const { user } = useAuth();
   
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      toast("Please log in to continue");
+      navigate('/auth');
+      return;
+    }
     
     setIsSubmitting(true);
     try {
