@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +13,23 @@ import {
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
-  SelectValue 
+  SelectValue,
+  SelectLabel
 } from "@/components/ui/select";
 import { getAllUniversities, UniversityData } from "@/pages/insights/universities/universities-data";
 import SearchInput from "@/components/SearchInput";
 import { useForm } from "react-hook-form";
 import { getMajors, Major } from "@/services/majors";
+
+// Define the predefined university options
+const universityOptions = [
+  { id: "harvard-university", name: "Harvard University" },
+  { id: "yale-university", name: "Yale University" },
+  { id: "columbia-university", name: "Columbia University" },
+  { id: "stanford-university", name: "Stanford University" },
+  { id: "amherst-college", name: "Amherst College" },
+  { id: "ucla", name: "UCLA" },
+];
 
 interface RegistrationPreviewProps {
   registrationType?: 'student' | 'mentor';
@@ -29,27 +39,9 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
   const [universitySearchTerm, setUniversitySearchTerm] = useState<string>("");
   const [majorSearchTerm, setMajorSearchTerm] = useState<string>("");
-  const [universities, setUniversities] = useState<UniversityData[]>([]);
   const [majors, setMajors] = useState<Array<Major>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Fetch universities from Supabase
-  useEffect(() => {
-    const loadUniversities = async () => {
-      try {
-        setIsLoading(true);
-        const data = await getAllUniversities();
-        setUniversities(data);
-      } catch (error) {
-        console.error("Failed to load universities:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadUniversities();
-  }, []);
-
   // Fetch majors from Supabase
   useEffect(() => {
     const loadMajors = async () => {
@@ -61,6 +53,7 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
       }
     };
     
+    setIsLoading(false);
     loadMajors();
   }, []);
   
@@ -258,16 +251,18 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
                 
                 <div className="space-y-2">
                   <Label htmlFor="university">University</Label>
-                  <SearchInput 
-                    value={universitySearchTerm}
-                    onChange={setUniversitySearchTerm}
-                    placeholder={isLoading ? "Loading universities..." : "Type to search universities..."}
-                    options={universities}
-                    onOptionSelect={(university) => {
-                      setSelectedUniversity(university.id);
-                      setUniversitySearchTerm(university.name);
-                    }}
-                  />
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your university" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {universityOptions.map((university) => (
+                        <SelectItem key={university.id} value={university.id}>
+                          {university.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">

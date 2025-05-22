@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckIcon, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -14,13 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getMajors, getActivities } from '@/services/profiles';
-import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
 import SearchInput from '@/components/SearchInput';
 
 const profileSchema = z.object({
@@ -33,6 +29,16 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
+// Define the predefined university options
+const universityOptions = [
+  { id: "harvard-university", name: "Harvard University" },
+  { id: "yale-university", name: "Yale University" },
+  { id: "columbia-university", name: "Columbia University" },
+  { id: "stanford-university", name: "Stanford University" },
+  { id: "amherst-college", name: "Amherst College" },
+  { id: "ucla", name: "UCLA" },
+];
+
 const ProfileComplete = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
@@ -40,10 +46,7 @@ const ProfileComplete = () => {
   const [majors, setMajors] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
-  const [universities, setUniversities] = useState<any[]>([]);
-  const [universityOpen, setUniversityOpen] = useState(false);
   const [majorOpen, setMajorOpen] = useState(false);
-  const [universitySearchTerm, setUniversitySearchTerm] = useState("");
   const [majorSearchTerm, setMajorSearchTerm] = useState("");
   
   const degrees = [
@@ -88,23 +91,6 @@ const ProfileComplete = () => {
       return;
     }
     
-    // Load universities from the insights page data
-    const loadUniversities = () => {
-      const universitiesByLetter = getUniversitiesByLetter();
-      const allUniversities: any[] = [];
-      
-      // Flatten the university list from all letters
-      Object.values(universitiesByLetter).forEach(universities => {
-        universities.forEach(university => {
-          allUniversities.push(university);
-        });
-      });
-      
-      // Sort universities by name
-      allUniversities.sort((a, b) => a.name.localeCompare(b.name));
-      setUniversities(allUniversities);
-    };
-    
     // Load majors and activities
     const loadFormData = async () => {
       try {
@@ -115,7 +101,6 @@ const ProfileComplete = () => {
         
         setMajors(majorsData);
         setActivities(activitiesData);
-        loadUniversities();
       } catch (error) {
         console.error('Error loading form data:', error);
         toast({
@@ -134,13 +119,15 @@ const ProfileComplete = () => {
     
     setIsLoading(true);
     try {
-      // Get school_id from session user metadata or from selected university
-      const metadata = user.user_metadata || {};
+      // Get school_id from selected university
       const schoolId = values.universityId;
       
       if (!schoolId) {
         throw new Error("School information not found. Please try again.");
       }
+      
+      // Get user metadata
+      const metadata = user.user_metadata || {};
       
       // Create profile
       const { error: profileError } = await supabase
@@ -151,6 +138,7 @@ const ProfileComplete = () => {
           school_id: schoolId,
           major_id: values.majorId,
           bio: values.bio,
+          visible: true, // Make profile visible by default
         });
       
       if (profileError) throw profileError;
@@ -160,9 +148,13 @@ const ProfileComplete = () => {
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (fetchError) throw fetchError;
+      
+      if (!profileData) {
+        throw new Error("Failed to create profile. Please try again.");
+      }
       
       // Add activities to profile
       const activityInserts = values.activities.map(activityId => ({
@@ -253,20 +245,26 @@ const ProfileComplete = () => {
                     control={form.control}
                     name="universityId"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem>
                         <FormLabel>University</FormLabel>
-                        <FormControl>
-                          <SearchInput
-                            value={universitySearchTerm}
-                            onChange={setUniversitySearchTerm}
-                            placeholder="Type to search universities..."
-                            options={universities}
-                            onOptionSelect={(university) => {
-                              form.setValue("universityId", university.id);
-                              setUniversitySearchTerm(university.name);
-                            }}
-                          />
-                        </FormControl>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={isLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your university" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {universityOptions.map((university) => (
+                              <SelectItem key={university.id} value={university.id}>
+                                {university.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
