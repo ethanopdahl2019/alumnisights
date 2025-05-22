@@ -28,7 +28,8 @@ const Browse = () => {
             school:schools(id, name, location, type, image, created_at),
             major:majors(*),
             activities:profile_activities(activities(*))
-          `),
+          `)
+          .eq('visible', true), // Only get profiles that are set to be visible
         supabase.from('schools').select('id, name, location, type, image, created_at'),
         supabase.from('majors').select('*'),
         supabase.from('activities').select('*')
@@ -56,7 +57,7 @@ const Browse = () => {
             },
             activities: profile.activities.map((pa: any) => pa.activities),
             // Explicitly cast the role to the correct type
-            role: (profile.role as 'applicant' | 'alumni') || 'applicant',
+            role: (profile.role as 'applicant' | 'alumni' | 'mentor') || 'applicant',
             social_links: socialLinks
           };
         });

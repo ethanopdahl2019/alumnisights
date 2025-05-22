@@ -35,6 +35,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
       activities:profile_activities(activities(*))
     `)
     .eq('featured', true)
+    .eq('visible', true) // Only get visible profiles
     .limit(3);
 
   if (error) {
@@ -49,7 +50,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities),
-    role: profile.role as 'applicant' | 'alumni',
+    role: profile.role as 'applicant' | 'alumni' | 'mentor',
     social_links: parseSocialLinks(profile.social_links)
   }));
 }
@@ -62,7 +63,8 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       school:schools(id, name, location, type, image, created_at),
       major:majors(*),
       activities:profile_activities(activities(*))
-    `);
+    `)
+    .eq('visible', true); // Only get visible profiles
 
   if (error) {
     console.error('Error fetching profiles:', error);
@@ -76,7 +78,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities),
-    role: profile.role as 'applicant' | 'alumni',
+    role: profile.role as 'applicant' | 'alumni' | 'mentor',
     social_links: parseSocialLinks(profile.social_links)
   }));
 }
@@ -107,7 +109,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
       image: profile.school?.image ?? null
     },
     activities: profile.activities.map((pa: any) => pa.activities),
-    role: profile.role as 'applicant' | 'alumni',
+    role: profile.role as 'applicant' | 'alumni' | 'mentor',
     social_links: parseSocialLinks(profile.social_links)
   };
 }

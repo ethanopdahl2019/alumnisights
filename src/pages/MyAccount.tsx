@@ -16,12 +16,14 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { User, Calendar, BadgeCheck, ShieldCheck, Key } from "lucide-react";
+import { User, Calendar, BadgeCheck, ShieldCheck, Key, Eye, EyeOff } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ProfileWithDetails } from "@/types/database";
 
 const MyAccount = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileWithDetails | null>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [badges, setBadges] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +32,9 @@ const MyAccount = () => {
   const [requestReason, setRequestReason] = useState("");
   const [accessDialogOpen, setAccessDialogOpen] = useState(false);
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const isAdmin = user?.user_metadata?.role === 'admin';
+  const isMentor = user?.user_metadata?.role === 'mentor' || user?.user_metadata?.role === 'alumni';
 
   useEffect(() => {
     if (!user && !loading) {
@@ -50,7 +54,33 @@ const MyAccount = () => {
           .single();
 
         if (profileError) throw profileError;
-        setProfile(profileData);
+        
+        // Parse social links if it's a string
+        let socialLinks = profileData.social_links;
+        if (typeof socialLinks === 'string' && socialLinks) {
+          try {
+            socialLinks = JSON.parse(socialLinks);
+          } catch (error) {
+            console.error('Error parsing social links:', error);
+            socialLinks = null;
+          }
+        }
+
+        // Make sure social_links isn't a number or null
+        if (typeof socialLinks === 'number' || socialLinks === null) {
+          socialLinks = {};
+        }
+        
+        const profileWithDetails = {
+          ...profileData,
+          social_links: socialLinks,
+          // Ensure other required properties are present
+          school: profileData.school || { name: 'Not specified' },
+          major: profileData.major || { name: 'Not specified' },
+          activities: [] // Initialize with empty array if not present
+        };
+
+        setProfile(profileWithDetails);
 
         // Fetch user's bookings
         const { data: bookingsData, error: bookingsError } = await supabase
@@ -143,6 +173,42 @@ const MyAccount = () => {
     }
   };
 
+  const toggleProfileVisibility = async () => {
+    if (!profile) return;
+    
+    setUpdating(true);
+    try {
+      // Update the profile's visibility in the database
+      const newVisibility = !profile.visible;
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({ visible: newVisibility })
+        .eq("id", profile.id);
+
+      if (error) throw error;
+      
+      // Update the local state
+      setProfile({
+        ...profile,
+        visible: newVisibility
+      });
+      
+      toast.success(newVisibility ? 
+        "Your profile is now visible in browse" : 
+        "Your profile is now hidden from browse");
+    } catch (error) {
+      console.error("Error updating profile visibility:", error);
+      toast.error("Failed to update profile visibility");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const completeProfileForBrowse = () => {
+    navigate("/profile-complete");
+  };
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -167,6 +233,21 @@ const MyAccount = () => {
       timeStyle: 'short'
     }).format(date);
   };
+
+  // Check if the profile is complete for browse visibility
+  const hasCompleteProfile = () => {
+    if (!profile) return false;
+    
+    return !!(
+      profile.name && 
+      profile.school_id && 
+      profile.major_id && 
+      profile.bio && 
+      profile.graduation_year
+    );
+  };
+
+  const isProfileComplete = hasCompleteProfile();
 
   return (
     <div className="min-h-screen bg-white">
@@ -267,6 +348,50 @@ const MyAccount = () => {
                         <div>
                           <p className="text-sm font-medium text-gray-500">Bio</p>
                           <p className="whitespace-pre-line">{profile.bio}</p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Mentor-specific profile visibility controls */}
+                    {isMentor && (
+                      <>
+                        <Separator />
+                        <div className="space-y-4">
+                          <h4 className="font-medium">Profile Visibility</h4>
+                          
+                          {isProfileComplete ? (
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">Visible in Browse</p>
+                                <p className="text-sm text-gray-500">
+                                  Allow students to find and book sessions with you
+                                </p>
+                              </div>
+                              <Switch
+                                checked={!!profile?.visible}
+                                onCheckedChange={toggleProfileVisibility}
+                                disabled={updating}
+                                className="data-[state=checked]:bg-green-500"
+                              />
+                            </div>
+                          ) : (
+                            <div className="rounded-lg bg-amber-50 p-4 border border-amber-200">
+                              <h5 className="font-medium text-amber-800 flex items-center">
+                                <EyeOff className="h-5 w-5 mr-2" /> 
+                                Complete your profile to be visible
+                              </h5>
+                              <p className="text-sm text-amber-700 mt-1 mb-3">
+                                You need to complete your profile information before it can be made visible in browse.
+                              </p>
+                              <Button 
+                                onClick={completeProfileForBrowse}
+                                variant="outline" 
+                                className="border-amber-400 hover:bg-amber-100"
+                              >
+                                Complete Profile
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </>
                     )}
