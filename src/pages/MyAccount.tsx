@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +48,7 @@ const MyAccount = () => {
         // Fetch profile data
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("*, school:schools(name), major:majors(name)")
+          .select("*, school:schools(id, name, location, type, image), major:majors(name)")
           .eq("user_id", user?.id)
           .single();
 
@@ -75,7 +74,13 @@ const MyAccount = () => {
           ...profileData,
           social_links: socialLinks,
           // Ensure other required properties are present
-          school: profileData.school || { name: 'Not specified' },
+          school: profileData.school || { 
+            id: '',
+            name: 'Not specified',
+            location: null,
+            type: null,
+            image: null
+          },
           major: profileData.major || { name: 'Not specified' },
           activities: [] // Initialize with empty array if not present
         };

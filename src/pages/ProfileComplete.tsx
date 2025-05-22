@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -29,14 +28,14 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-// Define the predefined university options
+// Define the predefined university options with proper UUID format for database compatibility
 const universityOptions = [
-  { id: "harvard-university", name: "Harvard University" },
-  { id: "yale-university", name: "Yale University" },
-  { id: "columbia-university", name: "Columbia University" },
-  { id: "stanford-university", name: "Stanford University" },
-  { id: "amherst-college", name: "Amherst College" },
-  { id: "ucla", name: "UCLA" },
+  { id: "63f0e83d-c608-462a-a9ef-5a50616879e3", name: "Harvard University" },
+  { id: "98f7d42a-b35f-4663-9722-5f70fe4873a9", name: "Yale University" },
+  { id: "b8d6f0a7-3451-44c5-9901-f0d5f6a9b1c5", name: "Columbia University" },
+  { id: "a1d4e6f8-10b2-42c0-91c5-3873e5f7a02d", name: "Stanford University" },
+  { id: "c7e9d0b2-54a8-4f6c-8235-7823e56b4f19", name: "Amherst College" },
+  { id: "e5d8c7b6-32a9-4f01-b743-1298d7e54c0a", name: "UCLA" },
 ];
 
 const ProfileComplete = () => {
