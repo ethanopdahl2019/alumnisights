@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -60,6 +59,7 @@ const AlumniProfileComplete = () => {
   const [majorSearchTerm, setMajorSearchTerm] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [flattenedUniversities, setFlattenedUniversities] = useState<{id: string, name: string}[]>([]);
   
   const degrees = [
     { id: "bachelors", name: "Bachelor's Degree" },
@@ -142,18 +142,21 @@ const AlumniProfileComplete = () => {
     const loadUniversities = () => {
       console.log("[AlumniProfileComplete] Loading universities");
       const universitiesByLetter = getUniversitiesByLetter();
-      const allUniversities: any[] = [];
+      const allUniversities: {id: string, name: string}[] = [];
       
       // Flatten the university list from all letters
       Object.values(universitiesByLetter).forEach(universities => {
         universities.forEach(university => {
-          allUniversities.push(university);
+          allUniversities.push({
+            id: university.id,
+            name: university.name
+          });
         });
       });
       
       // Sort universities by name
       allUniversities.sort((a, b) => a.name.localeCompare(b.name));
-      setUniversities(allUniversities);
+      setFlattenedUniversities(allUniversities);
       console.log("[AlumniProfileComplete] Universities loaded:", allUniversities.length);
     };
     
@@ -401,20 +404,26 @@ const AlumniProfileComplete = () => {
                     control={form.control}
                     name="universityId"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem>
                         <FormLabel>University</FormLabel>
-                        <FormControl>
-                          <SearchInput
-                            value={universitySearchTerm}
-                            onChange={setUniversitySearchTerm}
-                            placeholder="Type to search universities..."
-                            options={universities}
-                            onOptionSelect={(university) => {
-                              form.setValue("universityId", university.id);
-                              setUniversitySearchTerm(university.name);
-                            }}
-                          />
-                        </FormControl>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                          disabled={isLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your university" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[200px]">
+                            {flattenedUniversities.map((university) => (
+                              <SelectItem key={university.id} value={university.id}>
+                                {university.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
