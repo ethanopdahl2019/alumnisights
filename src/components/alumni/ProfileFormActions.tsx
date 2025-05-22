@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 
 interface ProfileFormActionsProps {
   isLoading: boolean;
@@ -9,26 +8,27 @@ interface ProfileFormActionsProps {
   onCancel: () => void;
 }
 
-const ProfileFormActions: React.FC<ProfileFormActionsProps> = ({
-  isLoading,
-  progress,
-  onCancel
+const ProfileFormActions: React.FC<ProfileFormActionsProps> = ({ 
+  isLoading, 
+  progress, 
+  onCancel 
 }) => {
   return (
-    <div className="flex justify-end space-x-4 pt-4">
+    <div className="flex justify-end space-x-4 pt-6">
       <Button 
         type="button" 
         variant="outline" 
         onClick={onCancel}
+        disabled={isLoading}
       >
-        Skip for now
+        Cancel
       </Button>
       <Button 
         type="submit" 
-        disabled={isLoading || progress < 100}
-        className={progress < 100 ? "opacity-70" : ""}
+        disabled={isLoading}
+        className={progress < 50 ? "opacity-90" : ""}
       >
-        {isLoading ? "Saving..." : "Complete Alumni Profile"}
+        {isLoading ? "Saving..." : "Complete Profile"}
       </Button>
     </div>
   );

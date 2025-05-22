@@ -63,10 +63,6 @@ export function useProfileSubmission() {
       const metadata = user.user_metadata || {};
       const schoolId = values.universityId;
       
-      if (!schoolId) {
-        throw new Error("School information not found. Please try again.");
-      }
-      
       // Check for existing profile
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
@@ -85,14 +81,14 @@ export function useProfileSubmission() {
           .from('profiles')
           .update({
             name: `${metadata.first_name} ${metadata.last_name}`,
-            school_id: schoolId,
-            major_id: values.majorId,
-            bio: values.bio,
+            school_id: schoolId || existingProfile.school_id,
+            major_id: values.majorId || existingProfile.major_id,
+            bio: values.bio || existingProfile.bio,
             image: imageUrl || existingProfile.image,
             role: 'alumni',
-            price_15_min: values.rate15min,
-            price_30_min: values.rate30min,
-            price_60_min: values.rate60min,
+            price_15_min: values.rate15min || existingProfile.price_15_min,
+            price_30_min: values.rate30min || existingProfile.price_30_min,
+            price_60_min: values.rate60min || existingProfile.price_60_min,
             visible: true // Make sure profile is visible
           })
           .eq('id', existingProfile.id);
@@ -101,19 +97,25 @@ export function useProfileSubmission() {
         
         profileId = existingProfile.id;
         
-        // Delete existing activities
-        const { error: deleteActivitiesError } = await supabase
-          .from('profile_activities')
-          .delete()
-          .eq('profile_id', profileId);
-          
-        if (deleteActivitiesError) throw deleteActivitiesError;
+        // Only delete existing activities if new ones are provided
+        if (values.activities && values.activities.length > 0) {
+          // Delete existing activities
+          const { error: deleteActivitiesError } = await supabase
+            .from('profile_activities')
+            .delete()
+            .eq('profile_id', profileId);
+            
+          if (deleteActivitiesError) throw deleteActivitiesError;
+        }
         
-        // Delete existing Greek life
-        await supabase
-          .from('profile_greek_life')
-          .delete()
-          .eq('profile_id', profileId);
+        // Only delete Greek life if a new one is provided
+        if (values.greekLife) {
+          // Delete existing Greek life
+          await supabase
+            .from('profile_greek_life')
+            .delete()
+            .eq('profile_id', profileId);
+        }
       } else {
         // Create new profile
         console.log("[useProfileSubmission] Creating new profile for user:", user.id);
@@ -142,19 +144,21 @@ export function useProfileSubmission() {
       
       console.log("[useProfileSubmission] Profile created/updated successfully:", profileId);
       
-      // Add activities to profile
-      const activityInserts = values.activities.map(activityId => ({
-        profile_id: profileId,
-        activity_id: activityId,
-      }));
-      
-      if (activityInserts.length > 0) {
-        console.log("[useProfileSubmission] Adding activities to profile:", activityInserts.length);
-        const { error: activitiesError } = await supabase
-          .from('profile_activities')
-          .insert(activityInserts);
+      // Add activities to profile if provided
+      if (values.activities && values.activities.length > 0) {
+        const activityInserts = values.activities.map(activityId => ({
+          profile_id: profileId,
+          activity_id: activityId,
+        }));
         
-        if (activitiesError) throw activitiesError;
+        if (activityInserts.length > 0) {
+          console.log("[useProfileSubmission] Adding activities to profile:", activityInserts.length);
+          const { error: activitiesError } = await supabase
+            .from('profile_activities')
+            .insert(activityInserts);
+          
+          if (activitiesError) throw activitiesError;
+        }
       }
       
       // Add Greek life affiliation if selected
@@ -175,10 +179,8 @@ export function useProfileSubmission() {
         }
       }
 
-      // Store restoration data in profiles table as JSON
+      // Store all profile submission data in the social_links JSON field
       try {
-        // Instead of using restoration_data table, we'll use an update to the profiles table
-        // to store the restoration information in a JSON field
         const { error: restorationError } = await supabase
           .from('profiles')
           .update({
