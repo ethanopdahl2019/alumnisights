@@ -24,8 +24,8 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
     throw error;
   }
 
-  // If signup successful and we have required data, create the profile
-  if (data.user && metadata.school_id && metadata.major_id) {
+  // If signup successful and user is a mentor or alumni, create the profile
+  if (data.user && (metadata.role === 'mentor' || metadata.role === 'alumni') && metadata.school_id && metadata.major_id) {
     try {
       // Create a profile immediately after successful sign up
       const { error: profileError } = await supabase
@@ -35,7 +35,7 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
           name: `${firstName} ${lastName}`,
           school_id: metadata.school_id,
           major_id: metadata.major_id,
-          role: (metadata.role === 'mentor' || metadata.role === 'alumni') ? metadata.role : 'applicant',
+          role: metadata.role,
           visible: true
         });
 
@@ -45,6 +45,24 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
       }
     } catch (profileError) {
       console.error('Failed to create profile:', profileError);
+    }
+  } else if (data.user) {
+    // For students, just create a basic profile without school/major info
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: data.user.id,
+          name: `${firstName} ${lastName}`,
+          role: 'applicant',
+          visible: true
+        });
+
+      if (profileError) {
+        console.error('Error creating basic profile:', profileError);
+      }
+    } catch (profileError) {
+      console.error('Failed to create basic profile:', profileError);
     }
   }
 

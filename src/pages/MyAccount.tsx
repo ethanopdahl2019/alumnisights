@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -62,12 +61,12 @@ const MyAccount = () => {
             socialLinks = JSON.parse(socialLinks);
           } catch (error) {
             console.error('Error parsing social links:', error);
-            socialLinks = null;
+            socialLinks = {};
           }
         }
-
-        // Make sure social_links isn't a number or null
-        if (typeof socialLinks === 'number' || socialLinks === null) {
+        
+        // If social_links is not a valid object, set it to an empty object
+        if (!socialLinks || typeof socialLinks !== 'object' || Array.isArray(socialLinks)) {
           socialLinks = {};
         }
         
@@ -77,7 +76,7 @@ const MyAccount = () => {
           
           const profileWithDetails: ProfileWithDetails = {
             ...profileData,
-            social_links: socialLinks,
+            social_links: socialLinks as Record<string, any>,
             role: validRole,
             // Ensure other required properties are present
             school: profileData.school || { 
@@ -129,7 +128,7 @@ const MyAccount = () => {
       }
     };
 
-    if (user) {
+    if (user && !loading) {
       fetchUserData();
     }
   }, [user, loading, navigate]);
