@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, RefreshCw, Search } from 'lucide-react';
 
-// Sample log data - in a real app, this would come from a database
+// Sample log data
 const SAMPLE_LOGS = [
   {
     id: '1',

@@ -1,80 +1,61 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Routes, Route, useNavigate, Link } from 'react-router-dom';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/components/AuthProvider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { isAdmin } from '@/services/auth';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import UserManagement from '@/components/admin/UserManagement';
 import ErrorLogs from '@/components/admin/ErrorLogs';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 
 const AdminDashboard = () => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('users');
 
-  // Redirect if not admin
-  React.useEffect(() => {
-    if (!loading && !isAdmin) {
-      toast.error("You don't have permission to access the admin dashboard");
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin(user))) {
       navigate('/');
+      return;
     }
-  }, [loading, isAdmin, navigate]);
+  }, [loading, user, navigate]);
 
-  if (loading || !user) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-            <p className="mt-4 text-lg">Checking admin permissions...</p>
-          </div>
-        </main>
-        <Footer />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return null; // This will never render due to the redirect in useEffect, but helps with type safety
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Admin Dashboard</title>
+      </Helmet>
       <Navbar />
-      <main className="flex-grow container mx-auto py-12 px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1">
-            Manage users, view system logs, and configure settings
-          </p>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+      
+      <main className="flex-grow container mx-auto py-8 px-4">
+        <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="mb-4">
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="logs">Error Logs</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
-
+          
           <TabsContent value="users">
             <UserManagement />
           </TabsContent>
-
+          
           <TabsContent value="logs">
             <ErrorLogs />
           </TabsContent>
-
-          <TabsContent value="settings">
-            <div className="p-12 text-center text-gray-500">
-              Admin settings panel coming soon
-            </div>
-          </TabsContent>
         </Tabs>
       </main>
+      
       <Footer />
     </div>
   );
