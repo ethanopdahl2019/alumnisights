@@ -17,6 +17,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// Type for the valid degree options matching the database enum
+type DegreeType = 'ba' | 'bs' | 'ma' | 'ms' | 'mba' | 'phd' | 'md' | 'jd' | 'other';
+
 // Schema with all fields optional
 const profileSchema = z.object({
   university: z.string().optional(),
@@ -173,6 +176,18 @@ const SimpleProfileComplete = () => {
     }
   };
   
+  // Map form degree values to database enum values
+  const mapDegreeToDatabaseValue = (formDegree: string): DegreeType => {
+    const degreeMap: Record<string, DegreeType> = {
+      'bachelors': 'bs',
+      'masters': 'ms',
+      'phd': 'phd',
+      'other': 'other'
+    };
+    
+    return degreeMap[formDegree] || 'other' as DegreeType;
+  };
+  
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) {
       toast("You need to be logged in to complete your profile.");
@@ -200,6 +215,9 @@ const SimpleProfileComplete = () => {
       // Convert graduation year to number if present
       const graduationYear = values.graduationYear ? parseInt(values.graduationYear, 10) : null;
       
+      // Convert the form degree value to a valid database enum value
+      const databaseDegree = mapDegreeToDatabaseValue(values.degree || '');
+      
       if (existingProfile) {
         // Update existing profile
         const { error: profileError } = await supabase
@@ -212,7 +230,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl || existingProfile.image,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree,
+            degree: databaseDegree,
             role: role, // Use one of the allowed enum values
             visible: existingProfile.visible !== undefined ? existingProfile.visible : true
           })
@@ -234,7 +252,7 @@ const SimpleProfileComplete = () => {
             image: imageUrl,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree,
+            degree: databaseDegree,
             role: role, // Use one of the allowed enum values
             visible: true,
             school_id: null,
