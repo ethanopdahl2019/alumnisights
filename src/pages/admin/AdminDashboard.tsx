@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -22,7 +21,8 @@ import {
   Star,
   ChevronRight,
   FileCheck,
-  BarChart
+  BarChart,
+  Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,12 @@ const adminLinkGroups = {
       description: "Manage user accounts and permissions",
       icon: <Users className="h-5 w-5" />,
       href: "/admin/users"
+    },
+    {
+      title: "Profile Management",
+      description: "Manage profile visibility and information",
+      icon: <Eye className="h-5 w-5" />,
+      href: "/admin/profile-management"
     },
     {
       title: "Registration Control",

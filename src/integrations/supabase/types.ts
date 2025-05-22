@@ -57,6 +57,162 @@ export type Database = {
         }
         Relationships: []
       }
+      alumni: {
+        Row: {
+          bio: string | null
+          created_at: string
+          degree: string | null
+          email: string
+          first_name: string
+          graduation_year: number | null
+          id: string
+          image: string | null
+          last_name: string
+          major_id: string | null
+          price_15_min: number | null
+          price_30_min: number | null
+          price_60_min: number | null
+          school_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          degree?: string | null
+          email: string
+          first_name: string
+          graduation_year?: number | null
+          id: string
+          image?: string | null
+          last_name: string
+          major_id?: string | null
+          price_15_min?: number | null
+          price_30_min?: number | null
+          price_60_min?: number | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          degree?: string | null
+          email?: string
+          first_name?: string
+          graduation_year?: number | null
+          id?: string
+          image?: string | null
+          last_name?: string
+          major_id?: string | null
+          price_15_min?: number | null
+          price_30_min?: number | null
+          price_60_min?: number | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumni_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alumni_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applicant_dream_schools: {
+        Row: {
+          created_at: string | null
+          id: string
+          profile_id: string
+          school_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          profile_id: string
+          school_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_dream_schools_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicant_dream_schools_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applicants: {
+        Row: {
+          created_at: string
+          degree: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          major_id: string | null
+          school_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          degree?: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          major_id?: string | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          degree?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          major_id?: string | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicants_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_categories: {
         Row: {
           created_at: string
@@ -747,66 +903,87 @@ export type Database = {
       profiles: {
         Row: {
           achievements: string[] | null
+          avatar: string | null
           bio: string | null
+          clubs: string[] | null
           created_at: string | null
           degree: Database["public"]["Enums"]["degree_type"] | null
           featured: boolean | null
           graduation_year: number | null
+          greek_life: string | null
           headline: string | null
           id: string
           image: string | null
           location: string | null
           major_id: string
+          major_name: string | null
           name: string
           price_15_min: number | null
           price_30_min: number | null
           price_60_min: number | null
           role: string | null
           school_id: string
+          school_name: string | null
           social_links: Json | null
+          sport: string | null
           user_id: string
+          visible: boolean | null
         }
         Insert: {
           achievements?: string[] | null
+          avatar?: string | null
           bio?: string | null
+          clubs?: string[] | null
           created_at?: string | null
           degree?: Database["public"]["Enums"]["degree_type"] | null
           featured?: boolean | null
           graduation_year?: number | null
+          greek_life?: string | null
           headline?: string | null
           id?: string
           image?: string | null
           location?: string | null
           major_id: string
+          major_name?: string | null
           name: string
           price_15_min?: number | null
           price_30_min?: number | null
           price_60_min?: number | null
           role?: string | null
           school_id: string
+          school_name?: string | null
           social_links?: Json | null
+          sport?: string | null
           user_id: string
+          visible?: boolean | null
         }
         Update: {
           achievements?: string[] | null
+          avatar?: string | null
           bio?: string | null
+          clubs?: string[] | null
           created_at?: string | null
           degree?: Database["public"]["Enums"]["degree_type"] | null
           featured?: boolean | null
           graduation_year?: number | null
+          greek_life?: string | null
           headline?: string | null
           id?: string
           image?: string | null
           location?: string | null
           major_id?: string
+          major_name?: string | null
           name?: string
           price_15_min?: number | null
           price_30_min?: number | null
           price_60_min?: number | null
           role?: string | null
           school_id?: string
+          school_name?: string | null
           social_links?: Json | null
+          sport?: string | null
           user_id?: string
+          visible?: boolean | null
         }
         Relationships: [
           {
