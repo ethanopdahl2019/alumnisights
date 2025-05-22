@@ -1,75 +1,78 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { getCurrentSession, getCurrentUser, onAuthStateChange, isAdmin } from '@/services/auth';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { isAdmin } from '@/services/auth';
 
-interface AuthContextType {
+type AuthContextType = {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signOut: () => Promise<void>;
   isAdmin: boolean;
-}
+};
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
-  signOut: async () => {},
   isAdmin: false
 });
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
-    // Initialize auth state
-    const initializeAuth = async () => {
-      // Set up auth state change listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, currentSession) => {
-          console.log("[AuthProvider] Auth state changed:", event);
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          setLoading(false);
-        }
-      );
-
-      // Get initial session
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
+    // Set up auth state listener
+    const { data: { subscription } } = onAuthStateChange((event, session) => {
+      setSession(session);
+      
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      
+      // Check admin status whenever the user changes
+      if (currentUser) {
+        setIsUserAdmin(isAdmin(currentUser));
+      } else {
+        setIsUserAdmin(false);
+      }
+      
       setLoading(false);
+    });
 
-      // Clean up listener on unmount
-      return () => {
-        subscription.unsubscribe();
-      };
+    // Check for existing session
+    getCurrentSession()
+      .then(session => {
+        setSession(session);
+        if (session) {
+          return getCurrentUser();
+        }
+        return null;
+      })
+      .then(user => {
+        setUser(user);
+        if (user) {
+          setIsUserAdmin(isAdmin(user));
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
+
+    return () => {
+      subscription.unsubscribe();
     };
-
-    initializeAuth();
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const value = {
-    session,
-    user,
-    loading,
-    signOut,
-    isAdmin: isAdmin(user)
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ session, user, loading, isAdmin: isUserAdmin }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;

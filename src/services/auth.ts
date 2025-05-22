@@ -1,41 +1,143 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { UserCredentials, UserRegistration } from '@/types/database';
 
-interface SignInParams {
-  email: string;
-  password: string;
+export async function signUp({ email, password, firstName, lastName, metadata = {} }: UserRegistration) {
+  // Set default role if not provided
+  if (!metadata.role) {
+    metadata.role = 'student';
+  }
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        first_name: firstName,
+        last_name: lastName,
+        ...metadata
+      }
+    }
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
-export const signIn = async ({ email, password }: SignInParams) => {
+export async function signIn({ email, password }: UserCredentials) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+
   return data;
-};
+}
 
-export const isAdmin = (user: User | null): boolean => {
-  if (!user) return false;
-  return user.user_metadata?.role === 'admin';
-};
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  
+  if (error) {
+    throw error;
+  }
+  
+  return true;
+}
 
-// Add this function to replace refreshAndCheckAdmin
-export const refreshAndCheckAdmin = async (user: User | null): Promise<boolean> => {
+export async function getCurrentSession() {
+  const { data, error } = await supabase.auth.getSession();
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data.session;
+}
+
+export async function getCurrentUser() {
+  const { data, error } = await supabase.auth.getUser();
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data.user;
+}
+
+export function onAuthStateChange(callback: (event: string, session: any) => void) {
+  return supabase.auth.onAuthStateChange(callback);
+}
+
+export function getUserRole(user: any) {
+  if (!user) return null;
+  return user.user_metadata?.role || null;
+}
+
+export function isStudent(user: any) {
+  return getUserRole(user) === 'student' || getUserRole(user) === 'applicant';
+}
+
+export function isMentor(user: any) {
+  return getUserRole(user) === 'mentor' || getUserRole(user) === 'alumni';
+}
+
+export function isAdmin(user: any) {
+  // Check if user has admin role in user_metadata
+  return getUserRole(user) === 'admin';
+}
+
+export async function updateUserMetadata(metadata: Record<string, any>) {
+  const { data, error } = await supabase.auth.updateUser({
+    data: metadata
+  });
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data;
+}
+
+// Enhanced function to check admin status using both metadata and database function
+export async function refreshAndCheckAdmin(user: any): Promise<boolean> {
   if (!user) return false;
   
+  // First check if user already has admin role in metadata
+  if (getUserRole(user) === 'admin') {
+    // Double check with the database function for extra security
+    try {
+      const { data, error } = await supabase.rpc('is_admin');
+      if (error) {
+        console.error('Error calling is_admin function:', error);
+        // Fall back to metadata-based check
+        return getUserRole(user) === 'admin';
+      }
+      return !!data; // Convert to boolean
+    } catch (error) {
+      console.error('Error checking admin status via RPC:', error);
+      // Fall back to metadata-based check
+      return getUserRole(user) === 'admin';
+    }
+  }
+  
+  // If not found in metadata, refresh the user data
   try {
-    // Get fresh session data
-    const { data: { session } } = await supabase.auth.getSession();
-    const currentUser = session?.user;
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error('Error refreshing session:', error);
+      return false;
+    }
     
-    if (!currentUser) return false;
-    
-    return isAdmin(currentUser);
+    const refreshedUser = data.user;
+    return getUserRole(refreshedUser) === 'admin';
   } catch (error) {
-    console.error("Error refreshing admin status:", error);
+    console.error('Error checking admin status:', error);
     return false;
   }
-};
+}

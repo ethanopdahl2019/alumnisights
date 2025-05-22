@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,16 +14,12 @@ import {
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
-  SelectValue,
-  SelectGroup,
-  SelectLabel
+  SelectValue 
 } from "@/components/ui/select";
 import { getAllUniversities, UniversityData } from "@/pages/insights/universities/universities-data";
 import SearchInput from "@/components/SearchInput";
 import { useForm } from "react-hook-form";
 import { getMajors, Major } from "@/services/majors";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Upload } from "lucide-react";
 
 interface RegistrationPreviewProps {
   registrationType?: 'student' | 'mentor';
@@ -35,8 +32,6 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
   const [universities, setUniversities] = useState<UniversityData[]>([]);
   const [majors, setMajors] = useState<Array<Major>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("profile-complete");
   
   // Fetch universities from Supabase
   useEffect(() => {
@@ -74,22 +69,8 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
     major.name.toLowerCase().includes(majorSearchTerm.toLowerCase())
   ).slice(0, 5);
 
-  // Handle image upload for preview
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const getMentorSpecificContent = () => (
     <div className="space-y-4 mt-4">
-      {/* Profile image is now part of the common content in profile-complete tab */}
-      
       <div className="space-y-2">
         <Label htmlFor="work-experience">Work Experience (years)</Label>
         <Select>
@@ -113,24 +94,20 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None</SelectItem>
-            <SelectGroup>
-              <SelectLabel>Fraternities</SelectLabel>
-              <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
-              <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
-              <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
-              <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
-              <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
-              <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
-            </SelectGroup>
-            <SelectGroup>
-              <SelectLabel>Sororities</SelectLabel>
-              <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
-              <SelectItem value="chi-omega">Chi Omega</SelectItem>
-              <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
-              <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
-              <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
-              <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
-            </SelectGroup>
+            <SelectLabel>Fraternities</SelectLabel>
+            <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
+            <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
+            <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
+            <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
+            <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
+            <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
+            <SelectLabel>Sororities</SelectLabel>
+            <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
+            <SelectItem value="chi-omega">Chi Omega</SelectItem>
+            <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
+            <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
+            <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
+            <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -187,11 +164,11 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
         <CardTitle>{registrationType === 'mentor' ? 'Mentor' : 'Student'} Registration Preview</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue={activeTab} className="w-full">
+        <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="login" onClick={() => setActiveTab("login")}>Login</TabsTrigger>
-            <TabsTrigger value="register" onClick={() => setActiveTab("register")}>Register</TabsTrigger>
-            <TabsTrigger value="profile-complete" onClick={() => setActiveTab("profile-complete")}>Profile Completion</TabsTrigger>
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsTrigger value="profile-complete">Profile Completion</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login" className="space-y-4">
@@ -270,32 +247,6 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
               </div>
               
               <div className="space-y-4">
-                {/* Profile Image Upload - Only one instance for both students and mentors */}
-                <div className="space-y-2">
-                  <Label htmlFor="profile-image">Profile Image</Label>
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="relative cursor-pointer">
-                      <Avatar className="w-24 h-24">
-                        {imagePreview ? (
-                          <AvatarImage src={imagePreview} alt="Profile preview" />
-                        ) : (
-                          <AvatarFallback className="bg-muted flex items-center justify-center">
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      <input
-                        type="file"
-                        id="profile-image"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500">Click to upload your profile picture</p>
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="bio">Bio</Label>
                   <textarea 
@@ -362,71 +313,39 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
                 </div>
                 
                 {registrationType === 'student' ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="greek-life-student">Greek Life</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Greek organization (if any)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectGroup>
-                            <SelectLabel>Fraternities</SelectLabel>
-                            <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
-                            <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
-                            <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
-                            <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
-                            <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
-                            <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
-                          </SelectGroup>
-                          <SelectGroup>
-                            <SelectLabel>Sororities</SelectLabel>
-                            <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
-                            <SelectItem value="chi-omega">Chi Omega</SelectItem>
-                            <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
-                            <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
-                            <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
-                            <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  
-                    <div className="space-y-3">
-                      <Label className="text-base">Activities</Label>
-                      <p className="text-sm text-gray-500">Select the activities you're involved in</p>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="sports" />
-                          <Label htmlFor="sports" className="text-sm font-normal">Sports</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="music" />
-                          <Label htmlFor="music" className="text-sm font-normal">Music</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="art" />
-                          <Label htmlFor="art" className="text-sm font-normal">Art</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="tech" />
-                          <Label htmlFor="tech" className="text-sm font-normal">Tech</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="volunteer" />
-                          <Label htmlFor="volunteer" className="text-sm font-normal">Volunteering</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="research" />
-                          <Label htmlFor="research" className="text-sm font-normal">Research</Label>
-                        </div>
+                  <div className="space-y-3">
+                    <Label className="text-base">Activities</Label>
+                    <p className="text-sm text-gray-500">Select the activities you're involved in</p>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="sports" />
+                        <Label htmlFor="sports" className="text-sm font-normal">Sports</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="music" />
+                        <Label htmlFor="music" className="text-sm font-normal">Music</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="art" />
+                        <Label htmlFor="art" className="text-sm font-normal">Art</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="tech" />
+                        <Label htmlFor="tech" className="text-sm font-normal">Tech</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="volunteer" />
+                        <Label htmlFor="volunteer" className="text-sm font-normal">Volunteering</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="research" />
+                        <Label htmlFor="research" className="text-sm font-normal">Research</Label>
                       </div>
                     </div>
-                  </>
+                  </div>
                 ) : (
-                  // Mentor specific fields
+                  // Special fields for mentors
                   getMentorSpecificContent()
                 )}
                 

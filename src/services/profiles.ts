@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, ProfileWithDetails, School } from '@/types/database';
 
@@ -11,7 +12,7 @@ const parseSocialLinks = (socialLinks: any): Record<string, any> | null => {
   }
   
   // If it's a string, try to parse it
-  if (typeof socialLinks === 'string' && socialLinks) {
+  if (typeof socialLinks === 'string') {
     try {
       return JSON.parse(socialLinks);
     } catch (error) {
@@ -23,28 +24,6 @@ const parseSocialLinks = (socialLinks: any): Record<string, any> | null => {
   return null;
 };
 
-// Transform profile data to match the ProfileWithDetails interface
-const transformProfileData = (profile: any): ProfileWithDetails => {
-  return {
-    ...profile,
-    school: {
-      ...profile.school,
-      image: profile.school?.image ?? null
-    },
-    activities: profile.activities?.map((pa: any) => pa.activities) || [],
-    // Cast role to the expected type with a fallback
-    role: (profile.role === 'alumni' || profile.role === 'applicant' 
-      ? profile.role as 'applicant' | 'alumni' 
-      : 'applicant'),
-    social_links: parseSocialLinks(profile.social_links),
-    greek_life: profile.greek_life?.length > 0 ? profile.greek_life[0].greek_life : null,
-    // Ensure school_name and major_name are available
-    school_name: profile.school_name || profile.school?.name || null,
-    major_name: profile.major_name || profile.major?.name || null,
-    degree: profile.degree || null
-  };
-};
-
 // Add image when projecting schools
 export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
   const { data: profiles, error } = await supabase
@@ -53,8 +32,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
       *,
       school:schools(id, name, location, type, image, created_at),
       major:majors(*),
-      activities:profile_activities(activities(*)),
-      greek_life:profile_greek_life(greek_life(*))
+      activities:profile_activities(activities(*))
     `)
     .eq('featured', true)
     .limit(3);
@@ -64,28 +42,43 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
     return [];
   }
 
-  return profiles.map(profile => transformProfileData(profile));
+  return profiles.map(profile => ({
+    ...profile,
+    school: {
+      ...profile.school,
+      image: profile.school?.image ?? null
+    },
+    activities: profile.activities.map((pa: any) => pa.activities),
+    role: profile.role as 'applicant' | 'alumni',
+    social_links: parseSocialLinks(profile.social_links)
+  }));
 }
 
 export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
-  // Modified to get all alumni profiles visible by default
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select(`
       *,
       school:schools(id, name, location, type, image, created_at),
       major:majors(*),
-      activities:profile_activities(activities(*)),
-      greek_life:profile_greek_life(greek_life(*))
-    `)
-    .eq('role', 'alumni');
+      activities:profile_activities(activities(*))
+    `);
 
   if (error) {
     console.error('Error fetching profiles:', error);
     return [];
   }
 
-  return profiles.map(profile => transformProfileData(profile));
+  return profiles.map(profile => ({
+    ...profile,
+    school: {
+      ...profile.school,
+      image: profile.school?.image ?? null
+    },
+    activities: profile.activities.map((pa: any) => pa.activities),
+    role: profile.role as 'applicant' | 'alumni',
+    social_links: parseSocialLinks(profile.social_links)
+  }));
 }
 
 export async function getProfileById(id: string): Promise<ProfileWithDetails | null> {
@@ -95,11 +88,10 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
       *,
       school:schools(id, name, location, type, image, created_at),
       major:majors(*),
-      activities:profile_activities(activities(*)),
-      greek_life:profile_greek_life(greek_life(*))
+      activities:profile_activities(activities(*))
     `)
     .eq('id', id)
-    .maybeSingle();
+    .maybeSingle(); // more reliable than .single()
 
   if (error) {
     console.error('Error fetching profile:', error);
@@ -108,7 +100,16 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
 
   if (!profile) return null;
 
-  return transformProfileData(profile);
+  return {
+    ...profile,
+    school: {
+      ...profile.school,
+      image: profile.school?.image ?? null
+    },
+    activities: profile.activities.map((pa: any) => pa.activities),
+    role: profile.role as 'applicant' | 'alumni',
+    social_links: parseSocialLinks(profile.social_links)
+  };
 }
 
 export async function getSchools(): Promise<School[]> {
@@ -151,20 +152,6 @@ export async function getActivities() {
     
   if (error) {
     console.error('Error fetching activities:', error);
-    return [];
-  }
-  
-  return data;
-}
-
-export async function getGreekLifeOptions() {
-  const { data, error } = await supabase
-    .from('greek_life')
-    .select('*')
-    .order('name');
-    
-  if (error) {
-    console.error('Error fetching Greek life options:', error);
     return [];
   }
   

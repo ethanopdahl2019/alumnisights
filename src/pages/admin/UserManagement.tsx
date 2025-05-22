@@ -1,233 +1,146 @@
-import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Trash2, Search, MoreHorizontal, UserPlus, UserCheck, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/components/AuthProvider';
-import { isAdmin } from '@/services/auth';
-import { fetchAllUsers, deleteUser, UserWithProfile, toggleUserVisibility } from '@/services/supabase/users';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const UserManagement: React.FC = () => {
-  const { user, loading } = useAuth();
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { useAuth } from "@/components/AuthProvider";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
+
+// Define a User interface for TypeScript
+interface User {
+  id: string;
+  email: string;
+  user_metadata: {
+    first_name?: string;
+    last_name?: string;
+    role?: string;
+    avatar_url?: string;
+  };
+  created_at: string;
+  last_sign_in_at?: string;
+}
+
+const UserManagement = () => {
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<UserWithProfile[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [userToDelete, setUserToDelete] = useState<UserWithProfile | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+
+  // Fetch all users using Edge Function
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("No active session");
+      }
+
+      const response = await fetch(
+        'https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/admin-users',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch users");
+      }
+
+      const data = await response.json();
+      setUsers(data.users || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users: " + (error as Error).message);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin(user))) {
-      toast.error("You don't have permission to access this page");
-      navigate('/');
-      return;
-    }
-    
-    if (!loading && user) {
-      loadUsers();
-    }
-  }, [loading, user, navigate]);
-
-  const loadUsers = async () => {
-    setIsLoading(true);
-    try {
-      const userData = await fetchAllUsers();
-      setUsers(userData);
-    } catch (error) {
-      console.error('Error loading users:', error);
-      toast.error("Failed to load users");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleDeleteUser = (user: UserWithProfile) => {
-    setUserToDelete(user);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteUser = async () => {
-    if (!userToDelete) return;
-    
-    setIsDeleting(true);
-    try {
-      const success = await deleteUser(userToDelete.id);
-      if (success) {
-        toast.success(`User ${userToDelete.email} has been deleted`);
-        setUsers(users.filter(u => u.id !== userToDelete.id));
+    // Check if user is admin
+    if (!loading) {
+      if (!user) {
+        toast.error("Please sign in to access this page");
+        navigate('/auth');
+        return;
       }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error("Failed to delete user");
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }
-  };
-
-  const handleToggleVisibility = async (userId: string, visible: boolean | undefined | null) => {
-    setIsTogglingVisibility(true);
-    try {
-      const success = await toggleUserVisibility(userId, !visible);
-      if (success) {
-        // Update the user in the local state
-        setUsers(users.map(user => {
-          if (user.id === userId && user.profile) {
-            return {
-              ...user,
-              profile: {
-                ...user.profile,
-                visible: !visible
-              }
-            };
-          }
-          return user;
-        }));
-        
-        toast.success(`User visibility has been ${!visible ? 'enabled' : 'disabled'}`);
+      
+      if (!isAdmin) {
+        toast.error("You don't have permission to access this page");
+        navigate('/');
+        return;
       }
-    } catch (error) {
-      console.error('Error toggling visibility:', error);
-      toast.error("Failed to update visibility");
-    } finally {
-      setIsTogglingVisibility(false);
+
+      fetchUsers();
     }
-  };
-
-  const filteredUsers = searchTerm 
-    ? users.filter(user => 
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (user.user_metadata?.first_name && user.user_metadata.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (user.user_metadata?.last_name && user.user_metadata.last_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (user.user_metadata?.role && user.user_metadata.role.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
-    : users;
-
-  const getRoleBadgeColor = (role: string | undefined) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-red-500 hover:bg-red-600';
-      case 'alumni':
-      case 'mentor':
-        return 'bg-blue-500 hover:bg-blue-600';
-      case 'student':
-        return 'bg-green-500 hover:bg-green-600';
-      default:
-        return 'bg-gray-500 hover:bg-gray-600';
-    }
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName && !lastName) return '??';
-    return `${(firstName?.[0] || '').toUpperCase()}${(lastName?.[0] || '').toUpperCase()}`;
-  };
+  }, [user, loading, isAdmin, navigate]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
-  if (!user || !isAdmin(user)) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <AlertTriangle className="h-16 w-16 text-yellow-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-        <p className="text-gray-600 mb-4 text-center">
-          You don't have permission to access this page.
-        </p>
-        <Button onClick={() => navigate('/')}>
-          Go back to home
-        </Button>
-      </div>
-    );
+  if (!isAdmin) {
+    return null; // Will redirect via useEffect
   }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>User Management | Admin Dashboard</title>
+        <title>User Management | Admin</title>
       </Helmet>
       <Navbar />
       
-      <div className="flex-grow container-custom py-8">
-        <h1 className="text-3xl font-bold mb-6">User Management</h1>
+      <main className="flex-grow container-custom py-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <h1 className="text-3xl font-bold text-navy">User Management</h1>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <Button
+              variant="outline"
+              onClick={() => fetchUsers()}
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/admin/dashboard')}
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
         
-        <Card className="mb-6">
+        <Card className="mb-8">
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Users</CardTitle>
-                <CardDescription>Manage all users in the system.</CardDescription>
-              </div>
-              <div className="relative w-64">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input 
-                  className="pl-8" 
-                  placeholder="Search users..." 
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                />
-              </div>
-            </div>
+            <CardTitle>All Users</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {loadingUsers ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
-            ) : filteredUsers.length > 0 ? (
+            ) : users.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -237,84 +150,39 @@ const UserManagement: React.FC = () => {
                       <TableHead>Role</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Last Login</TableHead>
-                      <TableHead className="text-center">Browse Visible</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
+                    {users.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center space-x-3">
-                            <Avatar>
-                              {user.profile?.image ? (
-                                <AvatarImage src={user.profile.image} alt={user.user_metadata?.first_name || ''} />
-                              ) : (
-                                <AvatarFallback>
-                                  {getInitials(user.user_metadata?.first_name, user.user_metadata?.last_name)}
-                                </AvatarFallback>
-                              )}
-                            </Avatar>
-                            <span>{user.user_metadata?.first_name} {user.user_metadata?.last_name}</span>
+                        <TableCell className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                            <AvatarFallback>
+                              {(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            {user.user_metadata?.first_name && user.user_metadata?.last_name ? (
+                              `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+                            ) : (
+                              <span className="text-muted-foreground">No name</span>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
-                          <Badge className={getRoleBadgeColor(user.user_metadata?.role)}>
-                            {user.user_metadata?.role || 'N/A'}
+                          <Badge variant={user.user_metadata?.role === 'admin' ? 'destructive' : 'outline'}>
+                            {user.user_metadata?.role || 'user'}
                           </Badge>
                         </TableCell>
-                        <TableCell>{formatDate(user.created_at)}</TableCell>
-                        <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
-                        <TableCell className="text-center">
-                          {user.user_metadata?.role === 'alumni' && (
-                            <div className="flex justify-center">
-                              <Checkbox 
-                                id={`visibility-${user.id}`}
-                                checked={user.profile?.visible ?? false}
-                                onCheckedChange={() => handleToggleVisibility(user.id, user.profile?.visible)}
-                                disabled={isTogglingVisibility}
-                              />
-                            </div>
-                          )}
+                        <TableCell>
+                          {new Date(user.created_at).toLocaleDateString()}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {user.user_metadata?.role === 'alumni' && (
-                                <DropdownMenuItem 
-                                  className="cursor-pointer"
-                                  onClick={() => handleToggleVisibility(user.id, user.profile?.visible)}
-                                  disabled={isTogglingVisibility}
-                                >
-                                  {user.profile?.visible ? (
-                                    <>
-                                      <EyeOff className="mr-2 h-4 w-4" />
-                                      Hide from Browse
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Eye className="mr-2 h-4 w-4" />
-                                      Show in Browse
-                                    </>
-                                  )}
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem 
-                                className="text-red-600 cursor-pointer"
-                                onClick={() => handleDeleteUser(user)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete User
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <TableCell>
+                          {user.last_sign_in_at ? 
+                            new Date(user.last_sign_in_at).toLocaleDateString() : 
+                            'Never'}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -322,40 +190,11 @@ const UserManagement: React.FC = () => {
                 </Table>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No users matching your search.</p>
-              </div>
+              <p className="text-center py-4 text-muted-foreground">No users found.</p>
             )}
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <p className="text-sm text-gray-500">
-              Total Users: {users.length}
-            </p>
-            <Button size="sm" onClick={loadUsers} disabled={isLoading}>
-              Refresh
-            </Button>
-          </CardFooter>
         </Card>
-      </div>
-
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm User Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the user {userToDelete?.email}? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteUser} disabled={isDeleting}>
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </main>
       
       <Footer />
     </div>

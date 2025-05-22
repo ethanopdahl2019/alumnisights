@@ -1,4 +1,3 @@
-
 export interface School {
   id: string;
   name: string;
@@ -48,10 +47,6 @@ export interface Profile {
   location?: string | null;
   social_links?: Record<string, any> | string | null;
   achievements?: string[] | null;
-  school_name?: string | null;
-  major_name?: string | null;
-  degree?: string | null;  // Changed to accept any string
-  visible?: boolean | null; // Added visible field to control Browse visibility
 }
 
 export interface ProfileWithDetails extends Profile {
@@ -67,14 +62,6 @@ export interface ProfileWithDetails extends Profile {
   location?: string | null;
   social_links?: Record<string, any> | string | null;
   achievements?: string[] | null;
-  greek_life?: {
-    id: string;
-    name: string;
-    type: string;
-  } | null;
-  school_name?: string | null;
-  major_name?: string | null;
-  degree?: string | null;  // Changed to accept any string
 }
 
 // New types for authentication

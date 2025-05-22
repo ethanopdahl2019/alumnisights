@@ -6,8 +6,6 @@ import { ProfileWithDetails } from '@/types/database';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { User } from 'lucide-react';
 
 export interface TagData {
   id: string;
@@ -46,38 +44,17 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
     return null;
   }
 
-  // Prepare tags from university, major, activities, and Greek life
   const tags: TagData[] = [
-    // University tag
-    {
-      id: profile.school_id,
-      label: profile.school?.name || 'University',
-      type: 'major'
-    },
-    // Major tag
-    {
-      id: profile.major_id,
-      label: profile.major?.name || 'Major',
-      type: 'study'
-    },
-    // Activity tags
     ...(profile.activities?.map(activity => ({
       id: activity.id,
       label: activity.name,
       type: activity.type as TagType
-    })) || []),
-    // Greek Life tag (if applicable)
-    ...(profile.greek_life ? [{
-      id: profile.greek_life.id,
-      label: profile.greek_life.name,
-      type: 'club' as TagType
-    }] : [])
+    })) || [])
   ];
   
   // Determine the link destination based on whether it's the user's own profile
-  // and whether they're a mentor or alumni
   const linkDestination = isOwnProfile 
-    ? (profile.role === 'alumni' ? '/mentor-dashboard' : '/alumni-dashboard')
+    ? '/alumni-dashboard' 
     : `/alumni/${profile.id}`;
   
   return (
@@ -91,15 +68,11 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
         data-testid="profile-card"
       >
         <div className="flex justify-center w-full mb-4">
-          <Avatar className="w-28 h-28">
-            {profile.image ? (
-              <AvatarImage src={profile.image} alt={`${profile.name}'s profile`} className="object-cover" />
-            ) : (
-              <AvatarFallback className="bg-primary/10 flex items-center justify-center">
-                <User className="h-12 w-12 text-primary/60" />
-              </AvatarFallback>
-            )}
-          </Avatar>
+          <img 
+            src={profile.image || '/placeholder.svg'} 
+            alt={`${profile.name}'s profile`} 
+            className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-sm"
+          />
         </div>
         <div className="flex flex-col items-center flex-grow w-full">
           <h3 className="font-medium text-lg text-center">{profile.name}</h3>

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckIcon, ChevronsUpDown, Upload } from 'lucide-react';
+import { CheckIcon, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -12,52 +12,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { toast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { getMajors, getActivities, getGreekLifeOptions } from '@/services/profiles';
-import { getUniversities } from '@/services/universities';
+import { getMajors, getActivities } from '@/services/profiles';
+import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
 import SearchInput from '@/components/SearchInput';
 
-// Modified schema to make fields optional
 const profileSchema = z.object({
-  bio: z.string().optional(),
-  universityId: z.string().optional(),
-  degree: z.string().optional(),
-  majorId: z.string().optional(),
-  activities: z.array(z.string()).optional(),
-  greekLife: z.string().optional(),
-  image: z.any().optional(),
+  bio: z.string().min(20, { message: "Bio should be at least 20 characters" }),
+  universityId: z.string().min(1, { message: "Please select your university" }),
+  degree: z.string().min(1, { message: "Please select your degree" }),
+  majorId: z.string().min(1, { message: "Please select your major" }),
+  activities: z.array(z.string()).min(1, { message: "Please select at least one activity" }),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileComplete = () => {
-  console.log("[ProfileComplete] Component rendering");
   const navigate = useNavigate();
   const { user, session } = useAuth();
-  
-  console.log("[ProfileComplete] Auth state:", { 
-    userExists: !!user, 
-    userEmail: user?.email, 
-    sessionExists: !!session,
-    userMetadata: user?.user_metadata 
-  });
-  
   const [isLoading, setIsLoading] = useState(false);
   const [majors, setMajors] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
-  const [greekLifeOptions, setGreekLifeOptions] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
   const [universities, setUniversities] = useState<any[]>([]);
+  const [universityOpen, setUniversityOpen] = useState(false);
+  const [majorOpen, setMajorOpen] = useState(false);
   const [universitySearchTerm, setUniversitySearchTerm] = useState("");
   const [majorSearchTerm, setMajorSearchTerm] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [existingProfile, setExistingProfile] = useState<any>(null);
   
   const degrees = [
     { id: "bachelors", name: "Bachelor's Degree" },
@@ -75,385 +62,134 @@ const ProfileComplete = () => {
       degree: "",
       majorId: "",
       activities: [],
-      greekLife: "",
     },
     mode: "onChange",
   });
-  
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      console.log("[ProfileComplete] Image selected:", file.name);
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
   
   // Watch form values to update progress
   const watchedValues = form.watch();
   
   useEffect(() => {
-    // Calculate form completion progress based on fields that have been filled
-    const calculateProgress = () => {
-      let completedSteps = 0;
-      let totalSteps = 0;
-      
-      if (watchedValues.bio) {
-        completedSteps++;
-      }
-      totalSteps++;
-      
-      if (watchedValues.universityId) {
-        completedSteps++;
-      }
-      totalSteps++;
-      
-      if (watchedValues.degree) {
-        completedSteps++;
-      }
-      totalSteps++;
-      
-      if (watchedValues.majorId) {
-        completedSteps++;
-      }
-      totalSteps++;
-      
-      if (watchedValues.activities && watchedValues.activities.length > 0) {
-        completedSteps++;
-      }
-      totalSteps++;
-      
-      if (imagePreview) {
-        completedSteps++;
-      }
-      totalSteps++;
-      
-      const progressValue = (completedSteps / totalSteps) * 100;
-      setProgress(progressValue);
-    };
+    // Calculate form completion progress
+    let completedSteps = 0;
+    if (watchedValues.bio.length >= 20) completedSteps++;
+    if (watchedValues.universityId) completedSteps++;
+    if (watchedValues.degree) completedSteps++;
+    if (watchedValues.majorId) completedSteps++;
+    if (watchedValues.activities.length > 0) completedSteps++;
     
-    calculateProgress();
-  }, [watchedValues, imagePreview]);
+    setProgress((completedSteps / 5) * 100);
+  }, [watchedValues]);
   
   // Redirect if not logged in
   useEffect(() => {
-    console.log("[ProfileComplete] Auth check running");
-    if (!user && !session) {
-      console.log("[ProfileComplete] No user or session found, redirecting to auth page");
+    if (!session) {
       navigate('/auth');
       return;
-    } else {
-      console.log("[ProfileComplete] User is authenticated:", user?.email);
     }
     
-    // Check if user already has a profile
-    const checkExistingProfile = async () => {
-      if (user) {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .maybeSingle();
-            
-          if (data) {
-            setExistingProfile(data);
-            
-            // Populate form with existing data
-            form.setValue('bio', data.bio || '');
-            form.setValue('universityId', data.school_id || '');
-            form.setValue('degree', data.degree || '');
-            form.setValue('majorId', data.major_id || '');
-            
-            if (data.image) {
-              setImagePreview(data.image);
-            }
-            
-            // Fetch activities for this profile
-            const { data: activitiesData } = await supabase
-              .from('profile_activities')
-              .select('activity_id')
-              .eq('profile_id', data.id);
-              
-            if (activitiesData) {
-              form.setValue('activities', activitiesData.map(item => item.activity_id));
-            }
-            
-            // Fetch greek life for this profile
-            const { data: greekLifeData } = await supabase
-              .from('profile_greek_life')
-              .select('greek_life_id')
-              .eq('profile_id', data.id)
-              .maybeSingle();
-              
-            if (greekLifeData) {
-              form.setValue('greekLife', greekLifeData.greek_life_id);
-            }
-            
-            // Set university search term
-            if (data.school_id) {
-              const { data: schoolData } = await supabase
-                .from('schools')
-                .select('name')
-                .eq('id', data.school_id)
-                .maybeSingle();
-                
-              if (schoolData) {
-                setUniversitySearchTerm(schoolData.name);
-              }
-            }
-            
-            // Set major search term
-            if (data.major_id) {
-              const { data: majorData } = await supabase
-                .from('majors')
-                .select('name')
-                .eq('id', data.major_id)
-                .maybeSingle();
-                
-              if (majorData) {
-                setMajorSearchTerm(majorData.name);
-              }
-            }
-          }
-        } catch (err) {
-          console.error("[ProfileComplete] Error checking for existing profile:", err);
-        }
-      }
-    };
-    
-    // Load universities from the services
-    const loadUniversities = async () => {
-      console.log("[ProfileComplete] Loading universities");
-      try {
-        const universitiesData = await getUniversities();
-        setUniversities(universitiesData);
-        console.log("[ProfileComplete] Universities loaded:", universitiesData.length);
-      } catch (error) {
-        console.error('[ProfileComplete] Error loading universities:', error);
-      }
-    };
-    
-    // Load majors, activities, and Greek Life options
-    const loadFormData = async () => {
-      console.log("[ProfileComplete] Loading form data (majors, activities, etc.)");
-      try {
-        const [majorsData, activitiesData, greekLifeData] = await Promise.all([
-          getMajors(),
-          getActivities(),
-          getGreekLifeOptions ? getGreekLifeOptions() : [] // Use if available, otherwise empty array
-        ]);
-        
-        console.log("[ProfileComplete] Data loaded:", { 
-          majorsCount: majorsData.length, 
-          activitiesCount: activitiesData.length,
-          greekLifeCount: greekLifeData?.length || 0
+    // Load universities from the insights page data
+    const loadUniversities = () => {
+      const universitiesByLetter = getUniversitiesByLetter();
+      const allUniversities: any[] = [];
+      
+      // Flatten the university list from all letters
+      Object.values(universitiesByLetter).forEach(universities => {
+        universities.forEach(university => {
+          allUniversities.push(university);
         });
+      });
+      
+      // Sort universities by name
+      allUniversities.sort((a, b) => a.name.localeCompare(b.name));
+      setUniversities(allUniversities);
+    };
+    
+    // Load majors and activities
+    const loadFormData = async () => {
+      try {
+        const [majorsData, activitiesData] = await Promise.all([
+          getMajors(),
+          getActivities()
+        ]);
         
         setMajors(majorsData);
         setActivities(activitiesData);
-        setGreekLifeOptions(greekLifeData || []);
-        
-        await loadUniversities();
-        await checkExistingProfile();
+        loadUniversities();
       } catch (error) {
-        console.error('[ProfileComplete] Error loading form data:', error);
-        toast("Failed to load profile data. Please try again later.");
+        console.error('Error loading form data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile data. Please try again later.",
+          variant: "destructive",
+        });
       }
     };
     
     loadFormData();
-  }, [session, navigate, user, form]);
-
-  // Upload profile image to Supabase Storage
-  const uploadProfileImage = async (userId: string): Promise<string | null> => {
-    if (!imageFile && imagePreview && existingProfile?.image) {
-      return existingProfile.image;
-    }
-    
-    if (!imageFile) return null;
-    
-    try {
-      console.log("[ProfileComplete] Uploading profile image");
-      const fileExt = imageFile.name.split('.').pop();
-      const filePath = `${userId}/profile.${fileExt}`;
-      
-      // Upload the image
-      const { data, error } = await supabase.storage
-        .from('profile-images')
-        .upload(filePath, imageFile, {
-          upsert: true
-        });
-      
-      if (error) throw error;
-      
-      // Get public URL
-      const { data: publicUrlData } = supabase.storage
-        .from('profile-images')
-        .getPublicUrl(data.path);
-      
-      console.log("[ProfileComplete] Image uploaded successfully:", publicUrlData.publicUrl);
-      return publicUrlData.publicUrl;
-    } catch (error) {
-      console.error('[ProfileComplete] Error uploading image:', error);
-      toast("Failed to upload your profile image.");
-      return null;
-    }
-  };
+  }, [session, navigate]);
   
   const onSubmit = async (values: ProfileFormValues) => {
-    if (!user) {
-      console.error("[ProfileComplete] Cannot complete profile - no user found");
-      toast("You need to be logged in to complete your profile.");
-      navigate('/auth');
-      return;
-    }
+    if (!user) return;
     
-    console.log("[ProfileComplete] Starting profile submission:", values);
     setIsLoading(true);
     try {
-      // Upload profile image if one is selected
-      let imageUrl = null;
-      if (imageFile || existingProfile?.image) {
-        imageUrl = await uploadProfileImage(user.id);
-      }
-      
-      // Get school_id from selected university
-      const schoolId = values.universityId || undefined;
-      const majorId = values.majorId || undefined;
-      
-      // Create or update profile
+      // Get school_id from session user metadata or from selected university
       const metadata = user.user_metadata || {};
-      const name = `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim();
+      const schoolId = values.universityId;
       
-      if (existingProfile) {
-        // Update existing profile
-        console.log("[ProfileComplete] Updating profile for user:", user.id);
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            name: name || existingProfile.name,
-            school_id: schoolId,
-            major_id: majorId,
-            bio: values.bio || existingProfile.bio,
-            image: imageUrl || existingProfile.image,
-            role: 'alumni' // Make sure role is set to alumni for browse section visibility
-          })
-          .eq('id', existingProfile.id);
-          
-        if (profileError) throw profileError;
-        
-        // If activities were selected, update them
-        if (values.activities && values.activities.length > 0) {
-          // First delete existing activities
-          await supabase
-            .from('profile_activities')
-            .delete()
-            .eq('profile_id', existingProfile.id);
-            
-          // Then add new activities
-          const activityInserts = values.activities.map(activityId => ({
-            profile_id: existingProfile.id,
-            activity_id: activityId,
-          }));
-          
-          if (activityInserts.length > 0) {
-            const { error: activitiesError } = await supabase
-              .from('profile_activities')
-              .insert(activityInserts);
-              
-            if (activitiesError) throw activitiesError;
-          }
-        }
-        
-        // Update Greek life if selected
-        if (values.greekLife && values.greekLife !== 'none') {
-          // First delete existing greek life
-          await supabase
-            .from('profile_greek_life')
-            .delete()
-            .eq('profile_id', existingProfile.id);
-            
-          // Then add new greek life
-          await supabase
-            .from('profile_greek_life')
-            .insert({
-              profile_id: existingProfile.id,
-              greek_life_id: values.greekLife,
-            });
-        }
-        
-        toast("Profile updated successfully!");
-      } else {
-        // Create new profile
-        console.log("[ProfileComplete] Creating profile for user:", user.id);
-        const { data: newProfile, error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            name: name || user.email?.split('@')[0] || 'User',
-            school_id: schoolId,
-            major_id: majorId,
-            bio: values.bio,
-            image: imageUrl,
-            role: 'alumni' // Make sure role is set to alumni for browse section visibility
-          })
-          .select('id')
-          .single();
-        
-        if (profileError) throw profileError;
-        
-        console.log("[ProfileComplete] Profile created successfully:", newProfile);
-        
-        // Add activities to profile if selected
-        if (values.activities && values.activities.length > 0) {
-          const activityInserts = values.activities.map(activityId => ({
-            profile_id: newProfile.id,
-            activity_id: activityId,
-          }));
-          
-          if (activityInserts.length > 0) {
-            console.log("[ProfileComplete] Adding activities to profile:", activityInserts.length);
-            const { error: activitiesError } = await supabase
-              .from('profile_activities')
-              .insert(activityInserts);
-            
-            if (activitiesError) throw activitiesError;
-          }
-        }
-        
-        // Add Greek life affiliation if selected
-        if (values.greekLife && values.greekLife !== 'none') {
-          console.log("[ProfileComplete] Adding Greek life affiliation:", values.greekLife);
-          try {
-            const { error: greekLifeError } = await supabase
-              .from('profile_greek_life')
-              .insert({
-                profile_id: newProfile.id,
-                greek_life_id: values.greekLife,
-              });
-            
-            if (greekLifeError) throw greekLifeError;
-          } catch (error) {
-            console.error('[ProfileComplete] Error adding Greek life affiliation:', error);
-            // Continue even if Greek life association fails
-          }
-        }
-        
-        toast("Profile complete! Your profile has been set up successfully.");
+      if (!schoolId) {
+        throw new Error("School information not found. Please try again.");
       }
       
-      // Redirect to profile page or appropriate dashboard
-      console.log("[ProfileComplete] Redirecting to alumni dashboard");
-      navigate('/mentor-dashboard');
+      // Create profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: user.id,
+          name: `${metadata.first_name} ${metadata.last_name}`,
+          school_id: schoolId,
+          major_id: values.majorId,
+          bio: values.bio,
+        });
+      
+      if (profileError) throw profileError;
+      
+      // Get the newly created profile
+      const { data: profileData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Add activities to profile
+      const activityInserts = values.activities.map(activityId => ({
+        profile_id: profileData.id,
+        activity_id: activityId,
+      }));
+      
+      const { error: activitiesError } = await supabase
+        .from('profile_activities')
+        .insert(activityInserts);
+      
+      if (activitiesError) throw activitiesError;
+      
+      toast({
+        title: "Profile complete!",
+        description: "Your profile has been set up successfully.",
+      });
+      
+      // Redirect to profile page
+      navigate(`/profile/${profileData.id}`);
     } catch (error: any) {
-      console.error('[ProfileComplete] Error completing profile:', error);
-      toast("Failed to complete your profile: " + (error.message || "Please try again."));
+      console.error('Error completing profile:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to complete your profile. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -489,35 +225,12 @@ const ProfileComplete = () => {
             <CardHeader>
               <CardTitle>Your Information</CardTitle>
               <CardDescription>
-                This information will be displayed on your public profile. Fill in as many fields as you'd like.
+                This information will be displayed on your public profile
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Profile Image Upload */}
-                  <div className="flex flex-col items-center mb-6">
-                    <div className="relative cursor-pointer">
-                      <Avatar className="w-24 h-24">
-                        {imagePreview ? (
-                          <AvatarImage src={imagePreview} alt="Profile preview" />
-                        ) : (
-                          <AvatarFallback className="bg-muted flex items-center justify-center">
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      <input
-                        type="file"
-                        id="profile-image"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">Click to upload your profile picture</p>
-                  </div>
-                  
                   <FormField
                     control={form.control}
                     name="bio"
@@ -547,10 +260,7 @@ const ProfileComplete = () => {
                             value={universitySearchTerm}
                             onChange={setUniversitySearchTerm}
                             placeholder="Type to search universities..."
-                            options={universities.map(uni => ({
-                              id: uni.id,
-                              name: uni.name
-                            }))}
+                            options={universities}
                             onOptionSelect={(university) => {
                               form.setValue("universityId", university.id);
                               setUniversitySearchTerm(university.name);
@@ -570,7 +280,7 @@ const ProfileComplete = () => {
                         <FormLabel>Degree</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
-                          value={field.value}
+                          defaultValue={field.value}
                           disabled={isLoading}
                         >
                           <FormControl>
@@ -602,54 +312,13 @@ const ProfileComplete = () => {
                             value={majorSearchTerm}
                             onChange={setMajorSearchTerm}
                             placeholder="Type to search majors..."
-                            options={filteredMajors.map(major => ({
-                              id: major.id,
-                              name: major.name
-                            }))}
+                            options={filteredMajors}
                             onOptionSelect={(major) => {
                               form.setValue("majorId", major.id);
                               setMajorSearchTerm(major.name);
                             }}
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="greekLife"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Greek Life</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Greek organization (if any)" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            <SelectLabel>Fraternities</SelectLabel>
-                            {greekLifeOptions
-                              .filter(org => org.type === 'fraternity')
-                              .map(org => (
-                                <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-                              ))
-                            }
-                            <SelectLabel>Sororities</SelectLabel>
-                            {greekLifeOptions
-                              .filter(org => org.type === 'sorority')
-                              .map(org => (
-                                <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-                              ))
-                            }
-                          </SelectContent>
-                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -681,11 +350,10 @@ const ProfileComplete = () => {
                                     <Checkbox
                                       checked={field.value?.includes(activity.id)}
                                       onCheckedChange={(checked) => {
-                                        const currentActivities = field.value || [];
                                         return checked
-                                          ? field.onChange([...currentActivities, activity.id])
+                                          ? field.onChange([...field.value, activity.id])
                                           : field.onChange(
-                                              currentActivities.filter(
+                                              field.value?.filter(
                                                 (value) => value !== activity.id
                                               )
                                             );
@@ -715,9 +383,10 @@ const ProfileComplete = () => {
                     </Button>
                     <Button 
                       type="submit" 
-                      disabled={isLoading}
+                      disabled={isLoading || progress < 100}
+                      className={progress < 100 ? "opacity-70" : ""}
                     >
-                      {isLoading ? "Saving..." : existingProfile ? "Update Profile" : "Complete Profile"}
+                      {isLoading ? "Saving..." : "Complete Profile"}
                     </Button>
                   </div>
                 </form>
