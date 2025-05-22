@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,12 +12,13 @@ import { ProfileWithDetails } from '@/types/database';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { toast } from 'sonner';
-import { Loader2, User, PenSquare, School, BookOpen, MapPin, Briefcase, Award } from 'lucide-react';
+import { Loader2, User, PenSquare, School, BookOpen, MapPin, Briefcase, Award, DollarSign, Activity, Users } from 'lucide-react';
 
 const MyAccount = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileWithDetails | null>(null);
+  const [restorationData, setRestorationData] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(0);
 
@@ -29,8 +31,9 @@ const MyAccount = () => {
 
     // Fetch user profile if logged in
     if (user) {
-      const fetchProfile = async () => {
+      const fetchProfileData = async () => {
         try {
+          // Fetch profile data
           const { data, error } = await supabase
             .from('profiles')
             .select(`
@@ -68,6 +71,23 @@ const MyAccount = () => {
             
             // Calculate profile completion percentage
             calculateProfileCompletion(profileData);
+            
+            // Fetch restoration data
+            try {
+              const { data: restData, error: restError } = await supabase
+                .from('restoration_data')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(1);
+                
+              if (!restError && restData && restData.length > 0) {
+                setRestorationData(restData[0]);
+              }
+            } catch (restErr) {
+              console.error('Error fetching restoration data:', restErr);
+              // Continue even if restoration data fetch fails
+            }
           }
         } catch (error) {
           console.error('Error in profile fetch:', error);
@@ -76,7 +96,7 @@ const MyAccount = () => {
         }
       };
 
-      fetchProfile();
+      fetchProfileData();
     }
   }, [user, loading, navigate]);
 
@@ -89,7 +109,10 @@ const MyAccount = () => {
       profile.image,
       profile.location,
       profile.graduation_year,
-      profile.activities?.length > 0
+      profile.activities?.length > 0,
+      profile.price_15_min,
+      profile.price_30_min,
+      profile.price_60_min
     ];
     
     const completedFields = fields.filter(Boolean).length;
@@ -125,7 +148,7 @@ const MyAccount = () => {
   };
 
   const metadata = user?.user_metadata || {};
-  const userRole = metadata?.role || 'user';
+  const userRole = metadata?.role || profile?.role || 'user';
   const roleName = userRole === 'applicant' 
     ? 'Applicant' 
     : userRole === 'alumni' 
@@ -136,7 +159,9 @@ const MyAccount = () => {
   
   // Determine the correct profile completion route
   const getProfileCompleteRoute = () => {
-    // Updated to use the new simple profile page
+    if (userRole === 'alumni') {
+      return '/alumni-profile-complete';
+    }
     return '/profile-complete';
   };
 
@@ -151,6 +176,7 @@ const MyAccount = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
+              {profile && <TabsTrigger value="registration">Registration Data</TabsTrigger>}
             </TabsList>
 
             <TabsContent value="profile">
@@ -267,6 +293,16 @@ const MyAccount = () => {
                                 </div>
                               </div>
                             )}
+
+                            {profile.role === 'alumni' && profile.price_15_min && (
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-5 w-5 text-gray-400" />
+                                <div>
+                                  <p className="text-sm font-medium">Mentoring Rates</p>
+                                  <p>From ${profile.price_15_min} for 15 minutes</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
                           {profile.activities && profile.activities.length > 0 && (
@@ -282,6 +318,17 @@ const MyAccount = () => {
                                   </span>
                                 ))}
                               </div>
+                            </div>
+                          )}
+
+                          {profile.greek_life && (
+                            <div className="mt-4">
+                              <h3 className="text-sm font-medium text-gray-500 mb-2">Greek Life</h3>
+                              <span 
+                                className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs"
+                              >
+                                {profile.greek_life.name}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -300,6 +347,51 @@ const MyAccount = () => {
                   </CardFooter>
                 )}
               </Card>
+            </TabsContent>
+
+            <TabsContent value="registration">
+              {restorationData ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Registration Data</CardTitle>
+                    <CardDescription>
+                      Complete details from your profile registration
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 mb-1">Registration Date</h3>
+                        <p>{new Date(restorationData.created_at).toLocaleDateString()}</p>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 mb-1">Registration Type</h3>
+                        <p className="capitalize">{restorationData.restoration_type.replace(/_/g, ' ')}</p>
+                      </div>
+
+                      {restorationData.restoration_details && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500 mb-1">Registration Details</h3>
+                          <div className="bg-gray-50 p-4 rounded-md overflow-auto max-h-96">
+                            <pre className="text-xs whitespace-pre-wrap">
+                              {JSON.stringify(restorationData.restoration_details, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="py-8">
+                    <div className="text-center">
+                      <p className="text-gray-500">No registration data available.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="settings">
