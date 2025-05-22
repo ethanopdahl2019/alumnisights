@@ -17,7 +17,7 @@ export interface UserWithProfile {
     id: string;
     name?: string;
     bio?: string;
-    role?: string;
+    role?: 'applicant' | 'alumni';
     image?: string;
     visible?: boolean;
     school?: {
@@ -158,11 +158,11 @@ export async function toggleUserVisibility(userId: string, visible: boolean): Pr
         .insert({
           user_id: userId,
           name: name || user.email?.split('@')[0] || 'User',
-          role: 'alumni',
+          role: 'applicant', // Using the proper enum value
           visible: visible,
           // Add minimal required fields
-          school_id: '', 
-          major_id: ''
+          school_id: null, 
+          major_id: null
         });
       
       if (insertError) {

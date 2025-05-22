@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -193,8 +192,10 @@ const SimpleProfileComplete = () => {
       const metadata = user.user_metadata || {};
       const name = `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim();
 
-      // Determine role
-      const role = metadata.role || 'applicant';
+      // Determine role - use only 'applicant' or 'alumni' as these are the values allowed in the database
+      const userRole = metadata.role || 'applicant';
+      // Convert to the right enum value - only 'applicant' or 'alumni' allowed
+      const role = userRole === 'alumni' ? 'alumni' : 'applicant';
       
       // Convert graduation year to number if present
       const graduationYear = values.graduationYear ? parseInt(values.graduationYear, 10) : null;
@@ -211,9 +212,9 @@ const SimpleProfileComplete = () => {
             image: imageUrl || existingProfile.image,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree, // Using string type from the updated database.ts
-            role: role as 'applicant' | 'alumni', // Cast to union type
-            visible: existingProfile.visible !== undefined ? existingProfile.visible : true // Preserve visibility or default to true
+            degree: values.degree,
+            role: role, // Use one of the allowed enum values
+            visible: existingProfile.visible !== undefined ? existingProfile.visible : true
           })
           .eq('id', existingProfile.id);
           
@@ -233,11 +234,11 @@ const SimpleProfileComplete = () => {
             image: imageUrl,
             location: values.location,
             graduation_year: graduationYear,
-            degree: values.degree, // Using string type from the updated database.ts
-            role: role as 'applicant' | 'alumni', // Cast to union type
-            visible: true, // Default to visible for new profiles
-            school_id: '', // Adding required fields with empty values
-            major_id: ''  // Adding required fields with empty values
+            degree: values.degree,
+            role: role, // Use one of the allowed enum values
+            visible: true,
+            school_id: null,
+            major_id: null
           });
         
         if (profileError) throw profileError;
@@ -247,7 +248,7 @@ const SimpleProfileComplete = () => {
       
       // Redirect to appropriate page
       if (role === 'alumni') {
-        navigate('/mentor-dashboard');
+        navigate('/alumni-dashboard');
       } else {
         navigate('/applicant-dashboard');
       }

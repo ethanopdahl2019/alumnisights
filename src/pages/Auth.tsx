@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -98,8 +97,8 @@ const Auth = () => {
     try {
       const { email, password, firstName, lastName, userType } = values;
 
-      // Set the role based on user type
-      const role = userType;
+      // Use only 'applicant' or 'alumni' as the role value
+      const role = userType === 'alumni' ? 'alumni' : 'applicant';
       
       console.log(`[Auth] Registering user as ${userType} with role ${role}`);
 
