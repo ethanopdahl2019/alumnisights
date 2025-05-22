@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Major {
@@ -69,3 +68,4 @@ export async function searchMajors(query: string): Promise<Major[]> {
     return [];
   }
 }
+

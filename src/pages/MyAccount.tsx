@@ -48,7 +48,7 @@ const MyAccount = () => {
         // Fetch profile data
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("*, school:schools(id, name, location, type, image), major:majors(name)")
+          .select("*, school:schools(id, name, location, type, image), major:majors(id, name, category)")
           .eq("user_id", user?.id)
           .single();
 
@@ -81,7 +81,11 @@ const MyAccount = () => {
             type: null,
             image: null
           },
-          major: profileData.major || { name: 'Not specified' },
+          major: profileData.major || { 
+            id: '',
+            name: 'Not specified',
+            category: null
+          },
           activities: [] // Initialize with empty array if not present
         };
 
