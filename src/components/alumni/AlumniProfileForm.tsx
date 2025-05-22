@@ -220,7 +220,7 @@ const AlumniProfileForm: React.FC<AlumniProfileFormProps> = ({ user, session }) 
       // Check for existing profile
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, image')
         .eq('user_id', user.id)
         .maybeSingle();
         
