@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -50,12 +51,12 @@ const MyAccount = () => {
           .from("profiles")
           .select("*, school:schools(id, name, location, type, image), major:majors(id, name, category)")
           .eq("user_id", user?.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) throw profileError;
         
         // Parse social links if it's a string
-        let socialLinks = profileData.social_links;
+        let socialLinks = profileData?.social_links;
         if (typeof socialLinks === 'string' && socialLinks) {
           try {
             socialLinks = JSON.parse(socialLinks);
@@ -70,26 +71,32 @@ const MyAccount = () => {
           socialLinks = {};
         }
         
-        const profileWithDetails = {
-          ...profileData,
-          social_links: socialLinks,
-          // Ensure other required properties are present
-          school: profileData.school || { 
-            id: '',
-            name: 'Not specified',
-            location: null,
-            type: null,
-            image: null
-          },
-          major: profileData.major || { 
-            id: '',
-            name: 'Not specified',
-            category: null
-          },
-          activities: [] // Initialize with empty array if not present
-        };
+        if (profileData) {
+          // Ensure role is one of the allowed values
+          const validRole = validateRole(profileData.role);
+          
+          const profileWithDetails: ProfileWithDetails = {
+            ...profileData,
+            social_links: socialLinks,
+            role: validRole,
+            // Ensure other required properties are present
+            school: profileData.school || { 
+              id: '',
+              name: 'Not specified',
+              location: null,
+              type: null,
+              image: null
+            },
+            major: profileData.major || { 
+              id: '',
+              name: 'Not specified',
+              category: null
+            },
+            activities: [] // Initialize with empty array if not present
+          };
 
-        setProfile(profileWithDetails);
+          setProfile(profileWithDetails);
+        }
 
         // Fetch user's bookings
         const { data: bookingsData, error: bookingsError } = await supabase
@@ -126,6 +133,12 @@ const MyAccount = () => {
       fetchUserData();
     }
   }, [user, loading, navigate]);
+
+  // Helper function to validate role
+  const validateRole = (role: string | null): 'applicant' | 'alumni' | 'mentor' => {
+    if (role === 'alumni' || role === 'mentor') return role;
+    return 'applicant'; // Default fallback
+  };
 
   const handleAccessCodeSubmit = async () => {
     setIsLoading(true);
@@ -312,9 +325,9 @@ const MyAccount = () => {
                       )}
                       <div>
                         <h3 className="font-semibold text-lg">
-                          {profile?.name || user.user_metadata?.first_name || "User"}
+                          {profile?.name || user?.user_metadata?.first_name || "User"}
                         </h3>
-                        <p className="text-gray-600">{user.email}</p>
+                        <p className="text-gray-600">{user?.email}</p>
                       </div>
                     </div>
                     

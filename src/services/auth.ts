@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
@@ -34,6 +35,7 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
           name: `${firstName} ${lastName}`,
           school_id: metadata.school_id,
           major_id: metadata.major_id,
+          role: (metadata.role === 'mentor' || metadata.role === 'alumni') ? metadata.role : 'applicant',
           visible: true
         });
 
