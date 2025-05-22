@@ -60,6 +60,12 @@ export default function MyAccount() {
               console.error('Error parsing social links:', error);
               socialLinks = null;
             }
+          } else if (typeof socialLinks === 'number') {
+            // Handle case where social_links might be a number
+            socialLinks = String(socialLinks);
+          } else if (socialLinks === null) {
+            // Handle null case
+            socialLinks = null;
           }
 
           const processedProfile: ProfileWithDetails = {

@@ -14,7 +14,9 @@ import {
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
-  SelectValue 
+  SelectValue,
+  SelectLabel,
+  SelectSeparator
 } from "@/components/ui/select";
 import { getAllUniversities, UniversityData } from "@/pages/insights/universities/universities-data";
 import SearchInput from "@/components/SearchInput";
