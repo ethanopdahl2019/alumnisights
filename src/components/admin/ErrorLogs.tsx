@@ -1,131 +1,71 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
 import { Loader2, RefreshCw, Search } from 'lucide-react';
 
+// Sample log data - in a real app, this would come from a database
+const SAMPLE_LOGS = [
+  {
+    id: '1',
+    level: 'error',
+    message: 'Failed to fetch user data',
+    source: 'api',
+    stack_trace: 'Error: Failed to fetch user data\n    at fetchUserData...',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: '2',
+    level: 'error',
+    message: 'Authentication failed',
+    source: 'auth',
+    stack_trace: 'Error: Authentication failed\n    at authenticateUser...',
+    created_at: new Date(Date.now() - 3600000).toISOString()
+  },
+  {
+    id: '3',
+    level: 'warning',
+    message: 'Image upload was slow',
+    source: 'storage',
+    stack_trace: null,
+    created_at: new Date(Date.now() - 7200000).toISOString()
+  },
+  {
+    id: '4',
+    level: 'info',
+    message: 'User profile updated successfully',
+    source: 'database',
+    stack_trace: null,
+    created_at: new Date(Date.now() - 10800000).toISOString()
+  },
+  {
+    id: '5',
+    level: 'error',
+    message: 'Payment processing failed',
+    source: 'payment',
+    stack_trace: 'Error: Payment processing failed\n    at processPayment...',
+    created_at: new Date(Date.now() - 14400000).toISOString()
+  }
+];
+
 const ErrorLogs = () => {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [logs, setLogs] = useState<any[]>(SAMPLE_LOGS);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [logType, setLogType] = useState('all');
 
   const fetchLogs = async () => {
     setLoading(true);
-    try {
-      // Fetch logs from Supabase
-      // Note: This is a placeholder. In a real implementation, you would need to
-      // set up a logging system that writes to a Supabase table
-      const { data, error } = await supabase
-        .from('logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100)
-        .catch(() => {
-          // If the logs table doesn't exist, return dummy data
-          return {
-            data: [
-              {
-                id: '1',
-                level: 'error',
-                message: 'Failed to fetch user data',
-                source: 'api',
-                stack_trace: 'Error: Failed to fetch user data\n    at fetchUserData...',
-                created_at: new Date().toISOString()
-              },
-              {
-                id: '2',
-                level: 'error',
-                message: 'Authentication failed',
-                source: 'auth',
-                stack_trace: 'Error: Authentication failed\n    at authenticateUser...',
-                created_at: new Date(Date.now() - 3600000).toISOString()
-              },
-              {
-                id: '3',
-                level: 'warning',
-                message: 'Image upload was slow',
-                source: 'storage',
-                stack_trace: null,
-                created_at: new Date(Date.now() - 7200000).toISOString()
-              }
-            ],
-            error: null
-          };
-        });
-
-      if (error) {
-        console.error('Error fetching logs:', error);
-        toast.error('Failed to load error logs');
-        // Provide sample data for demonstration
-        setLogs([
-          {
-            id: '1',
-            level: 'error',
-            message: 'Failed to fetch user data',
-            source: 'api',
-            stack_trace: 'Error: Failed to fetch user data\n    at fetchUserData...',
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            level: 'error',
-            message: 'Authentication failed',
-            source: 'auth',
-            stack_trace: 'Error: Authentication failed\n    at authenticateUser...',
-            created_at: new Date(Date.now() - 3600000).toISOString()
-          },
-          {
-            id: '3',
-            level: 'warning',
-            message: 'Image upload was slow',
-            source: 'storage',
-            stack_trace: null,
-            created_at: new Date(Date.now() - 7200000).toISOString()
-          }
-        ]);
-      } else {
-        setLogs(data || []);
-      }
-    } catch (error) {
-      console.error('Error in fetchLogs:', error);
-      toast.error('An unexpected error occurred while loading logs');
-      
-      // Provide sample data for demonstration
-      setLogs([
-        {
-          id: '1',
-          level: 'error',
-          message: 'Failed to fetch user data',
-          source: 'api',
-          stack_trace: 'Error: Failed to fetch user data\n    at fetchUserData...',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          level: 'error',
-          message: 'Authentication failed',
-          source: 'auth',
-          stack_trace: 'Error: Authentication failed\n    at authenticateUser...',
-          created_at: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: '3',
-          level: 'warning',
-          message: 'Image upload was slow',
-          source: 'storage',
-          stack_trace: null,
-          created_at: new Date(Date.now() - 7200000).toISOString()
-        }
-      ]);
-    } finally {
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      // In a real application, this would fetch from a database
+      setLogs(SAMPLE_LOGS);
       setLoading(false);
-    }
+    }, 800);
   };
 
   useEffect(() => {
@@ -134,7 +74,7 @@ const ErrorLogs = () => {
 
   const filteredLogs = logs.filter(log => {
     const matchesSearch = log.message?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          log.source?.toLowerCase().includes(searchTerm.toLowerCase());
+                        log.source?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = logType === 'all' || log.level === logType;
     return matchesSearch && matchesType;
   });

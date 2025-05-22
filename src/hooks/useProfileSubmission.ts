@@ -63,10 +63,10 @@ export function useProfileSubmission() {
       const metadata = user.user_metadata || {};
       const schoolId = values.universityId;
       
-      // Check for existing profile
+      // Check for existing profile with full details
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .select('id, image')
+        .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
         
@@ -118,7 +118,7 @@ export function useProfileSubmission() {
         }
       } else {
         // Create new profile
-        console.log("[useProfileSubmission] Creating new profile for user:", user.id);
+        console.log("[useProfileSubmission] Creating profile for user:", user.id);
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .insert({
