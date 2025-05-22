@@ -19,8 +19,45 @@ import { cn } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getMajors, getActivities, getGreekLifeOptions } from '@/services/profiles';
-import { getUniversitiesByLetter } from '@/pages/insights/universities/universities-data';
 import SearchInput from '@/components/SearchInput';
+
+// Define the list of prestigious universities
+const prestigiousUniversities = [
+  { id: "harvard", name: "Harvard" },
+  { id: "stanford", name: "Stanford" },
+  { id: "mit", name: "MIT" },
+  { id: "caltech", name: "Caltech" },
+  { id: "uchicago", name: "UChicago" },
+  { id: "upenn", name: "UPenn" },
+  { id: "yale", name: "Yale" },
+  { id: "columbia", name: "Columbia" },
+  { id: "princeton", name: "Princeton" },
+  { id: "berkeley", name: "UC Berkeley" },
+  { id: "ucla", name: "UCLA" },
+  { id: "cornell", name: "Cornell" },
+  { id: "michigan", name: "Michigan" },
+  { id: "duke", name: "Duke" },
+  { id: "northwestern", name: "Northwestern" },
+  { id: "nyu", name: "NYU" },
+  { id: "usc", name: "USC" },
+  { id: "carnegie", name: "Carnegie Mellon" },
+  { id: "unc", name: "UNC" },
+  { id: "brown", name: "Brown" },
+  { id: "uw", name: "UW" },
+  { id: "ucsd", name: "UCSD" },
+  { id: "wisconsin", name: "Wisconsin" },
+  { id: "uiuc", name: "UIUC" },
+  { id: "gatech", name: "Georgia Tech" },
+  { id: "utaustin", name: "UT Austin" },
+  { id: "florida", name: "Florida" },
+  { id: "bu", name: "BU" },
+  { id: "ucdavis", name: "UC Davis" },
+  { id: "ucsb", name: "UC Santa Barbara" },
+  { id: "emory", name: "Emory" },
+  { id: "uva", name: "UVA" },
+  { id: "amherst", name: "Amherst" },
+  { id: "maryland", name: "Maryland" },
+];
 
 const profileSchema = z.object({
   bio: z.string().min(20, { message: "Bio should be at least 20 characters" }),
@@ -54,12 +91,9 @@ const AlumniProfileComplete = () => {
   const [activities, setActivities] = useState<any[]>([]);
   const [greekLifeOptions, setGreekLifeOptions] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
-  const [universities, setUniversities] = useState<any[]>([]);
-  const [universitySearchTerm, setUniversitySearchTerm] = useState("");
   const [majorSearchTerm, setMajorSearchTerm] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [flattenedUniversities, setFlattenedUniversities] = useState<{id: string, name: string}[]>([]);
   
   const degrees = [
     { id: "bachelors", name: "Bachelor's Degree" },
@@ -138,28 +172,6 @@ const AlumniProfileComplete = () => {
       }
     }
     
-    // Load universities from the insights page data
-    const loadUniversities = () => {
-      console.log("[AlumniProfileComplete] Loading universities");
-      const universitiesByLetter = getUniversitiesByLetter();
-      const allUniversities: {id: string, name: string}[] = [];
-      
-      // Flatten the university list from all letters
-      Object.values(universitiesByLetter).forEach(universities => {
-        universities.forEach(university => {
-          allUniversities.push({
-            id: university.id,
-            name: university.name
-          });
-        });
-      });
-      
-      // Sort universities by name
-      allUniversities.sort((a, b) => a.name.localeCompare(b.name));
-      setFlattenedUniversities(allUniversities);
-      console.log("[AlumniProfileComplete] Universities loaded:", allUniversities.length);
-    };
-    
     // Load majors, activities, and Greek Life options
     const loadFormData = async () => {
       console.log("[AlumniProfileComplete] Loading form data (majors, activities, etc.)");
@@ -179,7 +191,6 @@ const AlumniProfileComplete = () => {
         setMajors(majorsData);
         setActivities(activitiesData);
         setGreekLifeOptions(greekLifeData || []);
-        loadUniversities();
       } catch (error) {
         console.error('[AlumniProfileComplete] Error loading form data:', error);
         toast("Failed to load profile data. Please try again later.");
@@ -416,8 +427,8 @@ const AlumniProfileComplete = () => {
                               <SelectValue placeholder="Select your university" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {flattenedUniversities.map((university) => (
+                          <SelectContent className="max-h-[300px]">
+                            {prestigiousUniversities.map((university) => (
                               <SelectItem key={university.id} value={university.id}>
                                 {university.name}
                               </SelectItem>
