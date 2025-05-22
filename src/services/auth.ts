@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
@@ -22,6 +21,29 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
 
   if (error) {
     throw error;
+  }
+
+  // If signup successful and we have required data, create the profile
+  if (data.user && metadata.school_id && metadata.major_id) {
+    try {
+      // Create a profile immediately after successful sign up
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: data.user.id,
+          name: `${firstName} ${lastName}`,
+          school_id: metadata.school_id,
+          major_id: metadata.major_id,
+          visible: true
+        });
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        // Don't throw here, as the user was already created
+      }
+    } catch (profileError) {
+      console.error('Failed to create profile:', profileError);
+    }
   }
 
   return data;
