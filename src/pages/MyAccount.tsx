@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,19 +73,24 @@ const MyAccount = () => {
             
             // Fetch restoration data
             try {
-              const { data: restData, error: restError } = await supabase
-                .from('restoration_data')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(1);
-                
-              if (!restError && restData && restData.length > 0) {
-                setRestorationData(restData[0]);
+              // Instead of fetching from restoration_data table, 
+              // we'll use the social_links field in the profile
+              if (profileData.social_links && 
+                  typeof profileData.social_links === 'object' && 
+                  profileData.social_links.restoration_type === 'profile_completion') {
+                setRestorationData({
+                  created_at: profileData.created_at,
+                  restoration_type: profileData.social_links.restoration_type,
+                  restoration_details: {
+                    form_values: profileData.social_links.form_values,
+                    metadata: profileData.social_links.metadata,
+                    completion_date: profileData.social_links.completion_date
+                  }
+                });
               }
             } catch (restErr) {
-              console.error('Error fetching restoration data:', restErr);
-              // Continue even if restoration data fetch fails
+              console.error('Error processing restoration data:', restErr);
+              // Continue even if restoration data processing fails
             }
           }
         } catch (error) {
@@ -362,12 +366,12 @@ const MyAccount = () => {
                     <div className="space-y-4">
                       <div>
                         <h3 className="text-sm font-medium text-gray-500 mb-1">Registration Date</h3>
-                        <p>{new Date(restorationData.created_at).toLocaleDateString()}</p>
+                        <p>{new Date(profile?.created_at || new Date()).toLocaleDateString()}</p>
                       </div>
 
                       <div>
                         <h3 className="text-sm font-medium text-gray-500 mb-1">Registration Type</h3>
-                        <p className="capitalize">{restorationData.restoration_type.replace(/_/g, ' ')}</p>
+                        <p className="capitalize">{restorationData.restoration_type?.replace(/_/g, ' ')}</p>
                       </div>
 
                       {restorationData.restoration_details && (

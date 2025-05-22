@@ -175,20 +175,21 @@ export function useProfileSubmission() {
         }
       }
 
-      // Store restoration data
+      // Store restoration data in profiles table as JSON
       try {
+        // Instead of using restoration_data table, we'll use an update to the profiles table
+        // to store the restoration information in a JSON field
         const { error: restorationError } = await supabase
-          .from('restoration_data')
-          .insert({
-            user_id: user.id,
-            profile_id: profileId,
-            restoration_type: 'profile_completion',
-            restoration_details: {
+          .from('profiles')
+          .update({
+            social_links: {
+              restoration_type: 'profile_completion',
               form_values: values,
               metadata: metadata,
               completion_date: new Date().toISOString()
             }
-          });
+          })
+          .eq('id', profileId);
 
         if (restorationError) {
           console.error('[useProfileSubmission] Error storing restoration data:', restorationError);
