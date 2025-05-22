@@ -9,13 +9,15 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
-  signOut: async () => {}
+  signOut: async () => {},
+  isAdmin: false
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -61,7 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     user,
     loading,
-    signOut
+    signOut,
+    isAdmin: isAdmin(user)
   };
 
   return (

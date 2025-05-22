@@ -3,7 +3,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ProfileFormValues } from '@/components/alumni/AlumniProfileForm';
+
+// Define the ProfileFormValues interface
+export interface ProfileFormValues {
+  universityId?: string;
+  majorId?: string;
+  bio?: string;
+  rate15min?: number;
+  rate30min?: number;
+  rate60min?: number;
+  activities?: string[];
+  greekLife?: string;
+}
 
 export function useProfileSubmission() {
   const [isLoading, setIsLoading] = useState(false);
@@ -61,157 +72,33 @@ export function useProfileSubmission() {
       
       // Get metadata from session user
       const metadata = user.user_metadata || {};
-      const schoolId = values.universityId;
       
-      // Check for existing profile with full details
-      const { data: existingProfile, error: checkError } = await supabase
+      // Store profile data
+      const { data, error } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .insert({
+          user_id: user.id,
+          name: `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim(),
+          school_id: values.universityId,
+          major_id: values.majorId,
+          bio: values.bio,
+          role: 'alumni',
+          price_15_min: values.rate15min,
+          price_30_min: values.rate30min,
+          price_60_min: values.rate60min,
+          image: imageUrl,
+          visible: true
+        })
+        .select('id')
+        .single();
         
-      if (checkError) throw checkError;
+      if (error) throw error;
       
-      let profileId;
-      
-      if (existingProfile) {
-        // Update existing profile
-        console.log("[useProfileSubmission] Updating existing profile for user:", user.id);
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            name: `${metadata.first_name} ${metadata.last_name}`,
-            school_id: schoolId || existingProfile.school_id,
-            major_id: values.majorId || existingProfile.major_id,
-            bio: values.bio || existingProfile.bio,
-            image: imageUrl || existingProfile.image,
-            role: 'alumni',
-            price_15_min: values.rate15min || existingProfile.price_15_min,
-            price_30_min: values.rate30min || existingProfile.price_30_min,
-            price_60_min: values.rate60min || existingProfile.price_60_min,
-            visible: true // Make sure profile is visible
-          })
-          .eq('id', existingProfile.id);
-          
-        if (updateError) throw updateError;
-        
-        profileId = existingProfile.id;
-        
-        // Only delete existing activities if new ones are provided
-        if (values.activities && values.activities.length > 0) {
-          // Delete existing activities
-          const { error: deleteActivitiesError } = await supabase
-            .from('profile_activities')
-            .delete()
-            .eq('profile_id', profileId);
-            
-          if (deleteActivitiesError) throw deleteActivitiesError;
-        }
-        
-        // Only delete Greek life if a new one is provided
-        if (values.greekLife) {
-          // Delete existing Greek life
-          await supabase
-            .from('profile_greek_life')
-            .delete()
-            .eq('profile_id', profileId);
-        }
-      } else {
-        // Create new profile
-        console.log("[useProfileSubmission] Creating profile for user:", user.id);
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            name: `${metadata.first_name} ${metadata.last_name}`,
-            school_id: schoolId,
-            major_id: values.majorId,
-            bio: values.bio,
-            image: imageUrl,
-            role: 'alumni',
-            price_15_min: values.rate15min,
-            price_30_min: values.rate30min,
-            price_60_min: values.rate60min,
-            visible: true // Make sure profile is visible by default
-          })
-          .select('id')
-          .single();
-        
-        if (profileError) throw profileError;
-        
-        profileId = profileData.id;
-      }
-      
-      console.log("[useProfileSubmission] Profile created/updated successfully:", profileId);
-      
-      // Add activities to profile if provided
-      if (values.activities && values.activities.length > 0) {
-        const activityInserts = values.activities.map(activityId => ({
-          profile_id: profileId,
-          activity_id: activityId,
-        }));
-        
-        if (activityInserts.length > 0) {
-          console.log("[useProfileSubmission] Adding activities to profile:", activityInserts.length);
-          const { error: activitiesError } = await supabase
-            .from('profile_activities')
-            .insert(activityInserts);
-          
-          if (activitiesError) throw activitiesError;
-        }
-      }
-      
-      // Add Greek life affiliation if selected
-      if (values.greekLife && values.greekLife !== 'none') {
-        console.log("[useProfileSubmission] Adding Greek life affiliation:", values.greekLife);
-        try {
-          const { error: greekLifeError } = await supabase
-            .from('profile_greek_life')
-            .insert({
-              profile_id: profileId,
-              greek_life_id: values.greekLife,
-            });
-          
-          if (greekLifeError) throw greekLifeError;
-        } catch (error) {
-          console.error('[useProfileSubmission] Error adding Greek life affiliation:', error);
-          // Continue even if Greek life association fails
-        }
-      }
-
-      // Store all profile submission data in the social_links JSON field
-      try {
-        const { error: restorationError } = await supabase
-          .from('profiles')
-          .update({
-            social_links: {
-              restoration_type: 'profile_completion',
-              form_values: values,
-              metadata: metadata,
-              completion_date: new Date().toISOString()
-            }
-          })
-          .eq('id', profileId);
-
-        if (restorationError) {
-          console.error('[useProfileSubmission] Error storing restoration data:', restorationError);
-          // Continue even if storing restoration data fails
-        }
-      } catch (error) {
-        console.error('[useProfileSubmission] Error in restoration data process:', error);
-        // Continue even if storing restoration data fails
-      }
-      
-      toast.success("Profile complete! Your alumni profile has been set up successfully.");
-      
-      // Redirect to alumni dashboard
-      console.log("[useProfileSubmission] Redirecting to alumni dashboard");
-      navigate('/alumni-dashboard');
-      
-      return { success: true, profileId };
+      toast.success("Profile saved successfully!");
+      return { success: true, data };
     } catch (error: any) {
-      console.error('[useProfileSubmission] Error completing profile:', error);
-      toast.error("Failed to complete your profile: " + (error.message || "Please try again."));
+      console.error('[useProfileSubmission] Error saving profile:', error);
+      toast.error("Failed to save your profile: " + (error.message || "Please try again."));
       return { success: false, error };
     } finally {
       setIsLoading(false);
