@@ -15,6 +15,7 @@ import Footer from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileWithDetails } from '@/types/database';
 import Tag from '@/components/Tag';
+import { Badge } from '@/components/ui/badge';
 
 export default function MyAccount() {
   const { user, loading } = useAuth();
@@ -61,14 +62,14 @@ export default function MyAccount() {
             }
           }
 
-          const processedProfile = {
+          const processedProfile: ProfileWithDetails = {
             ...profileData,
             school: profileData.school ? {
               ...profileData.school,
               image: profileData.school?.image ?? null
-            } : null,
+            } : null as any,
             activities: profileData.activities ? profileData.activities.map((pa: any) => pa.activities) : [],
-            role: profileData.role as 'applicant' | 'alumni',
+            role: profileData.role as 'applicant' | 'alumni' | 'mentor',
             social_links: socialLinks
           };
 

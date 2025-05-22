@@ -1,3 +1,4 @@
+
 export interface School {
   id: string;
   name: string;
@@ -41,12 +42,13 @@ export interface Profile {
   price_15_min?: number | null;
   price_30_min?: number | null;
   price_60_min?: number | null;
-  role?: 'applicant' | 'alumni';
+  role?: 'applicant' | 'alumni' | 'mentor';
   headline?: string | null;
   graduation_year?: number | null;
   location?: string | null;
   social_links?: Record<string, any> | string | null;
   achievements?: string[] | null;
+  visible?: boolean;
 }
 
 export interface ProfileWithDetails extends Profile {
@@ -56,12 +58,13 @@ export interface ProfileWithDetails extends Profile {
   price_15_min?: number | null;
   price_30_min?: number | null;
   price_60_min?: number | null;
-  role?: 'applicant' | 'alumni';
+  role?: 'applicant' | 'alumni' | 'mentor';
   headline?: string | null;
   graduation_year?: number | null;
   location?: string | null;
   social_links?: Record<string, any> | string | null;
   achievements?: string[] | null;
+  visible?: boolean;
 }
 
 // New types for authentication

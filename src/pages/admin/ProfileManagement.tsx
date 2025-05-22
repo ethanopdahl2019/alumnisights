@@ -65,8 +65,9 @@ const ProfileManagement = () => {
             image: profile.school?.image ?? null
           } : null,
           activities: profile.activities ? profile.activities.map((pa: any) => pa.activities) : [],
-          role: profile.role as 'applicant' | 'alumni',
-          social_links: socialLinks
+          role: profile.role as 'applicant' | 'alumni' | 'mentor',
+          social_links: socialLinks,
+          visible: profile.visible !== false // Default to true if visible is null
         };
       });
 
