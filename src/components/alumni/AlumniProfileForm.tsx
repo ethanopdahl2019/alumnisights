@@ -132,6 +132,34 @@ const AlumniProfileForm: React.FC<AlumniProfileFormProps> = ({ user, session }) 
     loadFormData();
   }, []);
 
+  // Check for existing profile
+  useEffect(() => {
+    const checkForExistingProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: existingProfile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        // If existing profile found, redirect to dashboard
+        if (existingProfile) {
+          console.log("[AlumniProfileForm] Existing profile found, redirecting to dashboard");
+          toast.info("Your profile is already set up!");
+          navigate('/alumni-dashboard');
+        }
+      } catch (error) {
+        console.error('[AlumniProfileForm] Error checking for existing profile:', error);
+      }
+    };
+    
+    checkForExistingProfile();
+  }, [user, navigate]);
+
   // Upload profile image to Supabase Storage
   const uploadProfileImage = async (userId: string): Promise<string | null> => {
     if (!imageFile) return null;
@@ -189,40 +217,84 @@ const AlumniProfileForm: React.FC<AlumniProfileFormProps> = ({ user, session }) 
         throw new Error("School information not found. Please try again.");
       }
       
-      // Create profile
-      console.log("[AlumniProfileForm] Creating profile for user:", user.id);
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: user.id,
-          name: `${metadata.first_name} ${metadata.last_name}`,
-          school_id: schoolId,
-          major_id: values.majorId,
-          bio: values.bio,
-          image: imageUrl,
-          role: 'alumni',
-          price_15_min: values.rate15min,
-          price_30_min: values.rate30min,
-          price_60_min: values.rate60min
-        });
-      
-      if (profileError) throw profileError;
-      
-      // Get the newly created profile
-      console.log("[AlumniProfileForm] Getting created profile");
-      const { data: profileData, error: fetchError } = await supabase
+      // Check for existing profile
+      const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
+        
+      if (checkError) throw checkError;
       
-      if (fetchError) throw fetchError;
+      let profileId;
       
-      console.log("[AlumniProfileForm] Profile created successfully:", profileData);
+      if (existingProfile) {
+        // Update existing profile
+        console.log("[AlumniProfileForm] Updating existing profile for user:", user.id);
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            name: `${metadata.first_name} ${metadata.last_name}`,
+            school_id: schoolId,
+            major_id: values.majorId,
+            bio: values.bio,
+            image: imageUrl || existingProfile.image,
+            role: 'alumni',
+            price_15_min: values.rate15min,
+            price_30_min: values.rate30min,
+            price_60_min: values.rate60min,
+            visible: true // Make sure profile is visible
+          })
+          .eq('id', existingProfile.id);
+          
+        if (updateError) throw updateError;
+        
+        profileId = existingProfile.id;
+        
+        // Delete existing activities
+        const { error: deleteActivitiesError } = await supabase
+          .from('profile_activities')
+          .delete()
+          .eq('profile_id', profileId);
+          
+        if (deleteActivitiesError) throw deleteActivitiesError;
+        
+        // Delete existing Greek life
+        await supabase
+          .from('profile_greek_life')
+          .delete()
+          .eq('profile_id', profileId);
+      } else {
+        // Create new profile
+        console.log("[AlumniProfileForm] Creating new profile for user:", user.id);
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            name: `${metadata.first_name} ${metadata.last_name}`,
+            school_id: schoolId,
+            major_id: values.majorId,
+            bio: values.bio,
+            image: imageUrl,
+            role: 'alumni',
+            price_15_min: values.rate15min,
+            price_30_min: values.rate30min,
+            price_60_min: values.rate60min,
+            visible: true // Make sure profile is visible by default
+          })
+          .select('id')
+          .single();
+        
+        if (profileError) throw profileError;
+        
+        profileId = profileData.id;
+      }
+      
+      console.log("[AlumniProfileForm] Profile created/updated successfully:", profileId);
       
       // Add activities to profile
       const activityInserts = values.activities.map(activityId => ({
-        profile_id: profileData.id,
+        profile_id: profileId,
         activity_id: activityId,
       }));
       
@@ -242,7 +314,7 @@ const AlumniProfileForm: React.FC<AlumniProfileFormProps> = ({ user, session }) 
           const { error: greekLifeError } = await supabase
             .from('profile_greek_life')
             .insert({
-              profile_id: profileData.id,
+              profile_id: profileId,
               greek_life_id: values.greekLife,
             });
           
@@ -253,14 +325,14 @@ const AlumniProfileForm: React.FC<AlumniProfileFormProps> = ({ user, session }) 
         }
       }
       
-      toast("Profile complete! Your alumni profile has been set up successfully.");
+      toast.success("Profile complete! Your alumni profile has been set up successfully.");
       
       // Redirect to alumni dashboard
       console.log("[AlumniProfileForm] Redirecting to alumni dashboard");
       navigate('/alumni-dashboard');
     } catch (error: any) {
       console.error('[AlumniProfileForm] Error completing profile:', error);
-      toast("Failed to complete your profile: " + (error.message || "Please try again."));
+      toast.error("Failed to complete your profile: " + (error.message || "Please try again."));
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, ProfileWithDetails, School } from '@/types/database';
 
@@ -69,7 +68,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
 }
 
 export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
-  // Modified to get all alumni regardless of completion status, respecting the visible flag
+  // Modified to get all alumni profiles visible by default
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select(`
@@ -79,8 +78,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       activities:profile_activities(activities(*)),
       greek_life:profile_greek_life(greek_life(*))
     `)
-    .eq('role', 'alumni')
-    .eq('visible', true); // Only get visible profiles
+    .eq('role', 'alumni');
 
   if (error) {
     console.error('Error fetching profiles:', error);

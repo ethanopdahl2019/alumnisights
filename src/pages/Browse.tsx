@@ -28,6 +28,7 @@ const Browse = () => {
           getActivities()
         ]);
         
+        console.log("[Browse] Loaded profiles:", profilesData.length);
         setProfiles(profilesData);
         setSchools(schoolsData);
         setMajors(majorsData);
@@ -77,8 +78,8 @@ const Browse = () => {
   ];
 
   const filteredProfiles = profiles.filter((profile) => {
-    // Include visible alumni profiles only
-    if (!profile.visible) return false;
+    // Include all alumni profiles with role='alumni'
+    if (!profile || profile.role !== 'alumni') return false;
     
     const matchesSearch = profile.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       profile.school?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
