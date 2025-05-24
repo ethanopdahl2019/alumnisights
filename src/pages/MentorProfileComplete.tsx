@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -17,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getActivities } from '@/services/profiles';
+import { getUniversityById } from '@/services/universities';
 
 const mentorProfileSchema = z.object({
   bio: z.string().min(20, { message: "Bio should be at least 20 characters" }),
@@ -98,13 +98,46 @@ const MentorProfileComplete = () => {
     
     setIsLoading(true);
     try {
-      // Get user metadata to find school and major IDs
+      // Get user metadata to find university and major IDs
       const metadata = user.user_metadata || {};
-      const schoolId = metadata.school_id;
+      const universityId = metadata.university_id; // Use university_id instead of school_id
       const majorId = metadata.major_id;
       
-      if (!schoolId || !majorId) {
-        throw new Error("School and major information not found. Please contact support.");
+      if (!universityId || !majorId) {
+        throw new Error("University and major information not found. Please contact support.");
+      }
+      
+      // Get university data to find corresponding school
+      const university = await getUniversityById(universityId);
+      if (!university) {
+        throw new Error("University not found. Please contact support.");
+      }
+      
+      // Try to find corresponding school by name match or create a fallback
+      const { data: schools, error: schoolsError } = await supabase
+        .from('schools')
+        .select('id')
+        .ilike('name', `%${university.name}%`)
+        .limit(1);
+      
+      if (schoolsError) {
+        console.error('Error finding school:', schoolsError);
+      }
+      
+      // Use the matched school ID or create a temporary one
+      let schoolId = schools && schools.length > 0 ? schools[0].id : null;
+      
+      // If no school match found, use the first available school as fallback
+      if (!schoolId) {
+        const { data: fallbackSchool, error: fallbackError } = await supabase
+          .from('schools')
+          .select('id')
+          .limit(1)
+          .single();
+        
+        if (!fallbackError && fallbackSchool) {
+          schoolId = fallbackSchool.id;
+        }
       }
       
       // Check if profile already exists
@@ -131,6 +164,7 @@ const MentorProfileComplete = () => {
             role: 'mentor',
             greek_life: values.greekLife || null,
             sport: values.sportsExperience || null,
+            university_id: universityId, // Store university ID
           })
           .eq('user_id', user.id)
           .select()
@@ -145,7 +179,7 @@ const MentorProfileComplete = () => {
           .insert({
             user_id: user.id,
             name: `${metadata.first_name} ${metadata.last_name}`,
-            school_id: schoolId,
+            school_id: schoolId, // Use school ID for profile table
             major_id: majorId,
             bio: values.bio,
             price_15_min: values.price15Min,
@@ -155,6 +189,7 @@ const MentorProfileComplete = () => {
             role: 'mentor',
             greek_life: values.greekLife || null,
             sport: values.sportsExperience || null,
+            university_id: universityId, // Also store university ID
           })
           .select()
           .single();

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -48,7 +49,7 @@ const mentorRegisterFormSchema = z.object({
   password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
   confirmPassword: z.string().min(8, { message: 'Please confirm your password' }),
   userType: z.enum(['student', 'mentor']),
-  schoolId: z.string().min(1, { message: 'School is required' }),
+  universityId: z.string().min(1, { message: 'University is required' }),
   majorId: z.string().min(1, { message: 'Major is required' }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -193,7 +194,7 @@ const Auth = () => {
   const onMentorRegisterSubmit = async (values: MentorRegisterFormValues) => {
     setIsLoading(true);
     try {
-      const { email, password, firstName, lastName, schoolId, majorId } = values;
+      const { email, password, firstName, lastName, universityId, majorId } = values;
 
       await signUp({ 
         email, 
@@ -202,7 +203,7 @@ const Auth = () => {
         lastName,
         metadata: {
           role: 'mentor',
-          school_id: schoolId,
+          university_id: universityId, // Store university ID instead of school ID
           major_id: majorId
         }
       });
@@ -443,17 +444,17 @@ const Auth = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="school">University</Label>
+                      <Label htmlFor="university">University</Label>
                       <UniversitySearchSelect
                         value={selectedUniversityId}
                         onSelect={(universityId) => {
                           setSelectedUniversityId(universityId);
-                          mentorRegisterForm.setValue('schoolId', universityId);
+                          mentorRegisterForm.setValue('universityId', universityId);
                         }}
                         placeholder="Type to search universities..."
                       />
-                      {mentorRegisterForm.formState.errors.schoolId && (
-                        <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.schoolId.message}</p>
+                      {mentorRegisterForm.formState.errors.universityId && (
+                        <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.universityId.message}</p>
                       )}
                     </div>
                     
