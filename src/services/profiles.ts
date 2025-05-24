@@ -30,7 +30,7 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
     .from('profiles')
     .select(`
       *,
-      school:schools(id, name, location, type, image, created_at),
+      school:schools(id, name, location, type, image),
       university:universities(id, name, state, type),
       major:majors(*),
       activities:profile_activities(activities(*))
@@ -50,9 +50,8 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
       id: profile.university.id,
       name: profile.university.name,
       location: profile.university.state,
-      type: profile.university.type,
-      image: null,
-      created_at: null
+      type: 'public' as const,
+      image: null
     } : null),
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni' | 'mentor',
@@ -65,7 +64,7 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
     .from('profiles')
     .select(`
       *,
-      school:schools(id, name, location, type, image, created_at),
+      school:schools(id, name, location, type, image),
       university:universities(id, name, state, type),
       major:majors(*),
       activities:profile_activities(activities(*))
@@ -83,9 +82,8 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
       id: profile.university.id,
       name: profile.university.name,
       location: profile.university.state,
-      type: profile.university.type,
-      image: null,
-      created_at: null
+      type: 'public' as const,
+      image: null
     } : null),
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni' | 'mentor',
@@ -98,7 +96,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     .from('profiles')
     .select(`
       *,
-      school:schools(id, name, location, type, image, created_at),
+      school:schools(id, name, location, type, image),
       university:universities(id, name, state, type),
       major:majors(*),
       activities:profile_activities(activities(*))
@@ -119,9 +117,8 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
       id: profile.university.id,
       name: profile.university.name,
       location: profile.university.state,
-      type: profile.university.type,
-      image: null,
-      created_at: null
+      type: 'public' as const,
+      image: null
     } : null),
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni' | 'mentor',
@@ -132,7 +129,7 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
 export async function getSchools(): Promise<School[]> {
   const { data, error } = await supabase
     .from('schools')
-    .select('id, name, location, type, image, created_at')
+    .select('id, name, location, type, image')
     .order('name');
     
   if (error) {

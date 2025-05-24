@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
 
 interface SignUpData {
   email: string;
@@ -65,7 +66,7 @@ export async function signUp({ email, password, firstName, lastName, metadata }:
 }
 
 export async function signIn({ email, password }: SignInData) {
-  const { data, error } = await supabase.auth.signIn({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -77,4 +78,35 @@ export async function signIn({ email, password }: SignInData) {
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+}
+
+export async function getCurrentSession(): Promise<Session | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session;
+}
+
+export async function getCurrentUser(): Promise<User | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+export function onAuthStateChange(callback: (event: string, session: Session | null) => void) {
+  return supabase.auth.onAuthStateChange(callback);
+}
+
+export function isAdmin(user: User): boolean {
+  return user?.user_metadata?.role === 'admin';
+}
+
+export function isMentor(user: User): boolean {
+  return user?.user_metadata?.role === 'mentor';
+}
+
+export function isStudent(user: User): boolean {
+  return user?.user_metadata?.role === 'student' || !user?.user_metadata?.role;
+}
+
+export async function refreshAndCheckAdmin(): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user ? isAdmin(user) : false;
 }
