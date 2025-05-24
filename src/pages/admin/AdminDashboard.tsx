@@ -146,7 +146,7 @@ const AdminDashboard = () => {
       
       try {
         // Check if user is admin using both methods
-        const hasAdminRole = await refreshAndCheckAdmin(user);
+        const hasAdminRole = await refreshAndCheckAdmin();
         
         setIsAdminUser(hasAdminRole);
         
