@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -54,20 +55,19 @@ const MyAccount = () => {
 
         if (profileError) throw profileError;
         
-        // Parse social links if it's a string
-        let socialLinks: Record<string, any> | string | null = profileData.social_links;
-        if (typeof socialLinks === 'string' && socialLinks) {
+        // Parse social links if it's a string and handle type conversion
+        let socialLinks: Record<string, any> | null = null;
+        const rawSocialLinks = profileData.social_links;
+        
+        if (typeof rawSocialLinks === 'string' && rawSocialLinks) {
           try {
-            socialLinks = JSON.parse(socialLinks);
+            socialLinks = JSON.parse(rawSocialLinks);
           } catch (error) {
             console.error('Error parsing social links:', error);
             socialLinks = null;
           }
-        }
-
-        // Make sure social_links is properly typed - convert boolean/array to null
-        if (typeof socialLinks === 'boolean' || Array.isArray(socialLinks)) {
-          socialLinks = null;
+        } else if (rawSocialLinks && typeof rawSocialLinks === 'object' && !Array.isArray(rawSocialLinks) && typeof rawSocialLinks !== 'boolean') {
+          socialLinks = rawSocialLinks as Record<string, any>;
         }
         
         const profileWithDetails: ProfileWithDetails = {
