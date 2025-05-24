@@ -70,9 +70,11 @@ const MyAccount = () => {
           socialLinks = {};
         }
         
-        const profileWithDetails = {
+        const profileWithDetails: ProfileWithDetails = {
           ...profileData,
           social_links: socialLinks,
+          // Ensure role is properly typed
+          role: (profileData.role || 'applicant') as 'applicant' | 'alumni' | 'mentor',
           // Ensure other required properties are present
           school: profileData.school || { 
             id: '',
