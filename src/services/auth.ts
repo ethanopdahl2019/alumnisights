@@ -31,7 +31,7 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          id: data.user.id,  // Use 'id' instead of 'user_id'
+          user_id: data.user.id,
           name: `${firstName} ${lastName}`,
           school_id: metadata.school_id,
           major_id: metadata.major_id,
@@ -52,7 +52,7 @@ export async function signUp({ email, password, firstName, lastName, metadata = 
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          id: data.user.id,  // Use 'id' instead of 'user_id'
+          user_id: data.user.id,
           name: `${firstName} ${lastName}`,
           role: 'applicant',
           visible: true,
