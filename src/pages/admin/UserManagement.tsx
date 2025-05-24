@@ -112,19 +112,47 @@ const UserManagement = () => {
   // Update user visibility
   const updateUserVisibility = async (userId: string, visible: boolean) => {
     try {
-      const { error } = await supabase
+      // First check if profile exists for this user
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: userId,
-          visible: visible
-        }, {
-          onConflict: 'user_id'
-        });
+        .select('user_id')
+        .eq('user_id', userId)
+        .single();
 
-      if (error) {
-        console.error('Error updating visibility:', error);
-        toast.error('Failed to update user visibility');
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error checking profile:', fetchError);
+        toast.error('Failed to check user profile');
         return;
+      }
+
+      if (existingProfile) {
+        // Update existing profile
+        const { error } = await supabase
+          .from('profiles')
+          .update({ visible: visible })
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('Error updating visibility:', error);
+          toast.error('Failed to update user visibility');
+          return;
+        }
+      } else {
+        // Create new profile with minimal required fields
+        const { error } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: userId,
+            name: 'User Profile', // Default name
+            major_id: (await supabase.from('majors').select('id').limit(1).single()).data?.id || '', // Get first major as default
+            visible: visible
+          });
+
+        if (error) {
+          console.error('Error creating profile:', error);
+          toast.error('Failed to create user profile');
+          return;
+        }
       }
 
       // Update local state

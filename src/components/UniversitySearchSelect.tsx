@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { SearchInput } from "@/components/SearchInput";
+import SearchInput from "@/components/SearchInput";
 import { getUniversities } from "@/services/universities";
 
 interface University {
