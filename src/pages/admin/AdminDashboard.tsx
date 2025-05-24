@@ -22,7 +22,8 @@ import {
   Star,
   ChevronRight,
   FileCheck,
-  BarChart
+  BarChart,
+  Home
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,12 @@ const adminLinkGroups = {
     },
   ],
   content: [
+    {
+      title: "Homepage Control",
+      description: "Manage homepage images and content",
+      icon: <Home className="h-5 w-5" />,
+      href: "/admin/homepage-control"
+    },
     {
       title: "Content Management",
       description: "Manage site content and blog posts",

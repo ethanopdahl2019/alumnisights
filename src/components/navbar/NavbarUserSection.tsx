@@ -26,7 +26,7 @@ export const NavbarUserSection = () => {
     } else if (isStudent(user)) {
       navigate('/student-dashboard');
     } else if (isAdmin) {
-      navigate('/admin/dashboard');
+      navigate('/admin');
     } else {
       // Default fallback
       navigate('/my-account');
@@ -82,7 +82,7 @@ export const NavbarUserSection = () => {
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="text-blue-600 flex items-center">
+            <DropdownMenuItem onClick={() => navigate('/admin')} className="text-blue-600 flex items-center">
               <ShieldAlert className="mr-2 h-4 w-4" />
               Admin Dashboard
             </DropdownMenuItem>

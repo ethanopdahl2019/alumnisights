@@ -1,522 +1,397 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/components/ui/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { getActivities } from '@/services/profiles';
-import { getUniversityById } from '@/services/universities';
+import { getMajors } from '@/services/majors';
+import { getSchools } from '@/services/profiles';
+import { School, Major } from '@/types/database';
+import { Upload, Camera } from 'lucide-react';
+import { uploadFileToStorage } from '@/utils/fileUpload';
 
-const mentorProfileSchema = z.object({
-  bio: z.string().min(20, { message: "Bio should be at least 20 characters" }),
-  price15Min: z.number().min(1, { message: "15-minute session price is required" }),
-  price30Min: z.number().min(1, { message: "30-minute session price is required" }),
-  price60Min: z.number().min(1, { message: "60-minute session price is required" }),
-  activities: z.array(z.string()).min(1, { message: "Please select at least one activity" }),
-  workExperience: z.string().optional(),
-  greekLife: z.string().optional(),
-  sportsExperience: z.string().optional(),
+// Define form schema
+const mentorProfileFormSchema = z.object({
+  firstName: z.string().min(1, { message: 'First name is required' }),
+  lastName: z.string().min(1, { message: 'Last name is required' }),
+  headline: z.string().min(1, { message: 'Headline is required' }),
+  bio: z.string().min(10, { message: 'Bio must be at least 10 characters' }),
+  universityId: z.string().min(1, { message: 'University is required' }),
+  majorId: z.string().min(1, { message: 'Major is required' }),
+  graduationYear: z.string().refine((val) => {
+    const num = parseInt(val, 10);
+    return !isNaN(num) && num > 1900 && num <= new Date().getFullYear();
+  }, {
+    message: "Graduation year must be a valid year"
+  }),
+  location: z.string().min(1, { message: 'Location is required' }),
+  price15Min: z.string().optional(),
+  price30Min: z.string().optional(),
+  price60Min: z.string().optional(),
 });
 
-type MentorProfileFormValues = z.infer<typeof mentorProfileSchema>;
+type MentorProfileFormValues = z.infer<typeof mentorProfileFormSchema>;
 
 const MentorProfileComplete = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { user, session } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [activities, setActivities] = useState<any[]>([]);
-  const [progress, setProgress] = useState(0);
-  
+  const [schools, setSchools] = useState<School[]>([]);
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [profileImage, setProfileImage] = useState<string>('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Form setup
   const form = useForm<MentorProfileFormValues>({
-    resolver: zodResolver(mentorProfileSchema),
+    resolver: zodResolver(mentorProfileFormSchema),
     defaultValues: {
-      bio: "",
-      price15Min: 25,
-      price30Min: 45,
-      price60Min: 80,
-      activities: [],
-      workExperience: "",
-      greekLife: "",
-      sportsExperience: "",
+      firstName: user?.user_metadata?.first_name || '',
+      lastName: user?.user_metadata?.last_name || '',
+      headline: '',
+      bio: '',
+      universityId: '',
+      majorId: '',
+      graduationYear: '',
+      location: '',
+      price15Min: '',
+      price30Min: '',
+      price60Min: '',
     },
-    mode: "onChange",
   });
-  
-  // Watch form values to update progress
-  const watchedValues = form.watch();
-  
+
   useEffect(() => {
-    // Calculate form completion progress
-    let completedSteps = 0;
-    if (watchedValues.bio.length >= 20) completedSteps++;
-    if (watchedValues.price15Min > 0) completedSteps++;
-    if (watchedValues.price30Min > 0) completedSteps++;
-    if (watchedValues.price60Min > 0) completedSteps++;
-    if (watchedValues.activities.length > 0) completedSteps++;
-    
-    setProgress((completedSteps / 5) * 100);
-  }, [watchedValues]);
-  
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!session) {
-      navigate('/auth');
-      return;
-    }
-    
-    // Load activities
-    const loadActivities = async () => {
+    const fetchData = async () => {
       try {
-        const activitiesData = await getActivities();
-        setActivities(activitiesData);
+        const [schoolsData, majorsData] = await Promise.all([
+          getSchools(),
+          getMajors()
+        ]);
+        setSchools(schoolsData);
+        setMajors(majorsData);
       } catch (error) {
-        console.error('Error loading activities:', error);
+        console.error("Failed to load form data:", error);
         toast({
-          title: "Error",
-          description: "Failed to load activities. Please try again later.",
-          variant: "destructive",
+          title: "Error loading data",
+          description: "Could not load schools and majors. Please try again later.",
+          variant: "destructive"
         });
       }
     };
     
-    loadActivities();
-  }, [session, navigate]);
-  
+    fetchData();
+  }, []);
+
+  const handleImageUpload = async (file: File) => {
+    if (!file || !user) return;
+
+    setUploadingImage(true);
+    try {
+      const imageUrl = await uploadFileToStorage({
+        file,
+        prefix: 'profile',
+        resourceId: user.id
+      });
+
+      if (imageUrl) {
+        setProfileImage(imageUrl);
+        toast({
+          title: "Image uploaded",
+          description: "Profile image uploaded successfully"
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload profile image",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const onSubmit = async (values: MentorProfileFormValues) => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
-      // Get user metadata to find university and major IDs
-      const metadata = user.user_metadata || {};
-      const universityId = metadata.university_id; // Use university_id instead of school_id
-      const majorId = metadata.major_id;
+      // Get university ID from user metadata or form
+      const universityId = user.user_metadata?.university_id || values.universityId;
       
-      if (!universityId || !majorId) {
-        throw new Error("University and major information not found. Please contact support.");
+      // Find the school that matches the university
+      let schoolId = null;
+      if (universityId) {
+        // Try to find a school with matching name or ID
+        const matchingSchool = schools.find(school => 
+          school.name.toLowerCase().includes(universityId.toLowerCase()) ||
+          school.id === universityId
+        );
+        schoolId = matchingSchool?.id || null;
       }
-      
-      // Get university data to find corresponding school
-      const university = await getUniversityById(universityId);
-      if (!university) {
-        throw new Error("University not found. Please contact support.");
-      }
-      
-      // Try to find corresponding school by name match or create a fallback
-      const { data: schools, error: schoolsError } = await supabase
-        .from('schools')
-        .select('id')
-        .ilike('name', `%${university.name}%`)
-        .limit(1);
-      
-      if (schoolsError) {
-        console.error('Error finding school:', schoolsError);
-      }
-      
-      // Use the matched school ID or create a temporary one
-      let schoolId = schools && schools.length > 0 ? schools[0].id : null;
-      
-      // If no school match found, use the first available school as fallback
-      if (!schoolId) {
-        const { data: fallbackSchool, error: fallbackError } = await supabase
-          .from('schools')
-          .select('id')
-          .limit(1)
-          .single();
-        
-        if (!fallbackError && fallbackSchool) {
-          schoolId = fallbackSchool.id;
-        }
-      }
-      
-      // Check if profile already exists
-      const { data: existingProfile, error: checkError } = await supabase
+
+      const profileData = {
+        user_id: user.id,
+        name: `${values.firstName} ${values.lastName}`,
+        bio: values.bio,
+        image: profileImage || null,
+        school_id: schoolId,
+        major_id: values.majorId,
+        role: 'mentor',
+        headline: values.headline,
+        graduation_year: parseInt(values.graduationYear),
+        location: values.location,
+        price_15_min: parseFloat(values.price15Min || '0'),
+        price_30_min: parseFloat(values.price30Min || '0'),
+        price_60_min: parseFloat(values.price60Min || '0'),
+        visible: true,
+        university_id: universityId
+      };
+
+      const { error } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (checkError) throw checkError;
-      
-      let profileData;
-      
-      if (existingProfile) {
-        // Update existing profile
-        const { error: profileError, data } = await supabase
-          .from('profiles')
-          .update({
-            bio: values.bio,
-            price_15_min: values.price15Min,
-            price_30_min: values.price30Min,
-            price_60_min: values.price60Min,
-            visible: true,
-            role: 'mentor',
-            greek_life: values.greekLife || null,
-            sport: values.sportsExperience || null,
-            university_id: universityId, // Store university ID
-          })
-          .eq('user_id', user.id)
-          .select()
-          .single();
-        
-        if (profileError) throw profileError;
-        profileData = data;
-      } else {
-        // Create new mentor profile
-        const { error: profileError, data } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            name: `${metadata.first_name} ${metadata.last_name}`,
-            school_id: schoolId, // Use school ID for profile table
-            major_id: majorId,
-            bio: values.bio,
-            price_15_min: values.price15Min,
-            price_30_min: values.price30Min,
-            price_60_min: values.price60Min,
-            visible: true,
-            role: 'mentor',
-            greek_life: values.greekLife || null,
-            sport: values.sportsExperience || null,
-            university_id: universityId, // Also store university ID
-          })
-          .select()
-          .single();
-        
-        if (profileError) throw profileError;
-        profileData = data;
-      }
-      
-      // Clear existing activities and add new ones
-      await supabase
-        .from('profile_activities')
-        .delete()
-        .eq('profile_id', profileData.id);
-      
-      // Add activities to profile
-      if (values.activities.length > 0) {
-        const activityInserts = values.activities.map(activityId => ({
-          profile_id: profileData.id,
-          activity_id: activityId,
-        }));
-        
-        const { error: activitiesError } = await supabase
-          .from('profile_activities')
-          .insert(activityInserts);
-        
-        if (activitiesError) throw activitiesError;
-      }
-      
+        .upsert(profileData, { 
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+
       toast({
-        title: "Mentor profile complete!",
-        description: "Your mentor profile has been set up successfully.",
+        title: "Profile completed",
+        description: "Your mentor profile has been created successfully!"
       });
-      
-      // Redirect to my account page
-      navigate('/my-account');
+
+      navigate('/mentor-dashboard');
+
     } catch (error: any) {
-      console.error('Error completing mentor profile:', error);
+      console.error('Error creating profile:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to complete your mentor profile. Please try again.",
-        variant: "destructive",
+        title: "Profile creation failed",
+        description: error.message || "Failed to create profile. Please try again.",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <div className="flex-grow container mx-auto py-12 px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Complete Your Mentor Profile</h1>
-            <p className="text-gray-600">
-              Set up your pricing and expertise to start mentoring students
-            </p>
-            
-            <div className="mt-6">
-              <Progress value={progress} className="h-2 w-full" />
-              <p className="text-sm text-gray-500 mt-2">
-                Profile completion: {Math.round(progress)}%
-              </p>
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center">Complete Your Mentor Profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Profile Image Upload */}
+            <div className="flex flex-col items-center space-y-4">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={profileImage} alt="Profile" />
+                <AvatarFallback>
+                  <Camera className="h-8 w-8 text-gray-400" />
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex flex-col items-center space-y-2">
+                <Label htmlFor="profile-image" className="cursor-pointer">
+                  <input
+                    id="profile-image"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageUpload(file);
+                    }}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingImage}
+                    className="flex items-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {uploadingImage ? 'Uploading...' : 'Upload Photo'}
+                  </Button>
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Upload a professional profile photo
+                </p>
+              </div>
             </div>
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Mentor Information</CardTitle>
-              <CardDescription>
-                This information will help students understand your expertise and book sessions with you
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bio</FormLabel>
-                        <FormControl>
-                          <textarea 
-                            className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Share your background, experience, and what you can help students with..."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Session Pricing</h3>
-                    <p className="text-sm text-gray-500">Set your rates for different session lengths</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="price15Min"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>15-minute session ($)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="25"
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="price30Min"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>30-minute session ($)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="45"
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="price60Min"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>60-minute session ($)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="80"
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Additional Information (Optional)</h3>
-                    <p className="text-sm text-gray-500">Help students learn more about your background</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="workExperience"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Work Experience (years)</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select years of experience" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="1-2">1-2 years</SelectItem>
-                                <SelectItem value="3-5">3-5 years</SelectItem>
-                                <SelectItem value="6-10">6-10 years</SelectItem>
-                                <SelectItem value="10+">10+ years</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="greekLife"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Greek Life</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select Greek organization (if any)" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
-                                <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
-                                <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
-                                <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
-                                <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
-                                <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
-                                <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
-                                <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
-                                <SelectItem value="chi-omega">Chi Omega</SelectItem>
-                                <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
-                                <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
-                                <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
-                                <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+            {/* Form fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="firstName">First Name</Label>
+                <Input 
+                  id="firstName" 
+                  placeholder="John" 
+                  {...form.register('firstName')} 
+                />
+                {form.formState.errors.firstName && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.firstName.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input 
+                  id="lastName" 
+                  placeholder="Doe" 
+                  {...form.register('lastName')} 
+                />
+                {form.formState.errors.lastName && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.lastName.message}</p>
+                )}
+              </div>
+            </div>
 
-                    <FormField
-                      control={form.control}
-                      name="sportsExperience"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>College Sports Experience</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select sport (if any)" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">None</SelectItem>
-                              <SelectItem value="football">Football</SelectItem>
-                              <SelectItem value="basketball">Basketball</SelectItem>
-                              <SelectItem value="baseball">Baseball</SelectItem>
-                              <SelectItem value="soccer">Soccer</SelectItem>
-                              <SelectItem value="tennis">Tennis</SelectItem>
-                              <SelectItem value="swimming">Swimming</SelectItem>
-                              <SelectItem value="track-field">Track & Field</SelectItem>
-                              <SelectItem value="volleyball">Volleyball</SelectItem>
-                              <SelectItem value="golf">Golf</SelectItem>
-                              <SelectItem value="lacrosse">Lacrosse</SelectItem>
-                              <SelectItem value="wrestling">Wrestling</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="activities"
-                    render={() => (
-                      <FormItem>
-                        <div className="mb-4">
-                          <FormLabel className="text-base">Areas of Expertise</FormLabel>
-                          <p className="text-sm text-gray-500">
-                            Select the areas where you can provide mentorship
-                          </p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          {activities.map((activity) => (
-                            <FormField
-                              key={activity.id}
-                              control={form.control}
-                              name="activities"
-                              render={({ field }) => (
-                                <FormItem
-                                  key={activity.id}
-                                  className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(activity.id)}
-                                      onCheckedChange={(checked) => {
-                                        return checked
-                                          ? field.onChange([...field.value, activity.id])
-                                          : field.onChange(
-                                              field.value?.filter(
-                                                (value) => value !== activity.id
-                                              )
-                                            );
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">
-                                    {activity.name}
-                                  </FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex justify-end space-x-4 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => navigate('/')}
-                    >
-                      Skip for now
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={isLoading || progress < 100}
-                      className={progress < 100 ? "opacity-70" : ""}
-                    >
-                      {isLoading ? "Saving..." : "Complete Profile"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      <Footer />
+            <div>
+              <Label htmlFor="headline">Headline</Label>
+              <Input 
+                id="headline" 
+                placeholder="e.g., Experienced Software Engineer" 
+                {...form.register('headline')} 
+              />
+              {form.formState.errors.headline && (
+                <p className="text-red-500 text-sm">{form.formState.errors.headline.message}</p>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea 
+                id="bio" 
+                placeholder="Tell us about yourself" 
+                rows={3}
+                {...form.register('bio')} 
+              />
+              {form.formState.errors.bio && (
+                <p className="text-red-500 text-sm">{form.formState.errors.bio.message}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="universityId">University</Label>
+                <Input 
+                  id="universityId" 
+                  placeholder="e.g., Harvard University" 
+                  {...form.register('universityId')} 
+                />
+                {form.formState.errors.universityId && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.universityId.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="majorId">Major</Label>
+                <Select onValueChange={(value) => form.setValue('majorId', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your major" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {majors.map((major) => (
+                      <SelectItem key={major.id} value={major.id}>
+                        {major.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.majorId && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.majorId.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="graduationYear">Graduation Year</Label>
+              <Input 
+                id="graduationYear" 
+                placeholder="e.g., 2022" 
+                {...form.register('graduationYear')} 
+              />
+              {form.formState.errors.graduationYear && (
+                <p className="text-red-500 text-sm">{form.formState.errors.graduationYear.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="location">Location</Label>
+              <Input 
+                id="location" 
+                placeholder="e.g., New York, NY" 
+                {...form.register('location')} 
+              />
+              {form.formState.errors.location && (
+                <p className="text-red-500 text-sm">{form.formState.errors.location.message}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="price15Min">Price (15 min)</Label>
+                <Input 
+                  id="price15Min" 
+                  placeholder="e.g., 25" 
+                  type="number"
+                  {...form.register('price15Min', { valueAsNumber: true })} 
+                />
+                {form.formState.errors.price15Min && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.price15Min.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="price30Min">Price (30 min)</Label>
+                <Input 
+                  id="price30Min" 
+                  placeholder="e.g., 40" 
+                  type="number"
+                  {...form.register('price30Min', { valueAsNumber: true })} 
+                />
+                {form.formState.errors.price30Min && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.price30Min.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="price60Min">Price (60 min)</Label>
+                <Input 
+                  id="price60Min" 
+                  placeholder="e.g., 75"
+                  type="number"
+                  {...form.register('price60Min', { valueAsNumber: true })} 
+                />
+                {form.formState.errors.price60Min && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.price60Min.message}</p>
+                )}
+              </div>
+            </div>
+            
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Creating Profile...' : 'Complete Profile'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

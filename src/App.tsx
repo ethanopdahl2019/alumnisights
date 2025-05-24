@@ -71,6 +71,7 @@ const ContentProgress = lazy(() => import("./pages/admin/ContentProgress"));
 const FeaturedSchools = lazy(() => import("./pages/admin/FeaturedSchools"));
 const RequestManagement = lazy(() => import("./pages/admin/RequestManagement"));
 const RegistrationControl = lazy(() => import("./pages/admin/RegistrationControl"));
+const HomepageControl = lazy(() => import("./pages/admin/HomepageControl"));
 
 const queryClient = new QueryClient();
 
@@ -139,6 +140,7 @@ const App = () => (
                 
                 {/* Admin routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<UserManagement />} />
                 <Route path="/admin/bookings" element={<BookingManagement />} />
                 <Route path="/admin/analytics" element={<Analytics />} />
@@ -146,6 +148,7 @@ const App = () => (
                 <Route path="/admin/featured-schools" element={<FeaturedSchools />} />
                 <Route path="/admin/requests" element={<RequestManagement />} />
                 <Route path="/admin/registration-control" element={<RegistrationControl />} />
+                <Route path="/admin/homepage-control" element={<HomepageControl />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
