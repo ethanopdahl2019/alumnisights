@@ -52,8 +52,10 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
     })) || [])
   ];
   
-  // Direct all profile cards to the alumni page
-  const linkDestination = `/alumni/${profile.id}`;
+  // Determine the link destination based on whether it's the user's own profile
+  const linkDestination = isOwnProfile 
+    ? '/alumni-dashboard' 
+    : `/alumni/${profile.id}`;
   
   return (
     <motion.div

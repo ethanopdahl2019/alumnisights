@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -12,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from '@/hooks/use-toast';
 import { signUp, signIn } from '@/services/auth';
 import { getMajors } from '@/services/majors';
-import { supabase } from '@/integrations/supabase/client';
+import { getSchools } from '@/services/profiles';
 import { 
   Select, 
   SelectContent, 
@@ -20,6 +21,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { School, Major } from '@/types/database';
 
 // Define form schemas
 const loginFormSchema = z.object({
@@ -27,7 +29,6 @@ const loginFormSchema = z.object({
   password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
 });
 
-// Create variable registration form schema based on user type
 const registerFormSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required' }),
   lastName: z.string().min(1, { message: 'Last name is required' }),
@@ -35,47 +36,21 @@ const registerFormSchema = z.object({
   password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
   confirmPassword: z.string().min(8, { message: 'Please confirm your password' }),
   userType: z.enum(['student', 'mentor']),
-  universityId: z.string().optional(),
-  majorId: z.string().optional(),
-}).refine(
-  (data) => data.password === data.confirmPassword, 
-  {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  }
-).refine(
-  (data) => {
-    // Only require university and major if user is a mentor
-    if (data.userType === 'mentor') {
-      return !!data.universityId && !!data.majorId;
-    }
-    return true;
-  },
-  {
-    message: "University and major are required for mentors",
-    path: ["universityId"],
-  }
-);
+  schoolId: z.string().min(1, { message: 'School is required' }),
+  majorId: z.string().min(1, { message: 'Major is required' }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 type RegisterFormValues = z.infer<typeof registerFormSchema>;
-
-interface University {
-  id: string;
-  name: string;
-}
-
-interface Major {
-  id: string;
-  name: string;
-  category: string | null;
-}
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
   const [userType, setUserType] = useState<'student' | 'mentor'>('student');
-  const [universities, setUniversities] = useState<University[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
   const [majors, setMajors] = useState<Major[]>([]);
   const navigate = useNavigate();
   
@@ -98,29 +73,26 @@ const Auth = () => {
       password: '',
       confirmPassword: '',
       userType: 'student',
-      universityId: '',
+      schoolId: '',
       majorId: '',
     },
   });
 
-  // Load universities and majors from Supabase
+  // Load schools and majors from Supabase
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [universitiesData, majorsData] = await Promise.all([
-          supabase.from('universities').select('id, name').order('name'),
+        const [schoolsData, majorsData] = await Promise.all([
+          getSchools(),
           getMajors()
         ]);
-        
-        if (universitiesData.data) {
-          setUniversities(universitiesData.data);
-        }
+        setSchools(schoolsData);
         setMajors(majorsData);
       } catch (error) {
         console.error("Failed to load form data:", error);
         toast({
           title: "Error loading data",
-          description: "Could not load universities and majors. Please try again later.",
+          description: "Could not load schools and majors. Please try again later.",
           variant: "destructive"
         });
       }
@@ -156,24 +128,21 @@ const Auth = () => {
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const { email, password, firstName, lastName, userType, universityId, majorId } = values;
+      const { email, password, firstName, lastName, userType, schoolId, majorId } = values;
 
       // Map the userType to the correct role
       const role = userType === 'mentor' ? 'mentor' : 'student';
-
-      // Only include university and major for mentors
-      const metadata: Record<string, any> = { role };
-      if (userType === 'mentor' && universityId && majorId) {
-        metadata.university_id = universityId;
-        metadata.major_id = majorId;
-      }
 
       await signUp({ 
         email, 
         password, 
         firstName, 
         lastName,
-        metadata
+        metadata: {
+          role,
+          school_id: schoolId,
+          major_id: majorId
+        }
       });
 
       toast({
@@ -183,8 +152,12 @@ const Auth = () => {
 
       await signIn({ email, password });
       
-      // Redirect to profile completion page
-      navigate('/profile-complete');
+      // Redirect based on user role
+      if (userType === "mentor") {
+        navigate('/mentor-dashboard');
+      } else {
+        navigate('/student-dashboard');
+      }
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
@@ -200,12 +173,6 @@ const Auth = () => {
   const handleUserTypeChange = (value: string) => {
     setUserType(value as 'student' | 'mentor');
     registerForm.setValue('userType', value as 'student' | 'mentor');
-    
-    // Clear university and major values if switching to student
-    if (value === 'student') {
-      registerForm.setValue('universityId', '');
-      registerForm.setValue('majorId', '');
-    }
   };
 
   return (
@@ -342,52 +309,47 @@ const Auth = () => {
                   </RadioGroup>
                 </div>
                 
-                {/* Only show University and Major fields for mentors */}
-                {userType === 'mentor' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="university">University</Label>
-                      <Select 
-                        onValueChange={(value) => registerForm.setValue('universityId', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your university" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {universities.map((university) => (
-                            <SelectItem key={university.id} value={university.id}>
-                              {university.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {registerForm.formState.errors.universityId && (
-                        <p className="text-red-500 text-sm">{registerForm.formState.errors.universityId.message}</p>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="major">Major</Label>
-                      <Select 
-                        onValueChange={(value) => registerForm.setValue('majorId', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your major" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {majors.map((major) => (
-                            <SelectItem key={major.id} value={major.id}>
-                              {major.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {registerForm.formState.errors.majorId && (
-                        <p className="text-red-500 text-sm">{registerForm.formState.errors.majorId.message}</p>
-                      )}
-                    </div>
-                  </>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="school">University</Label>
+                  <Select 
+                    onValueChange={(value) => registerForm.setValue('schoolId', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your university" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {schools.map((school) => (
+                        <SelectItem key={school.id} value={school.id}>
+                          {school.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {registerForm.formState.errors.schoolId && (
+                    <p className="text-red-500 text-sm">{registerForm.formState.errors.schoolId.message}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="major">Major</Label>
+                  <Select 
+                    onValueChange={(value) => registerForm.setValue('majorId', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your major" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {majors.map((major) => (
+                        <SelectItem key={major.id} value={major.id}>
+                          {major.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {registerForm.formState.errors.majorId && (
+                    <p className="text-red-500 text-sm">{registerForm.formState.errors.majorId.message}</p>
+                  )}
+                </div>
                 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Creating account...' : 'Create account'}

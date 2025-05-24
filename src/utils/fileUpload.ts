@@ -85,29 +85,3 @@ export async function uploadFileToStorage({
     return null;
   }
 }
-
-/**
- * Simple file upload function for profile images
- */
-export async function uploadFile(file: File, bucket: string): Promise<string> {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}.${fileExt}`;
-  const filePath = `${bucket}/${fileName}`;
-
-  const { error: uploadError, data } = await supabase.storage
-    .from('university-content')
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: true
-    });
-
-  if (uploadError) {
-    throw uploadError;
-  }
-
-  const { data: urlData } = supabase.storage
-    .from('university-content')
-    .getPublicUrl(filePath);
-
-  return urlData.publicUrl;
-}

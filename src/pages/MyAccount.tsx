@@ -50,52 +50,46 @@ const MyAccount = () => {
           .from("profiles")
           .select("*, school:schools(id, name, location, type, image), major:majors(id, name, category)")
           .eq("user_id", user?.id)
-          .maybeSingle();
+          .single();
 
         if (profileError) throw profileError;
         
         // Parse social links if it's a string
-        let socialLinks = profileData?.social_links;
+        let socialLinks = profileData.social_links;
         if (typeof socialLinks === 'string' && socialLinks) {
           try {
             socialLinks = JSON.parse(socialLinks);
           } catch (error) {
             console.error('Error parsing social links:', error);
-            socialLinks = {};
+            socialLinks = null;
           }
         }
-        
-        // If social_links is not a valid object, set it to an empty object
-        if (!socialLinks || typeof socialLinks !== 'object' || Array.isArray(socialLinks)) {
+
+        // Make sure social_links isn't a number or null
+        if (typeof socialLinks === 'number' || socialLinks === null) {
           socialLinks = {};
         }
         
-        if (profileData) {
-          // Ensure role is one of the allowed values
-          const validRole = validateRole(profileData.role);
-          
-          const profileWithDetails: ProfileWithDetails = {
-            ...profileData,
-            social_links: socialLinks as Record<string, any>,
-            role: validRole,
-            // Ensure other required properties are present
-            school: profileData.school || { 
-              id: '',
-              name: 'Not specified',
-              location: null,
-              type: null,
-              image: null
-            },
-            major: profileData.major || { 
-              id: '',
-              name: 'Not specified',
-              category: null
-            },
-            activities: [] // Initialize with empty array if not present
-          };
+        const profileWithDetails = {
+          ...profileData,
+          social_links: socialLinks,
+          // Ensure other required properties are present
+          school: profileData.school || { 
+            id: '',
+            name: 'Not specified',
+            location: null,
+            type: null,
+            image: null
+          },
+          major: profileData.major || { 
+            id: '',
+            name: 'Not specified',
+            category: null
+          },
+          activities: [] // Initialize with empty array if not present
+        };
 
-          setProfile(profileWithDetails);
-        }
+        setProfile(profileWithDetails);
 
         // Fetch user's bookings
         const { data: bookingsData, error: bookingsError } = await supabase
@@ -128,16 +122,10 @@ const MyAccount = () => {
       }
     };
 
-    if (user && !loading) {
+    if (user) {
       fetchUserData();
     }
   }, [user, loading, navigate]);
-
-  // Helper function to validate role
-  const validateRole = (role: string | null): 'applicant' | 'alumni' | 'mentor' => {
-    if (role === 'alumni' || role === 'mentor') return role;
-    return 'applicant'; // Default fallback
-  };
 
   const handleAccessCodeSubmit = async () => {
     setIsLoading(true);
@@ -324,9 +312,9 @@ const MyAccount = () => {
                       )}
                       <div>
                         <h3 className="font-semibold text-lg">
-                          {profile?.name || user?.user_metadata?.first_name || "User"}
+                          {profile?.name || user.user_metadata?.first_name || "User"}
                         </h3>
-                        <p className="text-gray-600">{user?.email}</p>
+                        <p className="text-gray-600">{user.email}</p>
                       </div>
                     </div>
                     

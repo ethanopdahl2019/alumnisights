@@ -922,11 +922,10 @@ export type Database = {
           price_30_min: number | null
           price_60_min: number | null
           role: string | null
-          school_id: string | null
+          school_id: string
           school_name: string | null
           social_links: Json | null
           sport: string | null
-          university_id: string | null
           user_id: string
           visible: boolean | null
         }
@@ -951,11 +950,10 @@ export type Database = {
           price_30_min?: number | null
           price_60_min?: number | null
           role?: string | null
-          school_id?: string | null
+          school_id: string
           school_name?: string | null
           social_links?: Json | null
           sport?: string | null
-          university_id?: string | null
           user_id: string
           visible?: boolean | null
         }
@@ -980,11 +978,10 @@ export type Database = {
           price_30_min?: number | null
           price_60_min?: number | null
           role?: string | null
-          school_id?: string | null
+          school_id?: string
           school_name?: string | null
           social_links?: Json | null
           sport?: string | null
-          university_id?: string | null
           user_id?: string
           visible?: boolean | null
         }
@@ -1001,13 +998,6 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_university_id_fkey"
-            columns: ["university_id"]
-            isOneToOne: false
-            referencedRelation: "universities"
             referencedColumns: ["id"]
           },
         ]

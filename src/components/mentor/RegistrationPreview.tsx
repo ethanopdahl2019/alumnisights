@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { 
   Select, 
   SelectContent, 
@@ -16,14 +16,20 @@ import {
   SelectValue,
   SelectLabel
 } from "@/components/ui/select";
+import { getAllUniversities, UniversityData } from "@/pages/insights/universities/universities-data";
 import SearchInput from "@/components/SearchInput";
+import { useForm } from "react-hook-form";
 import { getMajors, Major } from "@/services/majors";
-import { getUniversities } from "@/services/universities";
 
-interface University {
-  id: string;
-  name: string;
-}
+// Define the predefined university options
+const universityOptions = [
+  { id: "harvard-university", name: "Harvard University" },
+  { id: "yale-university", name: "Yale University" },
+  { id: "columbia-university", name: "Columbia University" },
+  { id: "stanford-university", name: "Stanford University" },
+  { id: "amherst-college", name: "Amherst College" },
+  { id: "ucla", name: "UCLA" },
+];
 
 interface RegistrationPreviewProps {
   registrationType?: 'student' | 'mentor';
@@ -31,29 +37,24 @@ interface RegistrationPreviewProps {
 
 const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPreviewProps) => {
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
+  const [universitySearchTerm, setUniversitySearchTerm] = useState<string>("");
   const [majorSearchTerm, setMajorSearchTerm] = useState<string>("");
   const [majors, setMajors] = useState<Array<Major>>([]);
-  const [universities, setUniversities] = useState<Array<University>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Fetch majors and universities from Supabase
+  // Fetch majors from Supabase
   useEffect(() => {
-    const loadData = async () => {
+    const loadMajors = async () => {
       try {
-        const [majorsData, universitiesData] = await Promise.all([
-          getMajors(),
-          getUniversities()
-        ]);
-        setMajors(majorsData);
-        setUniversities(universitiesData);
+        const data = await getMajors();
+        setMajors(data);
       } catch (error) {
-        console.error("Failed to load data:", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Failed to load majors:", error);
       }
     };
     
-    loadData();
+    setIsLoading(false);
+    loadMajors();
   }, []);
   
   // Filter majors based on search term
@@ -220,50 +221,6 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
                 </RadioGroup>
               </div>
               
-              {registrationType === 'mentor' && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="university">University</Label>
-                    <Select value={selectedUniversity} onValueChange={setSelectedUniversity}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your university" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {isLoading ? (
-                          <SelectItem value="loading" disabled>Loading universities...</SelectItem>
-                        ) : (
-                          universities.map((university) => (
-                            <SelectItem key={university.id} value={university.id}>
-                              {university.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="major">Major</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your major" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {isLoading ? (
-                          <SelectItem value="loading" disabled>Loading majors...</SelectItem>
-                        ) : (
-                          majors.slice(0, 10).map((major) => (
-                            <SelectItem key={major.id} value={major.id}>
-                              {major.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-              
               <Button className="w-full">Create account</Button>
             </div>
           </TabsContent>
@@ -299,15 +256,11 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
                       <SelectValue placeholder="Select your university" />
                     </SelectTrigger>
                     <SelectContent>
-                      {isLoading ? (
-                        <SelectItem value="loading" disabled>Loading universities...</SelectItem>
-                      ) : (
-                        universities.map((university) => (
-                          <SelectItem key={university.id} value={university.id}>
-                            {university.name}
-                          </SelectItem>
-                        ))
-                      )}
+                      {universityOptions.map((university) => (
+                        <SelectItem key={university.id} value={university.id}>
+                          {university.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -387,6 +340,7 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
                     </div>
                   </div>
                 ) : (
+                  // Special fields for mentors
                   getMentorSpecificContent()
                 )}
                 
