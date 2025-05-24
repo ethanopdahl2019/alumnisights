@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
-import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getActivities } from '@/services/profiles';
@@ -24,6 +24,9 @@ const mentorProfileSchema = z.object({
   price30Min: z.number().min(1, { message: "30-minute session price is required" }),
   price60Min: z.number().min(1, { message: "60-minute session price is required" }),
   activities: z.array(z.string()).min(1, { message: "Please select at least one activity" }),
+  workExperience: z.string().optional(),
+  greekLife: z.string().optional(),
+  sportsExperience: z.string().optional(),
 });
 
 type MentorProfileFormValues = z.infer<typeof mentorProfileSchema>;
@@ -43,6 +46,9 @@ const MentorProfileComplete = () => {
       price30Min: 45,
       price60Min: 80,
       activities: [],
+      workExperience: "",
+      greekLife: "",
+      sportsExperience: "",
     },
     mode: "onChange",
   });
@@ -101,45 +107,89 @@ const MentorProfileComplete = () => {
         throw new Error("School and major information not found. Please contact support.");
       }
       
-      // Create mentor profile
-      const { error: profileError, data: profileData } = await supabase
+      // Check if profile already exists
+      const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .insert({
-          user_id: user.id,
-          name: `${metadata.first_name} ${metadata.last_name}`,
-          school_id: schoolId,
-          major_id: majorId,
-          bio: values.bio,
-          price_15_min: values.price15Min,
-          price_30_min: values.price30Min,
-          price_60_min: values.price60Min,
-          visible: true,
-          role: 'mentor'
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
       
-      if (profileError) throw profileError;
+      if (checkError) throw checkError;
+      
+      let profileData;
+      
+      if (existingProfile) {
+        // Update existing profile
+        const { error: profileError, data } = await supabase
+          .from('profiles')
+          .update({
+            bio: values.bio,
+            price_15_min: values.price15Min,
+            price_30_min: values.price30Min,
+            price_60_min: values.price60Min,
+            visible: true,
+            role: 'mentor',
+            greek_life: values.greekLife || null,
+            sport: values.sportsExperience || null,
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single();
+        
+        if (profileError) throw profileError;
+        profileData = data;
+      } else {
+        // Create new mentor profile
+        const { error: profileError, data } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            name: `${metadata.first_name} ${metadata.last_name}`,
+            school_id: schoolId,
+            major_id: majorId,
+            bio: values.bio,
+            price_15_min: values.price15Min,
+            price_30_min: values.price30Min,
+            price_60_min: values.price60Min,
+            visible: true,
+            role: 'mentor',
+            greek_life: values.greekLife || null,
+            sport: values.sportsExperience || null,
+          })
+          .select()
+          .single();
+        
+        if (profileError) throw profileError;
+        profileData = data;
+      }
+      
+      // Clear existing activities and add new ones
+      await supabase
+        .from('profile_activities')
+        .delete()
+        .eq('profile_id', profileData.id);
       
       // Add activities to profile
-      const activityInserts = values.activities.map(activityId => ({
-        profile_id: profileData.id,
-        activity_id: activityId,
-      }));
-      
-      const { error: activitiesError } = await supabase
-        .from('profile_activities')
-        .insert(activityInserts);
-      
-      if (activitiesError) throw activitiesError;
+      if (values.activities.length > 0) {
+        const activityInserts = values.activities.map(activityId => ({
+          profile_id: profileData.id,
+          activity_id: activityId,
+        }));
+        
+        const { error: activitiesError } = await supabase
+          .from('profile_activities')
+          .insert(activityInserts);
+        
+        if (activitiesError) throw activitiesError;
+      }
       
       toast({
         title: "Mentor profile complete!",
         description: "Your mentor profile has been set up successfully.",
       });
       
-      // Redirect to mentor dashboard
-      navigate('/mentor-dashboard');
+      // Redirect to my account page
+      navigate('/my-account');
     } catch (error: any) {
       console.error('Error completing mentor profile:', error);
       toast({
@@ -261,6 +311,103 @@ const MentorProfileComplete = () => {
                         )}
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Additional Information (Optional)</h3>
+                    <p className="text-sm text-gray-500">Help students learn more about your background</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="workExperience"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Work Experience (years)</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select years of experience" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="1-2">1-2 years</SelectItem>
+                                <SelectItem value="3-5">3-5 years</SelectItem>
+                                <SelectItem value="6-10">6-10 years</SelectItem>
+                                <SelectItem value="10+">10+ years</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="greekLife"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Greek Life</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Greek organization (if any)" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                <SelectItem value="alpha-phi-alpha">Alpha Phi Alpha</SelectItem>
+                                <SelectItem value="sigma-chi">Sigma Chi</SelectItem>
+                                <SelectItem value="kappa-sigma">Kappa Sigma</SelectItem>
+                                <SelectItem value="sigma-alpha-epsilon">Sigma Alpha Epsilon</SelectItem>
+                                <SelectItem value="phi-delta-theta">Phi Delta Theta</SelectItem>
+                                <SelectItem value="pi-kappa-alpha">Pi Kappa Alpha</SelectItem>
+                                <SelectItem value="alpha-chi-omega">Alpha Chi Omega</SelectItem>
+                                <SelectItem value="chi-omega">Chi Omega</SelectItem>
+                                <SelectItem value="delta-gamma">Delta Gamma</SelectItem>
+                                <SelectItem value="kappa-kappa-gamma">Kappa Kappa Gamma</SelectItem>
+                                <SelectItem value="alpha-phi">Alpha Phi</SelectItem>
+                                <SelectItem value="delta-delta-delta">Delta Delta Delta</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="sportsExperience"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>College Sports Experience</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select sport (if any)" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="football">Football</SelectItem>
+                              <SelectItem value="basketball">Basketball</SelectItem>
+                              <SelectItem value="baseball">Baseball</SelectItem>
+                              <SelectItem value="soccer">Soccer</SelectItem>
+                              <SelectItem value="tennis">Tennis</SelectItem>
+                              <SelectItem value="swimming">Swimming</SelectItem>
+                              <SelectItem value="track-field">Track & Field</SelectItem>
+                              <SelectItem value="volleyball">Volleyball</SelectItem>
+                              <SelectItem value="golf">Golf</SelectItem>
+                              <SelectItem value="lacrosse">Lacrosse</SelectItem>
+                              <SelectItem value="wrestling">Wrestling</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                   
                   <FormField
