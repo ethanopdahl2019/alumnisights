@@ -19,7 +19,19 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { Trash2, Eye } from "lucide-react";
 
 // Define a User interface for TypeScript
 interface User {
@@ -46,6 +58,7 @@ const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [deletingUser, setDeletingUser] = useState<string | null>(null);
 
   // Fetch all users using Edge Function
   const fetchUsers = async () => {
@@ -168,6 +181,70 @@ const UserManagement = () => {
     }
   };
 
+  // Delete user function
+  const deleteUser = async (userId: string) => {
+    setDeletingUser(userId);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("No active session");
+      }
+
+      const response = await fetch(
+        `https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/admin-users`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete user");
+      }
+
+      // Remove user from local state
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      setUserProfiles(prev => {
+        const newProfiles = { ...prev };
+        delete newProfiles[userId];
+        return newProfiles;
+      });
+
+      toast.success("User deleted successfully");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Failed to delete user: " + (error as Error).message);
+    } finally {
+      setDeletingUser(null);
+    }
+  };
+
+  // View user profile
+  const viewUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !profile) {
+        toast.error('User profile not found');
+        return;
+      }
+
+      navigate(`/alumni/${profile.id}`);
+    } catch (error) {
+      console.error('Error finding user profile:', error);
+      toast.error('Failed to find user profile');
+    }
+  };
+
   useEffect(() => {
     // Check if user is admin
     if (!loading) {
@@ -245,6 +322,7 @@ const UserManagement = () => {
                       <TableHead>Created</TableHead>
                       <TableHead>Last Login</TableHead>
                       <TableHead>Visible in Browse</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -290,6 +368,45 @@ const UserManagement = () => {
                                 updateUserVisibility(user.id, checked as boolean)
                               }
                             />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => viewUserProfile(user.id)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={deletingUser === user.id}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the user account and remove all associated data.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => deleteUser(user.id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );

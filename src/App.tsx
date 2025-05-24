@@ -48,16 +48,6 @@ const GraduateAdmissions = lazy(() => import("./pages/insights/GraduateAdmission
 const ClubsAndGreekLife = lazy(() => import("./pages/insights/ClubsAndGreekLife"));
 const IndustryInsights = lazy(() => import("./pages/insights/IndustryInsights"));
 
-// University pages  
-const HarvardUniversity = lazy(() => import("./pages/insights/universities/harvard-university"));
-const StanfordUniversity = lazy(() => import("./pages/insights/universities/stanford-university"));
-const MIT = lazy(() => import("./pages/insights/universities/mit"));
-const AmherstCollege = lazy(() => import("./pages/insights/universities/amherst-college"));
-const AlleghenyCollege = lazy(() => import("./pages/insights/universities/allegheny-college"));
-const AmericanUniversity = lazy(() => import("./pages/insights/universities/american-university"));
-const AppalachianStateUniversity = lazy(() => import("./pages/insights/universities/appalachian-state-university"));
-const AuburnUniversity = lazy(() => import("./pages/insights/universities/auburn-university"));
-
 // University management pages
 const UniversityContentManager = lazy(() => import("./pages/insights/universities/UniversityContentManager"));
 const UniversityPage = lazy(() => import("./pages/insights/universities/UniversityPage"));
@@ -124,19 +114,12 @@ const App = () => (
                 <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
                 <Route path="/insights/industry-insights" element={<IndustryInsights />} />
                 
-                {/* University routes */}
-                <Route path="/insights/universities/harvard-university" element={<HarvardUniversity />} />
-                <Route path="/insights/universities/stanford-university" element={<StanfordUniversity />} />
-                <Route path="/insights/universities/mit" element={<MIT />} />
-                <Route path="/insights/universities/amherst-college" element={<AmherstCollege />} />
-                <Route path="/insights/universities/allegheny-college" element={<AlleghenyCollege />} />
-                <Route path="/insights/universities/american-university" element={<AmericanUniversity />} />
-                <Route path="/insights/universities/appalachian-state-university" element={<AppalachianStateUniversity />} />
-                <Route path="/insights/universities/auburn-university" element={<AuburnUniversity />} />
+                {/* University routes - Fixed routing */}
+                <Route path="/insights/universities/:universityId" element={<UniversityPage />} />
+                <Route path="/universities/:universityId" element={<UniversityPage />} />
                 
                 {/* University management routes */}
                 <Route path="/universities/manage" element={<UniversityContentManager />} />
-                <Route path="/universities/:universityId" element={<UniversityPage />} />
                 
                 {/* Admin routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
