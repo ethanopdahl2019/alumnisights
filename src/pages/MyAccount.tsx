@@ -55,7 +55,7 @@ const MyAccount = () => {
         if (profileError) throw profileError;
         
         // Parse social links if it's a string
-        let socialLinks = profileData.social_links;
+        let socialLinks: Record<string, any> | string | null = profileData.social_links;
         if (typeof socialLinks === 'string' && socialLinks) {
           try {
             socialLinks = JSON.parse(socialLinks);
@@ -65,9 +65,9 @@ const MyAccount = () => {
           }
         }
 
-        // Make sure social_links isn't a number or null
-        if (typeof socialLinks === 'number' || socialLinks === null) {
-          socialLinks = {};
+        // Make sure social_links is properly typed - convert boolean/array to null
+        if (typeof socialLinks === 'boolean' || Array.isArray(socialLinks)) {
+          socialLinks = null;
         }
         
         const profileWithDetails: ProfileWithDetails = {
