@@ -29,7 +29,19 @@ const loginFormSchema = z.object({
   password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
 });
 
-const registerFormSchema = z.object({
+const studentRegisterFormSchema = z.object({
+  firstName: z.string().min(1, { message: 'First name is required' }),
+  lastName: z.string().min(1, { message: 'Last name is required' }),
+  email: z.string().email({ message: 'Please enter a valid email' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  confirmPassword: z.string().min(8, { message: 'Please confirm your password' }),
+  userType: z.enum(['student', 'mentor']),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+const mentorRegisterFormSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required' }),
   lastName: z.string().min(1, { message: 'Last name is required' }),
   email: z.string().email({ message: 'Please enter a valid email' }),
@@ -44,7 +56,8 @@ const registerFormSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
-type RegisterFormValues = z.infer<typeof registerFormSchema>;
+type StudentRegisterFormValues = z.infer<typeof studentRegisterFormSchema>;
+type MentorRegisterFormValues = z.infer<typeof mentorRegisterFormSchema>;
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -63,9 +76,9 @@ const Auth = () => {
     },
   });
   
-  // Register form
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerFormSchema),
+  // Student register form
+  const studentRegisterForm = useForm<StudentRegisterFormValues>({
+    resolver: zodResolver(studentRegisterFormSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -73,6 +86,19 @@ const Auth = () => {
       password: '',
       confirmPassword: '',
       userType: 'student',
+    },
+  });
+
+  // Mentor register form
+  const mentorRegisterForm = useForm<MentorRegisterFormValues>({
+    resolver: zodResolver(mentorRegisterFormSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      userType: 'mentor',
       schoolId: '',
       majorId: '',
     },
@@ -98,8 +124,10 @@ const Auth = () => {
       }
     };
     
-    fetchData();
-  }, []);
+    if (userType === 'mentor') {
+      fetchData();
+    }
+  }, [userType]);
 
   // Handle login
   const onLoginSubmit = async (values: LoginFormValues) => {
@@ -124,14 +152,11 @@ const Auth = () => {
     }
   };
 
-  // Handle register
-  const onRegisterSubmit = async (values: RegisterFormValues) => {
+  // Handle student register
+  const onStudentRegisterSubmit = async (values: StudentRegisterFormValues) => {
     setIsLoading(true);
     try {
-      const { email, password, firstName, lastName, userType, schoolId, majorId } = values;
-
-      // Map the userType to the correct role
-      const role = userType === 'mentor' ? 'mentor' : 'student';
+      const { email, password, firstName, lastName } = values;
 
       await signUp({ 
         email, 
@@ -139,9 +164,7 @@ const Auth = () => {
         firstName, 
         lastName,
         metadata: {
-          role,
-          school_id: schoolId,
-          major_id: majorId
+          role: 'student'
         }
       });
 
@@ -151,13 +174,46 @@ const Auth = () => {
       });
 
       await signIn({ email, password });
+      navigate('/profile-complete');
       
-      // Redirect based on user role
-      if (userType === "mentor") {
-        navigate('/mentor-dashboard');
-      } else {
-        navigate('/student-dashboard');
-      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration failed",
+        description: error.message || "Failed to create account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle mentor register
+  const onMentorRegisterSubmit = async (values: MentorRegisterFormValues) => {
+    setIsLoading(true);
+    try {
+      const { email, password, firstName, lastName, schoolId, majorId } = values;
+
+      await signUp({ 
+        email, 
+        password, 
+        firstName, 
+        lastName,
+        metadata: {
+          role: 'mentor',
+          school_id: schoolId,
+          major_id: majorId
+        }
+      });
+
+      toast({
+        title: "Registration successful",
+        description: "Your account has been created. Please complete your mentor profile.",
+      });
+
+      await signIn({ email, password });
+      navigate('/mentor-profile-complete');
+      
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
@@ -172,7 +228,8 @@ const Auth = () => {
 
   const handleUserTypeChange = (value: string) => {
     setUserType(value as 'student' | 'mentor');
-    registerForm.setValue('userType', value as 'student' | 'mentor');
+    studentRegisterForm.setValue('userType', value as 'student' | 'mentor');
+    mentorRegisterForm.setValue('userType', value as 'student' | 'mentor');
   };
 
   return (
@@ -223,74 +280,7 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="register" className="space-y-4">
-              <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input 
-                      id="firstName" 
-                      placeholder="John" 
-                      {...registerForm.register('firstName')} 
-                    />
-                    {registerForm.formState.errors.firstName && (
-                      <p className="text-red-500 text-sm">{registerForm.formState.errors.firstName.message}</p>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input 
-                      id="lastName" 
-                      placeholder="Doe" 
-                      {...registerForm.register('lastName')} 
-                    />
-                    {registerForm.formState.errors.lastName && (
-                      <p className="text-red-500 text-sm">{registerForm.formState.errors.lastName.message}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="reg-email">Email</Label>
-                  <Input 
-                    id="reg-email" 
-                    type="email" 
-                    placeholder="your@email.com" 
-                    {...registerForm.register('email')} 
-                  />
-                  {registerForm.formState.errors.email && (
-                    <p className="text-red-500 text-sm">{registerForm.formState.errors.email.message}</p>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-password">Password</Label>
-                    <Input 
-                      id="reg-password" 
-                      type="password" 
-                      placeholder="••••••••" 
-                      {...registerForm.register('password')} 
-                    />
-                    {registerForm.formState.errors.password && (
-                      <p className="text-red-500 text-sm">{registerForm.formState.errors.password.message}</p>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input 
-                      id="confirmPassword" 
-                      type="password" 
-                      placeholder="••••••••" 
-                      {...registerForm.register('confirmPassword')} 
-                    />
-                    {registerForm.formState.errors.confirmPassword && (
-                      <p className="text-red-500 text-sm">{registerForm.formState.errors.confirmPassword.message}</p>
-                    )}
-                  </div>
-                </div>
-                
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>I am a:</Label>
                   <RadioGroup 
@@ -308,53 +298,197 @@ const Auth = () => {
                     </div>
                   </RadioGroup>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="school">University</Label>
-                  <Select 
-                    onValueChange={(value) => registerForm.setValue('schoolId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your university" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {schools.map((school) => (
-                        <SelectItem key={school.id} value={school.id}>
-                          {school.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {registerForm.formState.errors.schoolId && (
-                    <p className="text-red-500 text-sm">{registerForm.formState.errors.schoolId.message}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="major">Major</Label>
-                  <Select 
-                    onValueChange={(value) => registerForm.setValue('majorId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your major" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {majors.map((major) => (
-                        <SelectItem key={major.id} value={major.id}>
-                          {major.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {registerForm.formState.errors.majorId && (
-                    <p className="text-red-500 text-sm">{registerForm.formState.errors.majorId.message}</p>
-                  )}
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Creating account...' : 'Create account'}
-                </Button>
-              </form>
+
+                {userType === 'student' ? (
+                  <form onSubmit={studentRegisterForm.handleSubmit(onStudentRegisterSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input 
+                          id="firstName" 
+                          placeholder="John" 
+                          {...studentRegisterForm.register('firstName')} 
+                        />
+                        {studentRegisterForm.formState.errors.firstName && (
+                          <p className="text-red-500 text-sm">{studentRegisterForm.formState.errors.firstName.message}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input 
+                          id="lastName" 
+                          placeholder="Doe" 
+                          {...studentRegisterForm.register('lastName')} 
+                        />
+                        {studentRegisterForm.formState.errors.lastName && (
+                          <p className="text-red-500 text-sm">{studentRegisterForm.formState.errors.lastName.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="reg-email">Email</Label>
+                      <Input 
+                        id="reg-email" 
+                        type="email" 
+                        placeholder="your@email.com" 
+                        {...studentRegisterForm.register('email')} 
+                      />
+                      {studentRegisterForm.formState.errors.email && (
+                        <p className="text-red-500 text-sm">{studentRegisterForm.formState.errors.email.message}</p>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-password">Password</Label>
+                        <Input 
+                          id="reg-password" 
+                          type="password" 
+                          placeholder="••••••••" 
+                          {...studentRegisterForm.register('password')} 
+                        />
+                        {studentRegisterForm.formState.errors.password && (
+                          <p className="text-red-500 text-sm">{studentRegisterForm.formState.errors.password.message}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                        <Input 
+                          id="confirmPassword" 
+                          type="password" 
+                          placeholder="••••••••" 
+                          {...studentRegisterForm.register('confirmPassword')} 
+                        />
+                        {studentRegisterForm.formState.errors.confirmPassword && (
+                          <p className="text-red-500 text-sm">{studentRegisterForm.formState.errors.confirmPassword.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? 'Creating account...' : 'Create student account'}
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={mentorRegisterForm.handleSubmit(onMentorRegisterSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="mentor-firstName">First Name</Label>
+                        <Input 
+                          id="mentor-firstName" 
+                          placeholder="John" 
+                          {...mentorRegisterForm.register('firstName')} 
+                        />
+                        {mentorRegisterForm.formState.errors.firstName && (
+                          <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.firstName.message}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="mentor-lastName">Last Name</Label>
+                        <Input 
+                          id="mentor-lastName" 
+                          placeholder="Doe" 
+                          {...mentorRegisterForm.register('lastName')} 
+                        />
+                        {mentorRegisterForm.formState.errors.lastName && (
+                          <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.lastName.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="mentor-email">Email</Label>
+                      <Input 
+                        id="mentor-email" 
+                        type="email" 
+                        placeholder="your@email.com" 
+                        {...mentorRegisterForm.register('email')} 
+                      />
+                      {mentorRegisterForm.formState.errors.email && (
+                        <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.email.message}</p>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="mentor-password">Password</Label>
+                        <Input 
+                          id="mentor-password" 
+                          type="password" 
+                          placeholder="••••••••" 
+                          {...mentorRegisterForm.register('password')} 
+                        />
+                        {mentorRegisterForm.formState.errors.password && (
+                          <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.password.message}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="mentor-confirmPassword">Confirm Password</Label>
+                        <Input 
+                          id="mentor-confirmPassword" 
+                          type="password" 
+                          placeholder="••••••••" 
+                          {...mentorRegisterForm.register('confirmPassword')} 
+                        />
+                        {mentorRegisterForm.formState.errors.confirmPassword && (
+                          <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.confirmPassword.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="school">University</Label>
+                      <Select 
+                        onValueChange={(value) => mentorRegisterForm.setValue('schoolId', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your university" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {schools.map((school) => (
+                            <SelectItem key={school.id} value={school.id}>
+                              {school.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {mentorRegisterForm.formState.errors.schoolId && (
+                        <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.schoolId.message}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="major">Major</Label>
+                      <Select 
+                        onValueChange={(value) => mentorRegisterForm.setValue('majorId', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your major" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {majors.map((major) => (
+                            <SelectItem key={major.id} value={major.id}>
+                              {major.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {mentorRegisterForm.formState.errors.majorId && (
+                        <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.majorId.message}</p>
+                      )}
+                    </div>
+                    
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? 'Creating account...' : 'Create mentor account'}
+                    </Button>
+                  </form>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
