@@ -29,8 +29,12 @@ export const NavbarUserSection = () => {
       navigate('/admin/dashboard');
     } else {
       // Default fallback
-      navigate('/account');
+      navigate('/my-account');
     }
+  };
+
+  const goToAccount = () => {
+    navigate('/my-account');
   };
 
   const handleSignOut = async () => {
@@ -67,7 +71,7 @@ export const NavbarUserSection = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/account')}>
+        <DropdownMenuItem onClick={goToAccount}>
           <User className="mr-2 h-4 w-4" />
           View Account
         </DropdownMenuItem>

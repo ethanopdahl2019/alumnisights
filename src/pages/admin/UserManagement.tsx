@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { 
   Table, 
@@ -34,10 +35,16 @@ interface User {
   last_sign_in_at?: string;
 }
 
+interface UserProfile {
+  user_id: string;
+  visible: boolean;
+}
+
 const UserManagement = () => {
   const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [loadingUsers, setLoadingUsers] = useState(true);
 
   // Fetch all users using Edge Function
@@ -66,11 +73,70 @@ const UserManagement = () => {
 
       const data = await response.json();
       setUsers(data.users || []);
+      
+      // Fetch user profiles for visibility settings
+      await fetchUserProfiles(data.users || []);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users: " + (error as Error).message);
     } finally {
       setLoadingUsers(false);
+    }
+  };
+
+  // Fetch user profiles for visibility settings
+  const fetchUserProfiles = async (usersList: User[]) => {
+    try {
+      const userIds = usersList.map(u => u.id);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, visible')
+        .in('user_id', userIds);
+
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        return;
+      }
+
+      const profilesMap: Record<string, UserProfile> = {};
+      data.forEach(profile => {
+        profilesMap[profile.user_id] = profile;
+      });
+      
+      setUserProfiles(profilesMap);
+    } catch (error) {
+      console.error('Failed to fetch user profiles:', error);
+    }
+  };
+
+  // Update user visibility
+  const updateUserVisibility = async (userId: string, visible: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: userId,
+          visible: visible
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Error updating visibility:', error);
+        toast.error('Failed to update user visibility');
+        return;
+      }
+
+      // Update local state
+      setUserProfiles(prev => ({
+        ...prev,
+        [userId]: { ...prev[userId], user_id: userId, visible }
+      }));
+
+      toast.success(`User visibility ${visible ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Failed to update user visibility:', error);
+      toast.error('Failed to update user visibility');
     }
   };
 
@@ -150,42 +216,56 @@ const UserManagement = () => {
                       <TableHead>Role</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Last Login</TableHead>
+                      <TableHead>Visible in Browse</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                            <AvatarFallback>
-                              {(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            {user.user_metadata?.first_name && user.user_metadata?.last_name ? (
-                              `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
-                            ) : (
-                              <span className="text-muted-foreground">No name</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.user_metadata?.role === 'admin' ? 'destructive' : 'outline'}>
-                            {user.user_metadata?.role || 'user'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {user.last_sign_in_at ? 
-                            new Date(user.last_sign_in_at).toLocaleDateString() : 
-                            'Never'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {users.map((user) => {
+                      const profile = userProfiles[user.id];
+                      const isVisible = profile?.visible !== false; // Default to true if no profile
+                      
+                      return (
+                        <TableRow key={user.id}>
+                          <TableCell className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                              <AvatarFallback>
+                                {(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              {user.user_metadata?.first_name && user.user_metadata?.last_name ? (
+                                `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+                              ) : (
+                                <span className="text-muted-foreground">No name</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.user_metadata?.role === 'admin' ? 'destructive' : 'outline'}>
+                              {user.user_metadata?.role || 'user'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {user.last_sign_in_at ? 
+                              new Date(user.last_sign_in_at).toLocaleDateString() : 
+                              'Never'}
+                          </TableCell>
+                          <TableCell>
+                            <Checkbox
+                              checked={isVisible}
+                              onCheckedChange={(checked) => 
+                                updateUserVisibility(user.id, checked as boolean)
+                              }
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

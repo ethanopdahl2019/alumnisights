@@ -16,8 +16,8 @@ import {
   SelectValue,
   SelectLabel
 } from "@/components/ui/select";
-import { getAllUniversities, UniversityData } from "@/pages/insights/universities/universities-data";
 import SearchInput from "@/components/SearchInput";
+import UniversitySearchSelect from "@/components/UniversitySearchSelect";
 import { useForm } from "react-hook-form";
 import { getMajors, Major } from "@/services/majors";
 
@@ -37,7 +37,6 @@ interface RegistrationPreviewProps {
 
 const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPreviewProps) => {
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
-  const [universitySearchTerm, setUniversitySearchTerm] = useState<string>("");
   const [majorSearchTerm, setMajorSearchTerm] = useState<string>("");
   const [majors, setMajors] = useState<Array<Major>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -251,18 +250,11 @@ const RegistrationPreview = ({ registrationType = 'student' }: RegistrationPrevi
                 
                 <div className="space-y-2">
                   <Label htmlFor="university">University</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your university" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {universityOptions.map((university) => (
-                        <SelectItem key={university.id} value={university.id}>
-                          {university.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <UniversitySearchSelect
+                    value={selectedUniversity}
+                    onSelect={setSelectedUniversity}
+                    placeholder="Type to search universities..."
+                  />
                 </div>
                 
                 <div className="space-y-2">

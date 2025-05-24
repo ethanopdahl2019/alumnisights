@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -14,13 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { signUp, signIn } from '@/services/auth';
 import { getMajors } from '@/services/majors';
 import { getSchools } from '@/services/profiles';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import UniversitySearchSelect from '@/components/UniversitySearchSelect';
 import { School, Major } from '@/types/database';
 
 // Define form schemas
@@ -65,6 +58,7 @@ const Auth = () => {
   const [userType, setUserType] = useState<'student' | 'mentor'>('student');
   const [schools, setSchools] = useState<School[]>([]);
   const [majors, setMajors] = useState<Major[]>([]);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string>("");
   const navigate = useNavigate();
   
   // Login form
@@ -443,20 +437,14 @@ const Auth = () => {
                     
                     <div className="space-y-2">
                       <Label htmlFor="school">University</Label>
-                      <Select 
-                        onValueChange={(value) => mentorRegisterForm.setValue('schoolId', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your university" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {schools.map((school) => (
-                            <SelectItem key={school.id} value={school.id}>
-                              {school.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <UniversitySearchSelect
+                        value={selectedUniversityId}
+                        onSelect={(universityId) => {
+                          setSelectedUniversityId(universityId);
+                          mentorRegisterForm.setValue('schoolId', universityId);
+                        }}
+                        placeholder="Type to search universities..."
+                      />
                       {mentorRegisterForm.formState.errors.schoolId && (
                         <p className="text-red-500 text-sm">{mentorRegisterForm.formState.errors.schoolId.message}</p>
                       )}
