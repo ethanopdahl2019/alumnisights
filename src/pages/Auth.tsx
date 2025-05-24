@@ -101,7 +101,7 @@ const Auth = () => {
       password: '',
       confirmPassword: '',
       userType: 'mentor',
-      schoolId: '',
+      universityId: '',
       majorId: '',
     },
   });
