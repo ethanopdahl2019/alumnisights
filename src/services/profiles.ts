@@ -24,18 +24,19 @@ const parseSocialLinks = (socialLinks: any): Record<string, any> | null => {
   return null;
 };
 
-// Add image when projecting schools
+// Updated to handle both school_id and university_id
 export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select(`
       *,
       school:schools(id, name, location, type, image, created_at),
+      university:universities(id, name, state, type),
       major:majors(*),
       activities:profile_activities(activities(*))
     `)
     .eq('featured', true)
-    .eq('visible', true) // Only get visible profiles
+    .eq('visible', true)
     .limit(3);
 
   if (error) {
@@ -45,10 +46,14 @@ export async function getFeaturedProfiles(): Promise<ProfileWithDetails[]> {
 
   return profiles.map(profile => ({
     ...profile,
-    school: {
-      ...profile.school,
-      image: profile.school?.image ?? null
-    },
+    school: profile.school || (profile.university ? {
+      id: profile.university.id,
+      name: profile.university.name,
+      location: profile.university.state,
+      type: profile.university.type,
+      image: null,
+      created_at: null
+    } : null),
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni' | 'mentor',
     social_links: parseSocialLinks(profile.social_links)
@@ -61,10 +66,11 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
     .select(`
       *,
       school:schools(id, name, location, type, image, created_at),
+      university:universities(id, name, state, type),
       major:majors(*),
       activities:profile_activities(activities(*))
     `)
-    .eq('visible', true); // Only get visible profiles
+    .eq('visible', true);
 
   if (error) {
     console.error('Error fetching profiles:', error);
@@ -73,10 +79,14 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
 
   return profiles.map(profile => ({
     ...profile,
-    school: {
-      ...profile.school,
-      image: profile.school?.image ?? null
-    },
+    school: profile.school || (profile.university ? {
+      id: profile.university.id,
+      name: profile.university.name,
+      location: profile.university.state,
+      type: profile.university.type,
+      image: null,
+      created_at: null
+    } : null),
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni' | 'mentor',
     social_links: parseSocialLinks(profile.social_links)
@@ -89,11 +99,12 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     .select(`
       *,
       school:schools(id, name, location, type, image, created_at),
+      university:universities(id, name, state, type),
       major:majors(*),
       activities:profile_activities(activities(*))
     `)
     .eq('id', id)
-    .maybeSingle(); // more reliable than .single()
+    .maybeSingle();
 
   if (error) {
     console.error('Error fetching profile:', error);
@@ -104,10 +115,14 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
 
   return {
     ...profile,
-    school: {
-      ...profile.school,
-      image: profile.school?.image ?? null
-    },
+    school: profile.school || (profile.university ? {
+      id: profile.university.id,
+      name: profile.university.name,
+      location: profile.university.state,
+      type: profile.university.type,
+      image: null,
+      created_at: null
+    } : null),
     activities: profile.activities.map((pa: any) => pa.activities),
     role: profile.role as 'applicant' | 'alumni' | 'mentor',
     social_links: parseSocialLinks(profile.social_links)

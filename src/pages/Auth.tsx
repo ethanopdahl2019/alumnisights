@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -13,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from '@/hooks/use-toast';
 import { signUp, signIn } from '@/services/auth';
 import { getMajors } from '@/services/majors';
-import { getUniversities } from '@/services/universities';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Select, 
   SelectContent, 
@@ -36,7 +35,7 @@ const registerFormSchema = z.object({
   password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
   confirmPassword: z.string().min(8, { message: 'Please confirm your password' }),
   userType: z.enum(['student', 'mentor']),
-  schoolId: z.string().optional(),
+  universityId: z.string().optional(),
   majorId: z.string().optional(),
 }).refine(
   (data) => data.password === data.confirmPassword, 
@@ -46,15 +45,15 @@ const registerFormSchema = z.object({
   }
 ).refine(
   (data) => {
-    // Only require school and major if user is a mentor
+    // Only require university and major if user is a mentor
     if (data.userType === 'mentor') {
-      return !!data.schoolId && !!data.majorId;
+      return !!data.universityId && !!data.majorId;
     }
     return true;
   },
   {
-    message: "School and major are required for mentors",
-    path: ["schoolId"],
+    message: "University and major are required for mentors",
+    path: ["universityId"],
   }
 );
 
@@ -99,7 +98,7 @@ const Auth = () => {
       password: '',
       confirmPassword: '',
       userType: 'student',
-      schoolId: '',
+      universityId: '',
       majorId: '',
     },
   });
@@ -109,10 +108,13 @@ const Auth = () => {
     const fetchData = async () => {
       try {
         const [universitiesData, majorsData] = await Promise.all([
-          getUniversities(),
+          supabase.from('universities').select('id, name').order('name'),
           getMajors()
         ]);
-        setUniversities(universitiesData);
+        
+        if (universitiesData.data) {
+          setUniversities(universitiesData.data);
+        }
         setMajors(majorsData);
       } catch (error) {
         console.error("Failed to load form data:", error);
@@ -154,15 +156,15 @@ const Auth = () => {
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const { email, password, firstName, lastName, userType, schoolId, majorId } = values;
+      const { email, password, firstName, lastName, userType, universityId, majorId } = values;
 
       // Map the userType to the correct role
       const role = userType === 'mentor' ? 'mentor' : 'student';
 
-      // Only include school and major for mentors
+      // Only include university and major for mentors
       const metadata: Record<string, any> = { role };
-      if (userType === 'mentor' && schoolId && majorId) {
-        metadata.school_id = schoolId;
+      if (userType === 'mentor' && universityId && majorId) {
+        metadata.university_id = universityId;
         metadata.major_id = majorId;
       }
 
@@ -181,12 +183,8 @@ const Auth = () => {
 
       await signIn({ email, password });
       
-      // Redirect based on user role
-      if (userType === "mentor") {
-        navigate('/mentor-dashboard');
-      } else {
-        navigate('/student-dashboard');
-      }
+      // Redirect to profile completion page
+      navigate('/profile-complete');
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
@@ -203,9 +201,9 @@ const Auth = () => {
     setUserType(value as 'student' | 'mentor');
     registerForm.setValue('userType', value as 'student' | 'mentor');
     
-    // Clear school and major values if switching to student
+    // Clear university and major values if switching to student
     if (value === 'student') {
-      registerForm.setValue('schoolId', '');
+      registerForm.setValue('universityId', '');
       registerForm.setValue('majorId', '');
     }
   };
@@ -348,9 +346,9 @@ const Auth = () => {
                 {userType === 'mentor' && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="school">University</Label>
+                      <Label htmlFor="university">University</Label>
                       <Select 
-                        onValueChange={(value) => registerForm.setValue('schoolId', value)}
+                        onValueChange={(value) => registerForm.setValue('universityId', value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select your university" />
@@ -363,8 +361,8 @@ const Auth = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {registerForm.formState.errors.schoolId && (
-                        <p className="text-red-500 text-sm">{registerForm.formState.errors.schoolId.message}</p>
+                      {registerForm.formState.errors.universityId && (
+                        <p className="text-red-500 text-sm">{registerForm.formState.errors.universityId.message}</p>
                       )}
                     </div>
                     

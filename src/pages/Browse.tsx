@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { School, Major, Activity, ProfileWithDetails } from '@/types/database';
@@ -26,10 +25,11 @@ const Browse = () => {
           .select(`
             *,
             school:schools(id, name, location, type, image, created_at),
+            university:universities(id, name, state, type),
             major:majors(*),
             activities:profile_activities(activities(*))
           `)
-          .eq('visible', true), // Only get profiles that are set to be visible
+          .eq('visible', true),
         supabase.from('schools').select('id, name, location, type, image, created_at'),
         supabase.from('majors').select('*'),
         supabase.from('activities').select('*')
@@ -51,12 +51,15 @@ const Browse = () => {
           
           return {
             ...profile,
-            school: {
-              ...profile.school,
-              image: profile.school?.image ?? null
-            },
+            school: profile.school || (profile.university ? {
+              id: profile.university.id,
+              name: profile.university.name,
+              location: profile.university.state,
+              type: profile.university.type,
+              image: null,
+              created_at: null
+            } : null),
             activities: profile.activities.map((pa: any) => pa.activities),
-            // Explicitly cast the role to the correct type
             role: (profile.role as 'applicant' | 'alumni' | 'mentor') || 'applicant',
             social_links: socialLinks
           };
