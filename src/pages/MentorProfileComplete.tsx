@@ -54,9 +54,9 @@ const mentorProfileFormSchema = z.object({
   activities: z.array(z.string()).optional(),
   clubs: z.array(z.string()).optional(),
   greekLife: z.string().optional(),
-  price15Min: z.string().optional(),
-  price30Min: z.string().optional(),
-  price60Min: z.string().optional(),
+  price15Min: z.number().min(1, { message: 'Price must be greater than 0' }).optional(),
+  price30Min: z.number().min(1, { message: 'Price must be greater than 0' }).optional(),
+  price60Min: z.number().min(1, { message: 'Price must be greater than 0' }).optional(),
   hasAdvancedDegree: z.boolean().optional(),
   advancedDegrees: z.array(advancedDegreeSchema).optional(),
 });
@@ -140,9 +140,9 @@ const MentorProfileComplete = () => {
       activities: [],
       clubs: [],
       greekLife: '',
-      price15Min: '',
-      price30Min: '',
-      price60Min: '',
+      price15Min: undefined,
+      price30Min: undefined,
+      price60Min: undefined,
       hasAdvancedDegree: false,
       advancedDegrees: [],
     },
@@ -247,9 +247,9 @@ const MentorProfileComplete = () => {
         headline: values.headline,
         graduation_year: parseInt(values.graduationYear),
         location: values.location,
-        price_15_min: values.price15Min ? parseFloat(values.price15Min) : null,
-        price_30_min: values.price30Min ? parseFloat(values.price30Min) : null,
-        price_60_min: values.price60Min ? parseFloat(values.price60Min) : null,
+        price_15_min: values.price15Min || null,
+        price_30_min: values.price30Min || null,
+        price_60_min: values.price60Min || null,
         visible: true,
         university_id: universityId,
         achievements: [
@@ -600,7 +600,12 @@ const MentorProfileComplete = () => {
                   id="price15Min" 
                   placeholder="e.g., 25" 
                   type="number"
-                  {...form.register('price15Min')} 
+                  min="1"
+                  step="1"
+                  onChange={(e) => {
+                    const value = e.target.value ? parseInt(e.target.value) : undefined;
+                    form.setValue('price15Min', value);
+                  }}
                 />
                 {form.formState.errors.price15Min && (
                   <p className="text-red-500 text-sm">{form.formState.errors.price15Min.message}</p>
@@ -613,7 +618,12 @@ const MentorProfileComplete = () => {
                   id="price30Min" 
                   placeholder="e.g., 40" 
                   type="number"
-                  {...form.register('price30Min')} 
+                  min="1"
+                  step="1"
+                  onChange={(e) => {
+                    const value = e.target.value ? parseInt(e.target.value) : undefined;
+                    form.setValue('price30Min', value);
+                  }}
                 />
                 {form.formState.errors.price30Min && (
                   <p className="text-red-500 text-sm">{form.formState.errors.price30Min.message}</p>
@@ -626,7 +636,12 @@ const MentorProfileComplete = () => {
                   id="price60Min" 
                   placeholder="e.g., 75"
                   type="number"
-                  {...form.register('price60Min')} 
+                  min="1"
+                  step="1"
+                  onChange={(e) => {
+                    const value = e.target.value ? parseInt(e.target.value) : undefined;
+                    form.setValue('price60Min', value);
+                  }}
                 />
                 {form.formState.errors.price60Min && (
                   <p className="text-red-500 text-sm">{form.formState.errors.price60Min.message}</p>

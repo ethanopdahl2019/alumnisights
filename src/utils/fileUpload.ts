@@ -30,15 +30,10 @@ export async function uploadFileToStorage({
     const sanitizedResourceId = resourceId ? resourceId.replace(/[^a-zA-Z0-9-]/g, '_') : 'new';
     const fileName = `${sanitizedResourceId}-${prefix}-${Date.now()}.${fileExt}`;
     
-    // Determine bucket and path based on prefix
-    let bucketName = 'university-content';
-    let filePath = `universities/${sanitizedResourceId}/${prefix}/${fileName}`;
+    // Use university-content bucket for all uploads since it exists
+    const bucketName = 'university-content';
+    let filePath = `profiles/${sanitizedResourceId}/${fileName}`;
     
-    if (prefix === 'profile') {
-      bucketName = 'profile-photos';
-      filePath = `${sanitizedResourceId}/${fileName}`;
-    }
-
     console.log("Uploading to bucket:", bucketName, "path:", filePath);
 
     // Verify the bucket exists before attempting upload
@@ -58,7 +53,7 @@ export async function uploadFileToStorage({
       return null;
     }
 
-    // Upload the file to the appropriate bucket
+    // Upload the file to the university-content bucket
     const { error: uploadError, data } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file, {
