@@ -4,20 +4,15 @@ import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/components/AuthProvider";
 import { isMentor, isAdmin } from "@/services/auth";
 import { toast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { UserPlus, VideoIcon, Calendar, Clock } from "lucide-react";
-import ReferAlumniDialog from "@/components/mentor/ReferAlumniDialog";
-import MyReferrals from "@/components/mentor/MyReferrals";
-import RegistrationPreview from "@/components/mentor/RegistrationPreview";
-import { supabase } from "@/integrations/supabase/client";
+import { VideoIcon, CalendarIcon, DollarSign, Users, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MyReferrals from "@/components/mentor/MyReferrals";
 
 // Define interface for column check response
 interface ColumnCheckResponse {
@@ -31,8 +26,9 @@ interface Booking {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   zoom_link: string | null;
   student: {
+    id: string;
     name: string;
-    email?: string;
+    image: string | null;
   };
   booking_option: {
     title: string;
@@ -41,173 +37,98 @@ interface Booking {
 }
 
 const MentorDashboard = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin: userIsAdmin } = useAuth();
   const navigate = useNavigate();
-  const [referDialogOpen, setReferDialogOpen] = useState(false);
-  const [refreshReferrals, setRefreshReferrals] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [isLoadingBookings, setIsLoadingBookings] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [zoomLinkDialogOpen, setZoomLinkDialogOpen] = useState(false);
-  const [zoomLink, setZoomLink] = useState("");
-  const [isUpdatingZoomLink, setIsUpdatingZoomLink] = useState(false);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [earnings, setEarnings] = useState({ total: 0, thisMonth: 0 });
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    // Redirect if user is not logged in or not a mentor/admin
-    if (!loading && (!user || (!isMentor(user) && !isAdmin(user)))) {
-      toast({
-        variant: "destructive",
-        title: "Access Denied",
-        description: "You must be a mentor to access this dashboard",
-      });
-      navigate("/");
+    // Allow access for mentors OR admins
+    if (!loading) {
+      console.log('MentorDashboard - user:', user?.email, 'isMentor:', user ? isMentor(user) : false, 'isAdmin:', userIsAdmin);
+      
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You must be logged in to access this dashboard",
+        });
+        navigate("/auth");
+        return;
+      }
+      
+      // Allow access if user is mentor OR admin
+      if (!isMentor(user) && !userIsAdmin) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You must be a mentor to access this dashboard",
+        });
+        navigate("/");
+        return;
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, userIsAdmin, navigate]);
 
   useEffect(() => {
-    const fetchBookings = async () => {
+    const fetchData = async () => {
       if (!user) return;
-
-      setIsLoadingBookings(true);
+      
+      setIsLoadingData(true);
       try {
-        // Get the mentor's profile ID
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-
-        if (profileError) {
-          throw profileError;
-        }
-
-        // Fetch bookings with student profiles and booking options
-        const { data, error } = await supabase
+        // Fetch bookings for the mentor
+        const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
           .select(`
-            id, scheduled_at, status, zoom_link, 
-            booking_options(title, duration), 
-            user_id
+            id, 
+            scheduled_at, 
+            status, 
+            zoom_link,
+            profiles!bookings_user_id_fkey(id, name, image),
+            booking_options(title, duration)
           `)
-          .eq('profile_id', profileData.id)
+          .eq('profile_id', user.id)
           .order('scheduled_at', { ascending: true });
 
-        if (error) {
-          throw error;
+        if (bookingsError) {
+          throw bookingsError;
         }
 
-        if (!data) {
-          setBookings([]);
-          setIsLoadingBookings(false);
-          return;
-        }
-
-        // Get student names separately (since we need to join with auth.users)
-        const studentDetails = await Promise.all(
-          data.map(async (booking) => {
-            try {
-              const bookingData = booking as any;
-              
-              const { data: userData, error: userError } = await supabase
-                .from('profiles')
-                .select('name')
-                .eq('user_id', bookingData.user_id)
-                .single();
-
-              if (userError) throw userError;
-
-              return {
-                id: bookingData.id,
-                name: userData?.name || 'Anonymous Student'
-              };
-            } catch (e) {
-              console.error('Error fetching student details:', e);
-              return {
-                id: (booking as any).id,
-                name: 'Anonymous Student'
-              };
-            }
-          })
-        );
-
-        // Combine the data
-        const formattedBookings = data.map(booking => {
-          const bookingData = booking as any;
-          const student = studentDetails.find(s => s.id === bookingData.id);
-          return {
-            id: bookingData.id,
-            scheduled_at: bookingData.scheduled_at,
-            status: bookingData.status,
-            zoom_link: bookingData.zoom_link,
-            student: { name: student?.name || 'Anonymous Student' },
-            booking_option: bookingData.booking_options || { title: 'Session', duration: '30 min' }
-          };
-        });
-
+        // Format bookings data
+        const formattedBookings = bookingsData.map(booking => ({
+          id: booking.id,
+          scheduled_at: booking.scheduled_at,
+          status: booking.status,
+          zoom_link: booking.zoom_link,
+          student: {
+            id: booking.profiles.id,
+            name: booking.profiles.name || 'Unknown',
+            image: booking.profiles.image
+          },
+          booking_option: booking.booking_options || { title: 'Session', duration: '30 min' }
+        }));
         setBookings(formattedBookings);
+
+        // Fetch earnings (example - replace with actual logic)
+        setEarnings({ total: 500, thisMonth: 150 });
       } catch (error) {
-        console.error('Error fetching bookings:', error);
+        console.error('Error fetching data:', error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load bookings",
+          description: "Failed to load dashboard data",
         });
       } finally {
-        setIsLoadingBookings(false);
+        setIsLoadingData(false);
       }
     };
 
     if (user && !loading) {
-      fetchBookings();
+      fetchData();
     }
   }, [user, loading]);
-
-  const handleOpenZoomLinkDialog = (booking: Booking) => {
-    setSelectedBooking(booking);
-    setZoomLink(booking.zoom_link || '');
-    setZoomLinkDialogOpen(true);
-  };
-
-  const handleUpdateZoomLink = async () => {
-    if (!selectedBooking) return;
-    
-    setIsUpdatingZoomLink(true);
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          zoom_link: zoomLink,
-          status: 'confirmed' 
-        })
-        .eq('id', selectedBooking.id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Zoom link updated",
-        description: "The meeting link has been successfully added",
-      });
-      
-      // Update local state
-      setBookings(bookings.map(booking => 
-        booking.id === selectedBooking.id 
-          ? { ...booking, zoom_link: zoomLink, status: 'confirmed' } 
-          : booking
-      ));
-      
-      setZoomLinkDialogOpen(false);
-    } catch (error) {
-      console.error('Error updating zoom link:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update the Zoom link",
-      });
-    } finally {
-      setIsUpdatingZoomLink(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -217,20 +138,10 @@ const MentorDashboard = () => {
     );
   }
 
-  if (!user || (!isMentor(user) && !isAdmin(user))) {
+  // Allow access if user is mentor OR admin
+  if (!user || (!isMentor(user) && !userIsAdmin)) {
     return null; // Will redirect via useEffect
   }
-
-  const handleReferralComplete = () => {
-    setRefreshReferrals(prev => !prev);
-  };
-
-  const isUserAdmin = isAdmin(user);
-  
-  const upcomingBookings = bookings.filter(booking => 
-    new Date(booking.scheduled_at) > new Date() && 
-    (booking.status === 'pending' || booking.status === 'confirmed')
-  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -240,97 +151,87 @@ const MentorDashboard = () => {
       <Navbar />
       
       <main className="flex-grow container-custom py-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-3xl font-bold text-navy">Mentor Dashboard</h1>
-          <Button 
-            className="mt-4 md:mt-0 flex items-center gap-2" 
-            onClick={() => setReferDialogOpen(true)}
-          >
-            <UserPlus className="h-4 w-4" />
-            Refer an Alumni
-          </Button>
-        </div>
+        {userIsAdmin && (
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <p className="text-blue-800 font-medium">
+              👑 Admin View: You're viewing the Mentor Dashboard as an administrator
+            </p>
+          </div>
+        )}
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+        <h1 className="text-3xl font-bold text-navy mb-6">Mentor Dashboard</h1>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="sessions">Sessions</TabsTrigger>
-            {isUserAdmin && <TabsTrigger value="registration-preview">Registration Preview</TabsTrigger>}
+            <TabsTrigger value="referrals">Referrals</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="dashboard" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Profile</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600">
-                    Update your mentor profile and expertise areas
-                  </p>
-                  <div className="mt-4">
-                    <Button 
-                      variant="outline"
-                      className="text-blue-600 text-sm font-medium"
-                      onClick={() => navigate('/account')}
-                    >
-                      Edit Profile
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <MyReferrals key={refreshReferrals ? 'refresh' : 'initial'} />
-            </div>
-            
+          <TabsContent value="overview">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Student Requests</CardTitle>
+                  <CardTitle>Earnings</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-600">
-                    View and manage student mentoring requests
-                  </p>
-                  <div className="mt-4">
-                    <span className="text-2xl font-bold">
-                      {bookings.filter(b => b.status === 'pending').length}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-2">pending requests</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-500" />
+                      <span className="text-2xl font-bold">${earnings.total}</span>
+                    </div>
+                    <p className="text-sm text-gray-500">Total Earnings</p>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-500" />
+                      <span className="text-xl font-bold">${earnings.thisMonth}</span>
+                    </div>
+                    <p className="text-sm text-gray-500">Earnings This Month</p>
                   </div>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Your Schedule</CardTitle>
+                  <CardTitle>Upcoming Sessions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-600">
-                    Manage your availability and upcoming sessions
-                  </p>
-                  <div className="mt-4">
-                    <span className="text-2xl font-bold">
-                      {upcomingBookings.length}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-2">upcoming sessions</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="h-4 w-4 text-blue-500" />
+                      <span className="text-2xl font-bold">{bookings.filter(b => b.status === 'confirmed').length}</span>
+                    </div>
+                    <p className="text-sm text-gray-500">Confirmed Sessions</p>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-blue-500" />
+                      <span className="text-xl font-bold">{bookings.filter(b => b.status === 'pending').length}</span>
+                    </div>
+                    <p className="text-sm text-gray-500">Pending Requests</p>
                   </div>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Actions Needed</CardTitle>
+                  <CardTitle>Referrals</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-600">
-                    Sessions that require your attention
-                  </p>
-                  <div className="mt-4">
-                    <span className="text-2xl font-bold">
-                      {bookings.filter(b => !b.zoom_link && b.status === 'pending').length}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-2">need Zoom links</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-purple-500" />
+                      <span className="text-2xl font-bold">5</span>
+                    </div>
+                    <p className="text-sm text-gray-500">New Referrals</p>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-purple-500" />
+                      <span className="text-xl font-bold">12</span>
+                    </div>
+                    <p className="text-sm text-gray-500">Total Referrals</p>
                   </div>
                 </CardContent>
               </Card>
@@ -338,147 +239,80 @@ const MentorDashboard = () => {
           </TabsContent>
           
           <TabsContent value="sessions">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Sessions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoadingBookings ? (
-                  <div className="py-8 flex justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                  </div>
-                ) : bookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {bookings.map((booking) => (
-                      <div 
-                        key={booking.id} 
-                        className="border rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-                      >
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-medium">{booking.booking_option.title}</span>
-                            <Badge variant={booking.status === 'confirmed' ? 'default' : booking.status === 'pending' ? 'secondary' : 'outline'}>
-                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                            </Badge>
+            {isLoadingData ? (
+              <div className="flex items-center justify-center min-h-[200px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+              </div>
+            ) : bookings.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {bookings.map((booking) => (
+                  <Card key={booking.id} className="overflow-hidden">
+                    <div className="p-6 flex flex-col md:flex-row gap-4 items-center">
+                      <div className="md:w-16 md:h-16 w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                        {booking.student.image ? (
+                          <img
+                            src={booking.student.image}
+                            alt={booking.student.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
+                            <VideoIcon size={20} />
                           </div>
-                          <p className="text-sm">With {booking.student.name}</p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <div className="flex items-center text-sm text-gray-500">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              {format(new Date(booking.scheduled_at), 'MMMM d, yyyy')}
-                            </div>
-                            <div className="flex items-center text-sm text-gray-500">
-                              <Clock className="h-4 w-4 mr-1" />
-                              {format(new Date(booking.scheduled_at), 'h:mm a')}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="ml-auto">
-                          {booking.zoom_link ? (
-                            <div className="space-y-2">
-                              <a
-                                href={booking.zoom_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition flex items-center gap-1 text-sm"
-                              >
-                                <VideoIcon className="h-3.5 w-3.5" />
-                                Join Meeting
-                              </a>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="w-full text-sm"
-                                onClick={() => handleOpenZoomLinkDialog(booking)}
-                              >
-                                Edit Link
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button 
-                              className="flex items-center gap-1" 
-                              size="sm" 
-                              onClick={() => handleOpenZoomLinkDialog(booking)}
-                            >
-                              <VideoIcon className="h-3.5 w-3.5" />
-                              Add Zoom Link
-                            </Button>
-                          )}
-                        </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-gray-500">You don't have any sessions yet</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      
+                      <div className="flex-grow text-center md:text-left">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+                          <h3 className="font-medium text-lg">{booking.booking_option.title}</h3>
+                          <Badge variant={booking.status === 'confirmed' ? 'default' : booking.status === 'pending' ? 'secondary' : 'outline'}>
+                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                          </Badge>
+                        </div>
+                        <p className="text-sm">Session with {booking.student.name}</p>
+                        <p className="text-sm text-gray-500 flex items-center justify-center md:justify-start gap-1 mt-1">
+                          <CalendarIcon size={14} />
+                          {format(new Date(booking.scheduled_at), 'MMMM d, yyyy - h:mm a')}
+                          <span className="mx-1">•</span>
+                          {booking.booking_option.duration}
+                        </p>
+                      </div>
+                      
+                      {booking.zoom_link ? (
+                        <a
+                          href={booking.zoom_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center gap-2"
+                        >
+                          <VideoIcon size={16} />
+                          Join Meeting
+                        </a>
+                      ) : (
+                        <button
+                          disabled
+                          className="bg-gray-300 text-gray-600 px-4 py-2 rounded-lg flex items-center gap-2 cursor-not-allowed"
+                        >
+                          <VideoIcon size={16} />
+                          Awaiting Link
+                        </button>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <p className="text-gray-500 italic text-center">No sessions found.</p>
+              </div>
+            )}
           </TabsContent>
           
-          {isUserAdmin && (
-            <TabsContent value="registration-preview">
-              <RegistrationPreview />
-            </TabsContent>
-          )}
+          <TabsContent value="referrals">
+            <MyReferrals />
+          </TabsContent>
         </Tabs>
       </main>
-      
-      <Dialog open={zoomLinkDialogOpen} onOpenChange={setZoomLinkDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Zoom Meeting Link</DialogTitle>
-            <DialogDescription>
-              Enter the Zoom meeting link for the session with {selectedBooking?.student.name}
-              on {selectedBooking && format(new Date(selectedBooking.scheduled_at), 'MMMM d, yyyy')} at 
-              {selectedBooking && format(new Date(selectedBooking.scheduled_at), ' h:mm a')}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="zoom-link" className="text-sm font-medium">Zoom Meeting URL</label>
-              <Input
-                id="zoom-link"
-                placeholder="https://zoom.us/j/123456789"
-                value={zoomLink}
-                onChange={(e) => setZoomLink(e.target.value)}
-              />
-            </div>
-            <p className="text-xs text-gray-500">
-              This link will be shared with the student and they'll use it to join the meeting at the scheduled time.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setZoomLinkDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleUpdateZoomLink}
-              disabled={isUpdatingZoomLink || !zoomLink}
-            >
-              {isUpdatingZoomLink ? (
-                <>
-                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full"></div>
-                  Saving...
-                </>
-              ) : (
-                "Save Link"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <ReferAlumniDialog 
-        open={referDialogOpen}
-        onOpenChange={setReferDialogOpen}
-        onReferralComplete={handleReferralComplete}
-      />
       
       <Footer />
     </div>

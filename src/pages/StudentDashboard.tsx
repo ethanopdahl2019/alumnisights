@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -40,7 +39,7 @@ interface Booking {
 }
 
 const StudentDashboard = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin: userIsAdmin } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [completedSessions, setCompletedSessions] = useState<Booking[]>([]);
@@ -48,11 +47,22 @@ const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    // Redirect if user is not logged in or not a student/admin
+    // Allow access for students OR admins
     if (!loading) {
-      console.log('StudentDashboard - user:', user?.email, 'isStudent:', user ? isStudent(user) : false, 'isAdmin:', user ? isAdmin(user) : false);
+      console.log('StudentDashboard - user:', user?.email, 'isStudent:', user ? isStudent(user) : false, 'isAdmin:', userIsAdmin);
       
-      if (!user || (!isStudent(user) && !isAdmin(user))) {
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You must be logged in to access this dashboard",
+        });
+        navigate("/auth");
+        return;
+      }
+      
+      // Allow access if user is student OR admin
+      if (!isStudent(user) && !userIsAdmin) {
         toast({
           variant: "destructive",
           title: "Access Denied",
@@ -62,7 +72,7 @@ const StudentDashboard = () => {
         return;
       }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, userIsAdmin, navigate]);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -135,7 +145,8 @@ const StudentDashboard = () => {
     );
   }
 
-  if (!user || (!isStudent(user) && !isAdmin(user))) {
+  // Allow access if user is student OR admin
+  if (!user || (!isStudent(user) && !userIsAdmin)) {
     return null; // Will redirect via useEffect
   }
 
@@ -147,6 +158,14 @@ const StudentDashboard = () => {
       <Navbar />
       
       <main className="flex-grow container-custom py-10">
+        {userIsAdmin && (
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <p className="text-blue-800 font-medium">
+              👑 Admin View: You're viewing the Student Dashboard as an administrator
+            </p>
+          </div>
+        )}
+        
         <h1 className="text-3xl font-bold text-navy mb-6">Student Dashboard</h1>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">

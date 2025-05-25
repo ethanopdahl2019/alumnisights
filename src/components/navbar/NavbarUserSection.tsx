@@ -23,12 +23,13 @@ export const NavbarUserSection = () => {
     
     console.log('Going to dashboard for user:', user.email, 'isMentor:', isMentor(user), 'isStudent:', isStudent(user), 'isAdmin:', isAdmin);
     
-    if (isMentor(user)) {
+    // Admins can access any dashboard, but default to admin dashboard
+    if (isAdmin) {
+      navigate('/admin');
+    } else if (isMentor(user)) {
       navigate('/mentor-dashboard');
     } else if (isStudent(user)) {
       navigate('/student-dashboard');
-    } else if (isAdmin) {
-      navigate('/admin');
     } else {
       // Default fallback
       navigate('/my-account');
@@ -68,6 +69,7 @@ export const NavbarUserSection = () => {
             <AvatarFallback>{(user.user_metadata?.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}</AvatarFallback>
           </Avatar>
           <span className="hidden md:inline text-sm font-medium text-navy">{user.user_metadata?.first_name || user.email}</span>
+          {isAdmin && <ShieldAlert className="h-4 w-4 text-blue-600" />}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -84,14 +86,18 @@ export const NavbarUserSection = () => {
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-blue-600">Admin Access</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => navigate('/admin')} className="text-blue-600 flex items-center">
               <ShieldAlert className="mr-2 h-4 w-4" />
               Admin Dashboard
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/student-dashboard')}>
+            <DropdownMenuItem onClick={() => navigate('/admin/users')} className="text-blue-600">
+              User Management
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/student-dashboard')} className="text-blue-600">
               Student Dashboard
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')}>
+            <DropdownMenuItem onClick={() => navigate('/mentor-dashboard')} className="text-blue-600">
               Mentor Dashboard
             </DropdownMenuItem>
           </>

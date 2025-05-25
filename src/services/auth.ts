@@ -103,16 +103,19 @@ export function getUserRole(user: any) {
 }
 
 export function isStudent(user: any) {
-  return getUserRole(user) === 'student' || getUserRole(user) === 'applicant';
+  const role = getUserRole(user);
+  return role === 'student' || role === 'applicant';
 }
 
 export function isMentor(user: any) {
-  return getUserRole(user) === 'mentor' || getUserRole(user) === 'alumni';
+  const role = getUserRole(user);
+  return role === 'mentor' || role === 'alumni';
 }
 
 export function isAdmin(user: any) {
   // Check if user has admin role in user_metadata
-  return getUserRole(user) === 'admin';
+  const role = getUserRole(user);
+  return role === 'admin';
 }
 
 export async function updateUserMetadata(metadata: Record<string, any>) {

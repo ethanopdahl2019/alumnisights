@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -208,7 +207,7 @@ const UserManagement = () => {
   };
 
   useEffect(() => {
-    // Check if user is admin
+    // Check if user is admin - only admins can access
     if (!loading) {
       console.log('UserManagement - user:', user?.email, 'isAdmin:', isAdmin);
       
@@ -219,7 +218,7 @@ const UserManagement = () => {
       }
       
       if (!isAdmin) {
-        toast.error("You don't have permission to access this page");
+        toast.error("You don't have permission to access this page - Admin access required");
         navigate('/');
         return;
       }
@@ -248,22 +247,10 @@ const UserManagement = () => {
       <Navbar />
       
       <main className="flex-grow container-custom py-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-3xl font-bold text-navy">User Management</h1>
-          <div className="flex gap-2 mt-4 md:mt-0">
-            <Button
-              variant="outline"
-              onClick={() => fetchUsers()}
-            >
-              Refresh
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/admin')}
-            >
-              Back to Dashboard
-            </Button>
-          </div>
+        <div className="mb-4 p-4 bg-green-50 rounded-lg">
+          <p className="text-green-800 font-medium">
+            👑 Admin Panel: User Management - Full administrative access
+          </p>
         </div>
         
         <Card className="mb-8">
