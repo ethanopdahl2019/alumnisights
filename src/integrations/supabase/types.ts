@@ -1457,16 +1457,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      delete_user_and_data: {
-        Args: { user_id_to_delete: string }
-        Returns: boolean
-      }
       is_admin: {
         Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      update_user_browse_visibility: {
-        Args: { user_id_param: string; visible_param: boolean }
         Returns: boolean
       }
     }

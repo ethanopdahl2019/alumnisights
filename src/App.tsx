@@ -115,7 +115,6 @@ function App() {
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<UserManagement />} />
               <Route path="/admin/analytics" element={<Analytics />} />
               <Route path="/admin/bookings" element={<BookingManagement />} />

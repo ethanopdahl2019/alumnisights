@@ -39,7 +39,7 @@ interface Booking {
 }
 
 const StudentDashboard = () => {
-  const { user, loading, isAdmin: userIsAdmin } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [completedSessions, setCompletedSessions] = useState<Booking[]>([]);
@@ -47,32 +47,16 @@ const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    // Allow access for students OR admins
-    if (!loading) {
-      console.log('StudentDashboard - user:', user?.email, 'isStudent:', user ? isStudent(user) : false, 'isAdmin:', userIsAdmin);
-      
-      if (!user) {
-        toast({
-          variant: "destructive",
-          title: "Access Denied",
-          description: "You must be logged in to access this dashboard",
-        });
-        navigate("/auth");
-        return;
-      }
-      
-      // Allow access if user is student OR admin
-      if (!isStudent(user) && !userIsAdmin) {
-        toast({
-          variant: "destructive",
-          title: "Access Denied",
-          description: "You must be a student to access this dashboard",
-        });
-        navigate("/");
-        return;
-      }
+    // Redirect if user is not logged in or not a student/admin
+    if (!loading && (!user || (!isStudent(user) && !isAdmin(user)))) {
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "You must be a student to access this dashboard",
+      });
+      navigate("/");
     }
-  }, [user, loading, userIsAdmin, navigate]);
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -145,8 +129,7 @@ const StudentDashboard = () => {
     );
   }
 
-  // Allow access if user is student OR admin
-  if (!user || (!isStudent(user) && !userIsAdmin)) {
+  if (!user || (!isStudent(user) && !isAdmin(user))) {
     return null; // Will redirect via useEffect
   }
 
@@ -158,14 +141,6 @@ const StudentDashboard = () => {
       <Navbar />
       
       <main className="flex-grow container-custom py-10">
-        {userIsAdmin && (
-          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-            <p className="text-blue-800 font-medium">
-              👑 Admin View: You're viewing the Student Dashboard as an administrator
-            </p>
-          </div>
-        )}
-        
         <h1 className="text-3xl font-bold text-navy mb-6">Student Dashboard</h1>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">

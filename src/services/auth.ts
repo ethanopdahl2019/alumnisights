@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
@@ -103,19 +102,16 @@ export function getUserRole(user: any) {
 }
 
 export function isStudent(user: any) {
-  const role = getUserRole(user);
-  return role === 'student' || role === 'applicant';
+  return getUserRole(user) === 'student' || getUserRole(user) === 'applicant';
 }
 
 export function isMentor(user: any) {
-  const role = getUserRole(user);
-  return role === 'mentor' || role === 'alumni';
+  return getUserRole(user) === 'mentor' || getUserRole(user) === 'alumni';
 }
 
 export function isAdmin(user: any) {
   // Check if user has admin role in user_metadata
-  const role = getUserRole(user);
-  return role === 'admin';
+  return getUserRole(user) === 'admin';
 }
 
 export async function updateUserMetadata(metadata: Record<string, any>) {
@@ -130,13 +126,26 @@ export async function updateUserMetadata(metadata: Record<string, any>) {
   return data;
 }
 
-// Simplified admin check that doesn't rely on the database function
+// Enhanced function to check admin status using both metadata and database function
 export async function refreshAndCheckAdmin(user: any): Promise<boolean> {
   if (!user) return false;
   
-  // Check if user already has admin role in metadata
+  // First check if user already has admin role in metadata
   if (getUserRole(user) === 'admin') {
-    return true;
+    // Double check with the database function for extra security
+    try {
+      const { data, error } = await supabase.rpc('is_admin');
+      if (error) {
+        console.error('Error calling is_admin function:', error);
+        // Fall back to metadata-based check
+        return getUserRole(user) === 'admin';
+      }
+      return !!data; // Convert to boolean
+    } catch (error) {
+      console.error('Error checking admin status via RPC:', error);
+      // Fall back to metadata-based check
+      return getUserRole(user) === 'admin';
+    }
   }
   
   // If not found in metadata, refresh the user data

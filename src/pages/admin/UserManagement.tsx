@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -84,7 +85,6 @@ const UserManagement = () => {
       }
 
       const data = await response.json();
-      console.log('Fetched users:', data.users?.length || 0);
       setUsers(data.users || []);
       
       // Fetch user profiles for visibility settings
@@ -122,18 +122,50 @@ const UserManagement = () => {
     }
   };
 
-  // Update user visibility using the new database function
+  // Update user visibility
   const updateUserVisibility = async (userId: string, visible: boolean) => {
     try {
-      const { data, error } = await supabase.rpc('update_user_browse_visibility', {
-        user_id_param: userId,
-        visible_param: visible
-      });
+      // First check if profile exists for this user
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', userId)
+        .single();
 
-      if (error) {
-        console.error('Error updating visibility:', error);
-        toast.error('Failed to update user visibility');
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error checking profile:', fetchError);
+        toast.error('Failed to check user profile');
         return;
+      }
+
+      if (existingProfile) {
+        // Update existing profile
+        const { error } = await supabase
+          .from('profiles')
+          .update({ visible: visible })
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('Error updating visibility:', error);
+          toast.error('Failed to update user visibility');
+          return;
+        }
+      } else {
+        // Create new profile with minimal required fields
+        const { error } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: userId,
+            name: 'User Profile', // Default name
+            major_id: (await supabase.from('majors').select('id').limit(1).single()).data?.id || '', // Get first major as default
+            visible: visible
+          });
+
+        if (error) {
+          console.error('Error creating profile:', error);
+          toast.error('Failed to create user profile');
+          return;
+        }
       }
 
       // Update local state
@@ -149,23 +181,30 @@ const UserManagement = () => {
     }
   };
 
-  // Delete user function using the new database function
+  // Delete user function
   const deleteUser = async (userId: string) => {
     setDeletingUser(userId);
     try {
-      const { data, error } = await supabase.rpc('delete_user_and_data', {
-        user_id_to_delete: userId
-      });
-
-      if (error) {
-        console.error('Error deleting user:', error);
-        toast.error('Failed to delete user: ' + error.message);
-        return;
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("No active session");
       }
 
-      if (!data) {
-        toast.error('Failed to delete user');
-        return;
+      const response = await fetch(
+        `https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/admin-users`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete user");
       }
 
       // Remove user from local state
@@ -199,7 +238,7 @@ const UserManagement = () => {
         return;
       }
 
-      navigate(`/profile/${profile.id}`);
+      navigate(`/alumni/${profile.id}`);
     } catch (error) {
       console.error('Error finding user profile:', error);
       toast.error('Failed to find user profile');
@@ -207,10 +246,8 @@ const UserManagement = () => {
   };
 
   useEffect(() => {
-    // Check if user is admin - only admins can access
+    // Check if user is admin
     if (!loading) {
-      console.log('UserManagement - user:', user?.email, 'isAdmin:', isAdmin);
-      
       if (!user) {
         toast.error("Please sign in to access this page");
         navigate('/auth');
@@ -218,7 +255,7 @@ const UserManagement = () => {
       }
       
       if (!isAdmin) {
-        toast.error("You don't have permission to access this page - Admin access required");
+        toast.error("You don't have permission to access this page");
         navigate('/');
         return;
       }
@@ -247,15 +284,27 @@ const UserManagement = () => {
       <Navbar />
       
       <main className="flex-grow container-custom py-10">
-        <div className="mb-4 p-4 bg-green-50 rounded-lg">
-          <p className="text-green-800 font-medium">
-            👑 Admin Panel: User Management - Full administrative access
-          </p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <h1 className="text-3xl font-bold text-navy">User Management</h1>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <Button
+              variant="outline"
+              onClick={() => fetchUsers()}
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/admin/dashboard')}
+            >
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
         
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>All Users ({users.length})</CardTitle>
+            <CardTitle>All Users</CardTitle>
           </CardHeader>
           <CardContent>
             {loadingUsers ? (
