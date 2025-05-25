@@ -15,31 +15,28 @@ import { useNavigate } from "react-router-dom";
 import { ProfileWithDetails } from "@/types/database";
 
 interface BookingConfirmationProps {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-  selectedDate: Date | undefined;
-  selectedTime: string | null;
-  selectedProduct: {
-    title: string;
-    duration: string;
-  };
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   profile: ProfileWithDetails;
-  zoomLink?: string | null;
+  selectedDateTime: Date | null;
+  selectedDuration: 15 | 30 | 60;
+  price: number;
+  paymentMethod: 'card' | 'paypal';
 }
 
 const BookingConfirmationDialog: React.FC<BookingConfirmationProps> = ({
-  isOpen,
-  setIsOpen,
-  selectedDate,
-  selectedTime,
-  selectedProduct,
+  open,
+  onOpenChange,
   profile,
-  zoomLink
+  selectedDateTime,
+  selectedDuration,
+  price,
+  paymentMethod
 }) => {
   const navigate = useNavigate();
   
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -55,17 +52,17 @@ const BookingConfirmationDialog: React.FC<BookingConfirmationProps> = ({
         <div className="py-4 space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Session:</span>
-            <span className="font-medium">{selectedProduct.title} ({selectedProduct.duration})</span>
+            <span className="font-medium">{selectedDuration} minute session</span>
           </div>
-          {selectedDate && selectedTime && (
+          {selectedDateTime && (
             <>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Date:</span>
-                <span className="font-medium">{format(selectedDate, "MMMM d, yyyy")}</span>
+                <span className="font-medium">{format(selectedDateTime, "MMMM d, yyyy")}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Time:</span>
-                <span className="font-medium">{selectedTime}</span>
+                <span className="font-medium">{format(selectedDateTime, "h:mm a")}</span>
               </div>
             </>
           )}
@@ -73,20 +70,16 @@ const BookingConfirmationDialog: React.FC<BookingConfirmationProps> = ({
             <span className="text-gray-500">With:</span>
             <span className="font-medium">{profile.name}</span>
           </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Payment:</span>
+            <span className="font-medium">${price} via {paymentMethod === 'card' ? 'Card' : 'PayPal'}</span>
+          </div>
           
-          {zoomLink ? (
-            <div className="bg-blue-50 p-3 rounded-md mt-4">
-              <p className="text-sm text-blue-800">
-                Meeting link: <a href={zoomLink} className="underline" target="_blank" rel="noopener noreferrer">{zoomLink}</a>
-              </p>
-            </div>
-          ) : (
-            <div className="bg-blue-50 p-3 rounded-md mt-4">
-              <p className="text-sm text-blue-800">
-                An administrator will review your booking and add a Zoom link. You'll be able to see the link in your student dashboard once it's added.
-              </p>
-            </div>
-          )}
+          <div className="bg-blue-50 p-3 rounded-md mt-4">
+            <p className="text-sm text-blue-800">
+              An administrator will review your booking and add a Zoom link. You'll be able to see the link in your student dashboard once it's added.
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button onClick={() => navigate(`/student-dashboard`)}>

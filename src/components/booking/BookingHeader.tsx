@@ -9,10 +9,9 @@ import { ProfileWithDetails } from "@/types/database";
 
 interface BookingHeaderProps {
   profile: ProfileWithDetails;
-  id: string;
 }
 
-const BookingHeader: React.FC<BookingHeaderProps> = ({ profile, id }) => {
+const BookingHeader: React.FC<BookingHeaderProps> = ({ profile }) => {
   const navigate = useNavigate();
 
   return (
@@ -25,7 +24,7 @@ const BookingHeader: React.FC<BookingHeaderProps> = ({ profile, id }) => {
       >
         <Button
           variant="ghost"
-          onClick={() => navigate(`/alumni/${id}`)}
+          onClick={() => navigate(`/alumni/${profile.id}`)}
           className="flex items-center text-gray-600"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
