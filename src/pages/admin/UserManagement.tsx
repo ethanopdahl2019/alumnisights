@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -84,6 +85,7 @@ const UserManagement = () => {
       }
 
       const data = await response.json();
+      console.log('Fetched users:', data.users?.length || 0);
       setUsers(data.users || []);
       
       // Fetch user profiles for visibility settings
@@ -208,6 +210,8 @@ const UserManagement = () => {
   useEffect(() => {
     // Check if user is admin
     if (!loading) {
+      console.log('UserManagement - user:', user?.email, 'isAdmin:', isAdmin);
+      
       if (!user) {
         toast.error("Please sign in to access this page");
         navigate('/auth');
@@ -264,7 +268,7 @@ const UserManagement = () => {
         
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>All Users</CardTitle>
+            <CardTitle>All Users ({users.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {loadingUsers ? (

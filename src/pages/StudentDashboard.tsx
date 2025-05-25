@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -48,13 +49,18 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     // Redirect if user is not logged in or not a student/admin
-    if (!loading && (!user || (!isStudent(user) && !isAdmin(user)))) {
-      toast({
-        variant: "destructive",
-        title: "Access Denied",
-        description: "You must be a student to access this dashboard",
-      });
-      navigate("/");
+    if (!loading) {
+      console.log('StudentDashboard - user:', user?.email, 'isStudent:', user ? isStudent(user) : false, 'isAdmin:', user ? isAdmin(user) : false);
+      
+      if (!user || (!isStudent(user) && !isAdmin(user))) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You must be a student to access this dashboard",
+        });
+        navigate("/");
+        return;
+      }
     }
   }, [user, loading, navigate]);
 

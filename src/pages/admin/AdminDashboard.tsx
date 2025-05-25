@@ -27,8 +27,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { isAdmin, refreshAndCheckAdmin } from "@/services/auth";
-import AccessDenied from "../insights/universities/components/AccessDenied";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Group admin links by category
@@ -145,39 +143,26 @@ const adminLinkGroups = {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const [isAdminUser, setIsAdminUser] = useState<boolean | null>(null);
-  const [checkingAdmin, setCheckingAdmin] = useState<boolean>(true);
+  const { user, loading, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
+    if (!loading) {
+      console.log('AdminDashboard - user:', user?.email, 'isAdmin:', isAdmin);
+      
       if (!user) {
-        setCheckingAdmin(false);
+        toast.error("Please sign in to access this page");
+        navigate('/auth');
         return;
       }
       
-      try {
-        // Check if user is admin using both methods
-        const hasAdminRole = await refreshAndCheckAdmin(user);
-        
-        setIsAdminUser(hasAdminRole);
-        
-        if (!hasAdminRole) {
-          toast.error("You don't have permission to access this page");
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        toast.error("Error checking permissions");
-      } finally {
-        setCheckingAdmin(false);
+      if (!isAdmin) {
+        toast.error("You don't have permission to access this page");
+        navigate('/');
+        return;
       }
-    };
-    
-    if (!loading) {
-      checkAdminStatus();
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, isAdmin, navigate]);
 
   // Get all admin links flattened for "All" tab
   const allAdminLinks = [
@@ -186,7 +171,7 @@ const AdminDashboard = () => {
     ...adminLinkGroups.operations
   ];
 
-  if (loading || checkingAdmin) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -197,12 +182,8 @@ const AdminDashboard = () => {
     );
   }
   
-  if (!user) {
-    return <AccessDenied message="Please sign in to access this page" />;
-  }
-
-  if (isAdminUser === false) {
-    return <AccessDenied message="You don't have permission to access this page" />;
+  if (!user || !isAdmin) {
+    return null; // Will redirect via useEffect
   }
 
   return (

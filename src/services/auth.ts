@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredentials, UserRegistration } from '@/types/database';
 
@@ -126,26 +127,13 @@ export async function updateUserMetadata(metadata: Record<string, any>) {
   return data;
 }
 
-// Enhanced function to check admin status using both metadata and database function
+// Simplified admin check that doesn't rely on the database function
 export async function refreshAndCheckAdmin(user: any): Promise<boolean> {
   if (!user) return false;
   
-  // First check if user already has admin role in metadata
+  // Check if user already has admin role in metadata
   if (getUserRole(user) === 'admin') {
-    // Double check with the database function for extra security
-    try {
-      const { data, error } = await supabase.rpc('is_admin');
-      if (error) {
-        console.error('Error calling is_admin function:', error);
-        // Fall back to metadata-based check
-        return getUserRole(user) === 'admin';
-      }
-      return !!data; // Convert to boolean
-    } catch (error) {
-      console.error('Error checking admin status via RPC:', error);
-      // Fall back to metadata-based check
-      return getUserRole(user) === 'admin';
-    }
+    return true;
   }
   
   // If not found in metadata, refresh the user data

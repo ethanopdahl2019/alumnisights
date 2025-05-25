@@ -21,6 +21,8 @@ export const NavbarUserSection = () => {
   const goToDashboard = () => {
     if (!user) return;
     
+    console.log('Going to dashboard for user:', user.email, 'isMentor:', isMentor(user), 'isStudent:', isStudent(user), 'isAdmin:', isAdmin);
+    
     if (isMentor(user)) {
       navigate('/mentor-dashboard');
     } else if (isStudent(user)) {

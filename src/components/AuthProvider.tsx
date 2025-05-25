@@ -26,8 +26,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      
+      console.log('Auth state change:', event, session?.user?.email);
       setSession(session);
       
       const currentUser = session?.user ?? null;
@@ -35,7 +40,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Check admin status whenever the user changes
       if (currentUser) {
-        setIsUserAdmin(isAdmin(currentUser));
+        const adminStatus = isAdmin(currentUser);
+        console.log('Admin status for user:', currentUser.email, adminStatus);
+        setIsUserAdmin(adminStatus);
       } else {
         setIsUserAdmin(false);
       }
@@ -46,6 +53,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Check for existing session
     getCurrentSession()
       .then(session => {
+        if (!mounted) return;
+        console.log('Initial session check:', session?.user?.email);
         setSession(session);
         if (session) {
           return getCurrentUser();
@@ -53,17 +62,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       })
       .then(user => {
+        if (!mounted) return;
         setUser(user);
         if (user) {
-          setIsUserAdmin(isAdmin(user));
+          const adminStatus = isAdmin(user);
+          console.log('Initial admin status for user:', user.email, adminStatus);
+          setIsUserAdmin(adminStatus);
         }
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
+        if (!mounted) return;
+        console.error('Auth initialization error:', error);
         setLoading(false);
       });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
