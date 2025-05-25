@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -22,8 +23,8 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { getSchools } from '@/services/profiles';
 import { School } from '@/types/database';
-import { Upload, Camera, Plus, X, ArrowLeft } from 'lucide-react';
-import { uploadProfileImage } from '@/utils/profileImageUpload';
+import { Upload, Camera, Plus, X } from 'lucide-react';
+import { uploadFileToStorage } from '@/utils/fileUpload';
 
 // Define advanced degree schema
 const advancedDegreeSchema = z.object({
@@ -171,9 +172,10 @@ const MentorProfileComplete = () => {
 
     setUploadingImage(true);
     try {
-      const imageUrl = await uploadProfileImage({
+      const imageUrl = await uploadFileToStorage({
         file,
-        userId: user.id
+        prefix: 'profile',
+        resourceId: user.id
       });
 
       if (imageUrl) {
@@ -193,10 +195,6 @@ const MentorProfileComplete = () => {
     } finally {
       setUploadingImage(false);
     }
-  };
-
-  const handleBack = () => {
-    navigate(-1); // Go back to previous page
   };
 
   const addAdvancedDegree = () => {
@@ -307,17 +305,6 @@ const MentorProfileComplete = () => {
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-4 mb-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-          </div>
           <CardTitle className="text-center">Complete Your Mentor Profile</CardTitle>
         </CardHeader>
         <CardContent>
