@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Select, 
   SelectContent, 
@@ -23,19 +22,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { getMajors } from '@/services/majors';
 import { getSchools } from '@/services/profiles';
 import { School, Major } from '@/types/database';
-import { Plus, X } from 'lucide-react';
 
-// Define advanced degree schema
-const advancedDegreeSchema = z.object({
-  degree: z.string().min(1, { message: 'Degree is required' }),
-  year: z.string().refine((val) => {
-    const num = parseInt(val, 10);
-    return !isNaN(num) && num > 1900 && num <= new Date().getFullYear() + 10;
-  }, {
-    message: "Year must be a valid year"
-  }),
-  university: z.string().min(1, { message: 'University is required' }),
-});
+const applicationTypeOptions = [
+  'Undergraduate college',
+  'PhD programs',
+  'Medical school',
+  'Law school',
+  'Dentistry school',
+  'Master programs'
+];
 
 // Define form schema
 const profileFormSchema = z.object({
@@ -50,32 +45,10 @@ const profileFormSchema = z.object({
   }, {
     message: "Graduation year must be a valid year"
   }),
-  hasAdvancedDegree: z.boolean().optional(),
-  advancedDegrees: z.array(advancedDegreeSchema).optional(),
+  applicationType: z.string().min(1, { message: 'Application type is required' }),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
-type AdvancedDegree = z.infer<typeof advancedDegreeSchema>;
-
-const degreeOptions = [
-  'Master of Arts (MA)',
-  'Master of Science (MS)',
-  'Master of Business Administration (MBA)',
-  'Master of Education (MEd)',
-  'Master of Engineering (MEng)',
-  'Master of Fine Arts (MFA)',
-  'Master of Public Administration (MPA)',
-  'Master of Social Work (MSW)',
-  'Doctor of Philosophy (PhD)',
-  'Doctor of Medicine (MD)',
-  'Doctor of Dental Surgery (DDS)',
-  'Doctor of Veterinary Medicine (DVM)',
-  'Juris Doctor (JD)',
-  'Doctor of Pharmacy (PharmD)',
-  'Doctor of Physical Therapy (DPT)',
-  'Doctor of Psychology (PsyD)',
-  'Other'
-];
 
 const ProfileComplete = () => {
   const { user } = useAuth();
@@ -83,8 +56,6 @@ const ProfileComplete = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [schools, setSchools] = useState<School[]>([]);
   const [majors, setMajors] = useState<Major[]>([]);
-  const [hasAdvancedDegree, setHasAdvancedDegree] = useState(false);
-  const [advancedDegrees, setAdvancedDegrees] = useState<AdvancedDegree[]>([]);
 
   // Form setup
   const form = useForm<ProfileFormValues>({
@@ -96,8 +67,7 @@ const ProfileComplete = () => {
       universityId: '',
       majorId: '',
       graduationYear: '',
-      hasAdvancedDegree: false,
-      advancedDegrees: [],
+      applicationType: '',
     },
   });
 
@@ -123,21 +93,6 @@ const ProfileComplete = () => {
     fetchData();
   }, []);
 
-  const addAdvancedDegree = () => {
-    setAdvancedDegrees([...advancedDegrees, { degree: '', year: '', university: '' }]);
-  };
-
-  const removeAdvancedDegree = (index: number) => {
-    setAdvancedDegrees(advancedDegrees.filter((_, i) => i !== index));
-  };
-
-  const updateAdvancedDegree = (index: number, field: keyof AdvancedDegree, value: string) => {
-    const updated = [...advancedDegrees];
-    updated[index] = { ...updated[index], [field]: value };
-    setAdvancedDegrees(updated);
-    form.setValue('advancedDegrees', updated);
-  };
-
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
 
@@ -152,10 +107,7 @@ const ProfileComplete = () => {
         role: 'applicant',
         graduation_year: parseInt(values.graduationYear),
         visible: true,
-        // Store advanced degrees in achievements array for now
-        achievements: hasAdvancedDegree && advancedDegrees.length > 0 
-          ? advancedDegrees.map(degree => `${degree.degree} from ${degree.university} (${degree.year})`)
-          : null
+        achievements: [`Applying to: ${values.applicationType}`]
       };
 
       // Update user metadata
@@ -166,7 +118,7 @@ const ProfileComplete = () => {
           university_id: values.universityId,
           major_id: values.majorId,
           graduation_year: values.graduationYear,
-          advanced_degrees: hasAdvancedDegree ? advancedDegrees : null
+          application_type: values.applicationType
         }
       });
 
@@ -296,102 +248,22 @@ const ProfileComplete = () => {
               )}
             </div>
 
-            {/* Advanced Degrees Section */}
-            <div className="border-t pt-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Checkbox
-                  id="hasAdvancedDegree"
-                  checked={hasAdvancedDegree}
-                  onCheckedChange={(checked) => {
-                    setHasAdvancedDegree(checked as boolean);
-                    if (!checked) {
-                      setAdvancedDegrees([]);
-                      form.setValue('advancedDegrees', []);
-                    }
-                  }}
-                />
-                <Label htmlFor="hasAdvancedDegree" className="text-base font-medium">
-                  Do you have any advanced degrees?
-                </Label>
-              </div>
-
-              {hasAdvancedDegree && (
-                <div className="space-y-4">
-                  {advancedDegrees.map((degree, index) => (
-                    <Card key={index} className="p-4">
-                      <div className="flex justify-between items-center mb-4">
-                        <h4 className="font-medium">Advanced Degree {index + 1}</h4>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeAdvancedDegree(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <Label>Degree</Label>
-                          <Select 
-                            value={degree.degree}
-                            onValueChange={(value) => updateAdvancedDegree(index, 'degree', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select degree" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {degreeOptions.map((degreeOption) => (
-                                <SelectItem key={degreeOption} value={degreeOption}>
-                                  {degreeOption}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <div>
-                          <Label>Year Graduated</Label>
-                          <Input
-                            placeholder="e.g., 2023"
-                            value={degree.year}
-                            onChange={(e) => updateAdvancedDegree(index, 'year', e.target.value)}
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label>University</Label>
-                          <Select 
-                            value={degree.university}
-                            onValueChange={(value) => updateAdvancedDegree(index, 'university', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select university" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {schools.map((school) => (
-                                <SelectItem key={school.id} value={school.name}>
-                                  {school.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </Card>
+            <div>
+              <Label htmlFor="applicationType">I am applying to</Label>
+              <Select onValueChange={(value) => form.setValue('applicationType', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select application type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {applicationTypeOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
                   ))}
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addAdvancedDegree}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Another Advanced Degree
-                  </Button>
-                </div>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.applicationType && (
+                <p className="text-red-500 text-sm">{form.formState.errors.applicationType.message}</p>
               )}
             </div>
             

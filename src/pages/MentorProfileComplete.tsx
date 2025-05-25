@@ -23,10 +23,22 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { getSchools } from '@/services/profiles';
 import { School } from '@/types/database';
-import { Upload, Camera } from 'lucide-react';
+import { Upload, Camera, Plus, X } from 'lucide-react';
 import { uploadFileToStorage } from '@/utils/fileUpload';
 
-// Define form schema - removed majorId, added new fields
+// Define advanced degree schema
+const advancedDegreeSchema = z.object({
+  degree: z.string().min(1, { message: 'Degree is required' }),
+  year: z.string().refine((val) => {
+    const num = parseInt(val, 10);
+    return !isNaN(num) && num > 1900 && num <= new Date().getFullYear() + 10;
+  }, {
+    message: "Year must be a valid year"
+  }),
+  university: z.string().min(1, { message: 'University is required' }),
+});
+
+// Define form schema
 const mentorProfileFormSchema = z.object({
   headline: z.string().min(1, { message: 'Headline is required' }),
   bio: z.string().min(10, { message: 'Bio must be at least 10 characters' }),
@@ -50,9 +62,32 @@ const mentorProfileFormSchema = z.object({
   price15Min: z.string().optional(),
   price30Min: z.string().optional(),
   price60Min: z.string().optional(),
+  hasAdvancedDegree: z.boolean().optional(),
+  advancedDegrees: z.array(advancedDegreeSchema).optional(),
 });
 
 type MentorProfileFormValues = z.infer<typeof mentorProfileFormSchema>;
+type AdvancedDegree = z.infer<typeof advancedDegreeSchema>;
+
+const degreeOptions = [
+  'Master of Arts (MA)',
+  'Master of Science (MS)',
+  'Master of Business Administration (MBA)',
+  'Master of Education (MEd)',
+  'Master of Engineering (MEng)',
+  'Master of Fine Arts (MFA)',
+  'Master of Public Administration (MPA)',
+  'Master of Social Work (MSW)',
+  'Doctor of Philosophy (PhD)',
+  'Doctor of Medicine (MD)',
+  'Doctor of Dental Surgery (DDS)',
+  'Doctor of Veterinary Medicine (DVM)',
+  'Juris Doctor (JD)',
+  'Doctor of Pharmacy (PharmD)',
+  'Doctor of Physical Therapy (DPT)',
+  'Doctor of Psychology (PsyD)',
+  'Other'
+];
 
 const MentorProfileComplete = () => {
   const { user } = useAuth();
@@ -61,6 +96,8 @@ const MentorProfileComplete = () => {
   const [schools, setSchools] = useState<School[]>([]);
   const [profileImage, setProfileImage] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [hasAdvancedDegree, setHasAdvancedDegree] = useState(false);
+  const [advancedDegrees, setAdvancedDegrees] = useState<AdvancedDegree[]>([]);
   const [availableActivities, setAvailableActivities] = useState<string[]>([
     'Student Government',
     'Academic Clubs',
@@ -100,6 +137,8 @@ const MentorProfileComplete = () => {
       price15Min: '',
       price30Min: '',
       price60Min: '',
+      hasAdvancedDegree: false,
+      advancedDegrees: [],
     },
   });
 
@@ -151,6 +190,21 @@ const MentorProfileComplete = () => {
     }
   };
 
+  const addAdvancedDegree = () => {
+    setAdvancedDegrees([...advancedDegrees, { degree: '', year: '', university: '' }]);
+  };
+
+  const removeAdvancedDegree = (index: number) => {
+    setAdvancedDegrees(advancedDegrees.filter((_, i) => i !== index));
+  };
+
+  const updateAdvancedDegree = (index: number, field: keyof AdvancedDegree, value: string) => {
+    const updated = [...advancedDegrees];
+    updated[index] = { ...updated[index], [field]: value };
+    setAdvancedDegrees(updated);
+    form.setValue('advancedDegrees', updated);
+  };
+
   const onSubmit = async (values: MentorProfileFormValues) => {
     if (!user) return;
 
@@ -181,7 +235,7 @@ const MentorProfileComplete = () => {
         bio: values.bio,
         image: profileImage || null,
         school_id: schoolId,
-        major_id: majorId, // Use major from user metadata
+        major_id: majorId,
         role: 'mentor',
         headline: values.headline,
         graduation_year: parseInt(values.graduationYear),
@@ -191,15 +245,27 @@ const MentorProfileComplete = () => {
         price_60_min: parseFloat(values.price60Min || '0'),
         visible: true,
         university_id: universityId,
-        // Add new fields
         achievements: [
           `Current Occupation: ${values.currentOccupation}`,
           `Years of Experience: ${values.yearsOfExperience}`,
           ...(values.activities || []).map(activity => `Activity: ${activity}`),
           ...(values.clubs || []).map(club => `Club: ${club}`),
-          ...(values.greekLife ? [`Greek Life: ${values.greekLife}`] : [])
+          ...(values.greekLife ? [`Greek Life: ${values.greekLife}`] : []),
+          ...(hasAdvancedDegree && advancedDegrees.length > 0 
+            ? advancedDegrees.map(degree => `${degree.degree} from ${degree.university} (${degree.year})`)
+            : [])
         ]
       };
+
+      // Update user metadata with advanced degrees
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          ...user.user_metadata,
+          advanced_degrees: hasAdvancedDegree ? advancedDegrees : null
+        }
+      });
+
+      if (metadataError) throw metadataError;
 
       const { error } = await supabase
         .from('profiles')
@@ -324,6 +390,7 @@ const MentorProfileComplete = () => {
               )}
             </div>
 
+            {/* Activities Section */}
             <div>
               <Label>College Activities</Label>
               <div className="grid grid-cols-2 gap-2 mt-2">
@@ -348,6 +415,7 @@ const MentorProfileComplete = () => {
               </div>
             </div>
 
+            {/* Clubs Section */}
             <div>
               <Label>College Clubs</Label>
               <div className="grid grid-cols-2 gap-2 mt-2">
@@ -379,6 +447,105 @@ const MentorProfileComplete = () => {
                 placeholder="e.g., Alpha Phi Alpha" 
                 {...form.register('greekLife')} 
               />
+            </div>
+
+            {/* Advanced Degrees Section */}
+            <div className="border-t pt-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Checkbox
+                  id="hasAdvancedDegree"
+                  checked={hasAdvancedDegree}
+                  onCheckedChange={(checked) => {
+                    setHasAdvancedDegree(checked as boolean);
+                    if (!checked) {
+                      setAdvancedDegrees([]);
+                      form.setValue('advancedDegrees', []);
+                    }
+                  }}
+                />
+                <Label htmlFor="hasAdvancedDegree" className="text-base font-medium">
+                  Do you have any advanced degrees?
+                </Label>
+              </div>
+
+              {hasAdvancedDegree && (
+                <div className="space-y-4">
+                  {advancedDegrees.map((degree, index) => (
+                    <Card key={index} className="p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-medium">Advanced Degree {index + 1}</h4>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeAdvancedDegree(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label>Degree</Label>
+                          <Select 
+                            value={degree.degree}
+                            onValueChange={(value) => updateAdvancedDegree(index, 'degree', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select degree" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {degreeOptions.map((degreeOption) => (
+                                <SelectItem key={degreeOption} value={degreeOption}>
+                                  {degreeOption}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label>Year Graduated</Label>
+                          <Input
+                            placeholder="e.g., 2023"
+                            value={degree.year}
+                            onChange={(e) => updateAdvancedDegree(index, 'year', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label>University</Label>
+                          <Select 
+                            value={degree.university}
+                            onValueChange={(value) => updateAdvancedDegree(index, 'university', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select university" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {schools.map((school) => (
+                                <SelectItem key={school.id} value={school.name}>
+                                  {school.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addAdvancedDegree}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Another Advanced Degree
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div>

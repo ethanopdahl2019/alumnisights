@@ -56,6 +56,7 @@ serve(async (req) => {
       const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers()
 
       if (error) {
+        console.error('Error listing users:', error)
         return new Response(
           JSON.stringify({ error: error.message }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -78,6 +79,8 @@ serve(async (req) => {
         )
       }
 
+      console.log('Attempting to delete user:', userId)
+
       // Get admin client for user management
       const supabaseAdmin = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
@@ -90,16 +93,28 @@ serve(async (req) => {
         }
       )
 
+      // First delete related profile data
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId)
+
+      if (profileError) {
+        console.error('Error deleting profile:', profileError)
+      }
+
       // Delete user from auth
       const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
       if (error) {
+        console.error('Error deleting user:', error)
         return new Response(
           JSON.stringify({ error: error.message }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
+      console.log('User deleted successfully:', userId)
       return new Response(
         JSON.stringify({ success: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -112,6 +127,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    console.error('Function error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
