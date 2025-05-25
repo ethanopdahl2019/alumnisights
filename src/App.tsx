@@ -50,6 +50,7 @@ const IndustryInsights = lazy(() => import("./pages/insights/IndustryInsights"))
 
 // University management pages
 const UniversityContentManager = lazy(() => import("./pages/insights/universities/UniversityContentManager"));
+const UniversityContentEditor = lazy(() => import("./pages/insights/universities/UniversityContentEditor"));
 const UniversityPage = lazy(() => import("./pages/insights/universities/UniversityPage"));
 
 // Admin pages
@@ -121,6 +122,8 @@ const App = () => (
                 <Route path="/universities/:universityId" element={<UniversityPage />} />
                 
                 {/* University management routes */}
+                <Route path="/insights/university-content-manager" element={<UniversityContentManager />} />
+                <Route path="/insights/university-content-editor/:id" element={<UniversityContentEditor />} />
                 <Route path="/universities/manage" element={<UniversityContentManager />} />
                 
                 {/* Admin routes */}
