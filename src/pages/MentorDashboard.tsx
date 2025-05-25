@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -13,12 +14,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MyReferrals from "@/components/mentor/MyReferrals";
-
-// Define interface for column check response
-interface ColumnCheckResponse {
-  exists: boolean;
-  data: { column_name: string }[];
-}
 
 interface Booking {
   id: string;
@@ -39,7 +34,7 @@ interface Booking {
 const MentorDashboard = () => {
   const { user, loading, isAdmin: userIsAdmin } = useAuth();
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [earnings, setEarnings] = useState({ total: 0, thisMonth: 0 });
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -78,7 +73,26 @@ const MentorDashboard = () => {
       
       setIsLoadingData(true);
       try {
-        // Fetch bookings for the mentor
+        // First, get the current user's profile to find their profile_id
+        const { data: userProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching user profile:', profileError);
+          throw profileError;
+        }
+
+        if (!userProfile) {
+          console.log('No profile found for user');
+          setBookings([]);
+          setEarnings({ total: 500, thisMonth: 150 });
+          return;
+        }
+
+        // Fetch bookings for the mentor using the profile_id
         const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
           .select(`
@@ -86,29 +100,54 @@ const MentorDashboard = () => {
             scheduled_at, 
             status, 
             zoom_link,
-            profiles!bookings_user_id_fkey(id, name, image),
-            booking_options(title, duration)
+            user_id,
+            booking_option_id
           `)
-          .eq('profile_id', user.id)
+          .eq('profile_id', userProfile.id)
           .order('scheduled_at', { ascending: true });
 
         if (bookingsError) {
+          console.error('Error fetching bookings:', bookingsError);
           throw bookingsError;
         }
 
-        // Format bookings data
-        const formattedBookings = bookingsData.map(booking => ({
-          id: booking.id,
-          scheduled_at: booking.scheduled_at,
-          status: booking.status,
-          zoom_link: booking.zoom_link,
-          student: {
-            id: booking.profiles.id,
-            name: booking.profiles.name || 'Unknown',
-            image: booking.profiles.image
-          },
-          booking_option: booking.booking_options || { title: 'Session', duration: '30 min' }
-        }));
+        // Now fetch the related data for each booking
+        const formattedBookings: Booking[] = [];
+        
+        if (bookingsData && bookingsData.length > 0) {
+          for (const booking of bookingsData) {
+            // Get student profile
+            const { data: studentProfile } = await supabase
+              .from('profiles')
+              .select('id, name, image')
+              .eq('user_id', booking.user_id)
+              .single();
+
+            // Get booking option
+            const { data: bookingOption } = await supabase
+              .from('booking_options')
+              .select('title, duration')
+              .eq('id', booking.booking_option_id)
+              .single();
+
+            formattedBookings.push({
+              id: booking.id,
+              scheduled_at: booking.scheduled_at,
+              status: booking.status,
+              zoom_link: booking.zoom_link,
+              student: {
+                id: studentProfile?.id || '',
+                name: studentProfile?.name || 'Unknown Student',
+                image: studentProfile?.image || null
+              },
+              booking_option: {
+                title: bookingOption?.title || 'Session',
+                duration: bookingOption?.duration || '30 min'
+              }
+            });
+          }
+        }
+
         setBookings(formattedBookings);
 
         // Fetch earnings (example - replace with actual logic)
