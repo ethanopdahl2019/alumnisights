@@ -50,12 +50,7 @@ const mentorProfileFormSchema = z.object({
   }),
   location: z.string().min(1, { message: 'Location is required' }),
   currentOccupation: z.string().min(1, { message: 'Current occupation is required' }),
-  yearsOfExperience: z.string().refine((val) => {
-    const num = parseInt(val, 10);
-    return !isNaN(num) && num >= 0 && num <= 50;
-  }, {
-    message: "Years of experience must be a valid number"
-  }),
+  yearsOfExperience: z.string().min(1, { message: 'Years of experience is required' }),
   activities: z.array(z.string()).optional(),
   clubs: z.array(z.string()).optional(),
   greekLife: z.string().optional(),
@@ -87,6 +82,17 @@ const degreeOptions = [
   'Doctor of Physical Therapy (DPT)',
   'Doctor of Psychology (PsyD)',
   'Other'
+];
+
+const experienceOptions = [
+  '0-1 years',
+  '2-3 years',
+  '4-5 years',
+  '6-8 years',
+  '9-12 years',
+  '13-15 years',
+  '16-20 years',
+  '20+ years'
 ];
 
 const MentorProfileComplete = () => {
@@ -160,7 +166,8 @@ const MentorProfileComplete = () => {
     fetchData();
   }, []);
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file || !user) return;
 
     setUploadingImage(true);
@@ -317,10 +324,7 @@ const MentorProfileComplete = () => {
                     id="profile-image"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleImageUpload(file);
-                    }}
+                    onChange={handleImageUpload}
                     className="hidden"
                   />
                   <Button
@@ -366,6 +370,18 @@ const MentorProfileComplete = () => {
             </div>
 
             <div>
+              <Label htmlFor="graduationYear">Graduation Year</Label>
+              <Input 
+                id="graduationYear" 
+                placeholder="e.g., 2022" 
+                {...form.register('graduationYear')} 
+              />
+              {form.formState.errors.graduationYear && (
+                <p className="text-red-500 text-sm">{form.formState.errors.graduationYear.message}</p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="currentOccupation">Current Occupation</Label>
               <Input 
                 id="currentOccupation" 
@@ -379,12 +395,18 @@ const MentorProfileComplete = () => {
 
             <div>
               <Label htmlFor="yearsOfExperience">Years of Work Experience</Label>
-              <Input 
-                id="yearsOfExperience" 
-                placeholder="e.g., 5" 
-                type="number"
-                {...form.register('yearsOfExperience')} 
-              />
+              <Select onValueChange={(value) => form.setValue('yearsOfExperience', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select years of experience" />
+                </SelectTrigger>
+                <SelectContent>
+                  {experienceOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {form.formState.errors.yearsOfExperience && (
                 <p className="text-red-500 text-sm">{form.formState.errors.yearsOfExperience.message}</p>
               )}
@@ -545,18 +567,6 @@ const MentorProfileComplete = () => {
                     Add Another Advanced Degree
                   </Button>
                 </div>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="graduationYear">Graduation Year</Label>
-              <Input 
-                id="graduationYear" 
-                placeholder="e.g., 2022" 
-                {...form.register('graduationYear')} 
-              />
-              {form.formState.errors.graduationYear && (
-                <p className="text-red-500 text-sm">{form.formState.errors.graduationYear.message}</p>
               )}
             </div>
 
