@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Select, 
   SelectContent, 
@@ -20,17 +21,15 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { getMajors } from '@/services/majors';
 import { getSchools } from '@/services/profiles';
-import { School, Major } from '@/types/database';
+import { School } from '@/types/database';
 import { Upload, Camera } from 'lucide-react';
 import { uploadFileToStorage } from '@/utils/fileUpload';
 
-// Define form schema - removed firstName, lastName, universityId
+// Define form schema - removed majorId, added new fields
 const mentorProfileFormSchema = z.object({
   headline: z.string().min(1, { message: 'Headline is required' }),
   bio: z.string().min(10, { message: 'Bio must be at least 10 characters' }),
-  majorId: z.string().min(1, { message: 'Major is required' }),
   graduationYear: z.string().refine((val) => {
     const num = parseInt(val, 10);
     return !isNaN(num) && num > 1900 && num <= new Date().getFullYear();
@@ -38,6 +37,16 @@ const mentorProfileFormSchema = z.object({
     message: "Graduation year must be a valid year"
   }),
   location: z.string().min(1, { message: 'Location is required' }),
+  currentOccupation: z.string().min(1, { message: 'Current occupation is required' }),
+  yearsOfExperience: z.string().refine((val) => {
+    const num = parseInt(val, 10);
+    return !isNaN(num) && num >= 0 && num <= 50;
+  }, {
+    message: "Years of experience must be a valid number"
+  }),
+  activities: z.array(z.string()).optional(),
+  clubs: z.array(z.string()).optional(),
+  greekLife: z.string().optional(),
   price15Min: z.string().optional(),
   price30Min: z.string().optional(),
   price60Min: z.string().optional(),
@@ -50,19 +59,44 @@ const MentorProfileComplete = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [schools, setSchools] = useState<School[]>([]);
-  const [majors, setMajors] = useState<Major[]>([]);
   const [profileImage, setProfileImage] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [availableActivities, setAvailableActivities] = useState<string[]>([
+    'Student Government',
+    'Academic Clubs',
+    'Research',
+    'Internships',
+    'Study Abroad',
+    'Volunteer Work',
+    'Sports Teams',
+    'Honor Societies',
+    'Cultural Organizations',
+    'Professional Organizations'
+  ]);
+  const [availableClubs, setAvailableClubs] = useState<string[]>([
+    'Debate Team',
+    'Drama Club',
+    'Music Ensembles',
+    'Academic Honor Societies',
+    'Pre-professional Clubs',
+    'Cultural Clubs',
+    'Service Clubs',
+    'Special Interest Groups'
+  ]);
 
-  // Form setup - removed firstName, lastName, universityId from defaults
+  // Form setup
   const form = useForm<MentorProfileFormValues>({
     resolver: zodResolver(mentorProfileFormSchema),
     defaultValues: {
       headline: '',
       bio: '',
-      majorId: '',
       graduationYear: '',
       location: '',
+      currentOccupation: '',
+      yearsOfExperience: '',
+      activities: [],
+      clubs: [],
+      greekLife: '',
       price15Min: '',
       price30Min: '',
       price60Min: '',
@@ -72,17 +106,13 @@ const MentorProfileComplete = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [schoolsData, majorsData] = await Promise.all([
-          getSchools(),
-          getMajors()
-        ]);
+        const schoolsData = await getSchools();
         setSchools(schoolsData);
-        setMajors(majorsData);
       } catch (error) {
         console.error("Failed to load form data:", error);
         toast({
           title: "Error loading data",
-          description: "Could not load schools and majors. Please try again later.",
+          description: "Could not load schools. Please try again later.",
           variant: "destructive"
         });
       }
@@ -126,8 +156,9 @@ const MentorProfileComplete = () => {
 
     setIsLoading(true);
     try {
-      // Get university ID from user metadata
+      // Get university ID and major from user metadata
       const universityId = user.user_metadata?.university_id;
+      const majorId = user.user_metadata?.major_id;
       
       // Find the school that matches the university
       let schoolId = null;
@@ -150,7 +181,7 @@ const MentorProfileComplete = () => {
         bio: values.bio,
         image: profileImage || null,
         school_id: schoolId,
-        major_id: values.majorId,
+        major_id: majorId, // Use major from user metadata
         role: 'mentor',
         headline: values.headline,
         graduation_year: parseInt(values.graduationYear),
@@ -159,7 +190,15 @@ const MentorProfileComplete = () => {
         price_30_min: parseFloat(values.price30Min || '0'),
         price_60_min: parseFloat(values.price60Min || '0'),
         visible: true,
-        university_id: universityId
+        university_id: universityId,
+        // Add new fields
+        achievements: [
+          `Current Occupation: ${values.currentOccupation}`,
+          `Years of Experience: ${values.yearsOfExperience}`,
+          ...(values.activities || []).map(activity => `Activity: ${activity}`),
+          ...(values.clubs || []).map(club => `Club: ${club}`),
+          ...(values.greekLife ? [`Greek Life: ${values.greekLife}`] : [])
+        ]
       };
 
       const { error } = await supabase
@@ -261,22 +300,85 @@ const MentorProfileComplete = () => {
             </div>
 
             <div>
-              <Label htmlFor="majorId">Major</Label>
-              <Select onValueChange={(value) => form.setValue('majorId', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your major" />
-                </SelectTrigger>
-                <SelectContent>
-                  {majors.map((major) => (
-                    <SelectItem key={major.id} value={major.id}>
-                      {major.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.majorId && (
-                <p className="text-red-500 text-sm">{form.formState.errors.majorId.message}</p>
+              <Label htmlFor="currentOccupation">Current Occupation</Label>
+              <Input 
+                id="currentOccupation" 
+                placeholder="e.g., Software Engineer at Google" 
+                {...form.register('currentOccupation')} 
+              />
+              {form.formState.errors.currentOccupation && (
+                <p className="text-red-500 text-sm">{form.formState.errors.currentOccupation.message}</p>
               )}
+            </div>
+
+            <div>
+              <Label htmlFor="yearsOfExperience">Years of Work Experience</Label>
+              <Input 
+                id="yearsOfExperience" 
+                placeholder="e.g., 5" 
+                type="number"
+                {...form.register('yearsOfExperience')} 
+              />
+              {form.formState.errors.yearsOfExperience && (
+                <p className="text-red-500 text-sm">{form.formState.errors.yearsOfExperience.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>College Activities</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {availableActivities.map((activity) => (
+                  <div key={activity} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`activity-${activity}`}
+                      onCheckedChange={(checked) => {
+                        const currentActivities = form.getValues('activities') || [];
+                        if (checked) {
+                          form.setValue('activities', [...currentActivities, activity]);
+                        } else {
+                          form.setValue('activities', currentActivities.filter(a => a !== activity));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`activity-${activity}`} className="text-sm">
+                      {activity}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label>College Clubs</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {availableClubs.map((club) => (
+                  <div key={club} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`club-${club}`}
+                      onCheckedChange={(checked) => {
+                        const currentClubs = form.getValues('clubs') || [];
+                        if (checked) {
+                          form.setValue('clubs', [...currentClubs, club]);
+                        } else {
+                          form.setValue('clubs', currentClubs.filter(c => c !== club));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`club-${club}`} className="text-sm">
+                      {club}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="greekLife">Greek Life (Optional)</Label>
+              <Input 
+                id="greekLife" 
+                placeholder="e.g., Alpha Phi Alpha" 
+                {...form.register('greekLife')} 
+              />
             </div>
 
             <div>
