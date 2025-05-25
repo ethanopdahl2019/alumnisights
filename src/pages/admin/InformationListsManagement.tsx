@@ -19,7 +19,7 @@ interface InformationList {
   id: string;
   title: string;
   items: ListItem[];
-  tableName?: string;
+  tableName?: 'greek_life' | 'clubs' | 'activities' | 'sports' | 'majors';
 }
 
 const InformationListsManagement = () => {
@@ -116,10 +116,56 @@ const InformationListsManagement = () => {
     try {
       for (const list of defaultLists) {
         if (list.tableName) {
-          const { data, error } = await supabase
-            .from(list.tableName)
-            .select('*')
-            .order('name');
+          let data: any[] = [];
+          let error: any = null;
+
+          // Type-safe database queries
+          switch (list.tableName) {
+            case 'greek_life':
+              const greekLifeResult = await supabase
+                .from('greek_life')
+                .select('*')
+                .order('name');
+              data = greekLifeResult.data || [];
+              error = greekLifeResult.error;
+              break;
+            
+            case 'clubs':
+              const clubsResult = await supabase
+                .from('clubs')
+                .select('*')
+                .order('name');
+              data = clubsResult.data || [];
+              error = clubsResult.error;
+              break;
+            
+            case 'activities':
+              const activitiesResult = await supabase
+                .from('activities')
+                .select('*')
+                .order('name');
+              data = activitiesResult.data || [];
+              error = activitiesResult.error;
+              break;
+            
+            case 'sports':
+              const sportsResult = await supabase
+                .from('sports')
+                .select('*')
+                .order('name');
+              data = sportsResult.data || [];
+              error = sportsResult.error;
+              break;
+            
+            case 'majors':
+              const majorsResult = await supabase
+                .from('majors')
+                .select('*')
+                .order('name');
+              data = majorsResult.data || [];
+              error = majorsResult.error;
+              break;
+          }
 
           if (error) {
             console.error(`Error loading ${list.tableName}:`, error);
@@ -130,7 +176,7 @@ const InformationListsManagement = () => {
             const items = data.map(item => ({
               id: item.id,
               name: item.name,
-              type: item.type || undefined
+              ...(item.type && { type: item.type })
             }));
 
             setLists(prev => prev.map(l => 
@@ -206,17 +252,7 @@ const InformationListsManagement = () => {
     }
 
     try {
-      // Delete existing items
-      const { error: deleteError } = await supabase
-        .from(list.tableName)
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
-
-      if (deleteError) {
-        console.error('Delete error:', deleteError);
-      }
-
-      // Insert new items
+      // Type-safe database operations
       const itemsToInsert = list.items
         .filter(item => item.name.trim() !== '')
         .map(item => ({
@@ -224,14 +260,81 @@ const InformationListsManagement = () => {
           ...(item.type && { type: item.type })
         }));
 
-      if (itemsToInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from(list.tableName)
-          .insert(itemsToInsert);
+      switch (list.tableName) {
+        case 'greek_life':
+          // Delete existing items
+          await supabase
+            .from('greek_life')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
 
-        if (insertError) {
-          throw insertError;
-        }
+          // Insert new items
+          if (itemsToInsert.length > 0) {
+            const { error: insertError } = await supabase
+              .from('greek_life')
+              .insert(itemsToInsert);
+            if (insertError) throw insertError;
+          }
+          break;
+
+        case 'clubs':
+          await supabase
+            .from('clubs')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+          if (itemsToInsert.length > 0) {
+            const { error: insertError } = await supabase
+              .from('clubs')
+              .insert(itemsToInsert.map(item => ({ name: item.name })));
+            if (insertError) throw insertError;
+          }
+          break;
+
+        case 'activities':
+          await supabase
+            .from('activities')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+          if (itemsToInsert.length > 0) {
+            const { error: insertError } = await supabase
+              .from('activities')
+              .insert(itemsToInsert.map(item => ({ 
+                name: item.name,
+                type: 'club' as const // Default type for activities
+              })));
+            if (insertError) throw insertError;
+          }
+          break;
+
+        case 'sports':
+          await supabase
+            .from('sports')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+          if (itemsToInsert.length > 0) {
+            const { error: insertError } = await supabase
+              .from('sports')
+              .insert(itemsToInsert.map(item => ({ name: item.name })));
+            if (insertError) throw insertError;
+          }
+          break;
+
+        case 'majors':
+          await supabase
+            .from('majors')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+          if (itemsToInsert.length > 0) {
+            const { error: insertError } = await supabase
+              .from('majors')
+              .insert(itemsToInsert.map(item => ({ name: item.name })));
+            if (insertError) throw insertError;
+          }
+          break;
       }
 
       toast.success(`${list.title} saved successfully`);
