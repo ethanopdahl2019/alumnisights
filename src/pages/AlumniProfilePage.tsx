@@ -1,3 +1,4 @@
+
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -140,6 +141,9 @@ const AlumniProfilePage = () => {
     reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 
     0;
 
+  // Check if any booking options are available
+  const hasBookingOptions = profile?.price_15_min || profile?.price_30_min || profile?.price_60_min;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -181,7 +185,7 @@ const AlumniProfilePage = () => {
                         <div className="flex flex-col gap-2 text-gray-600">
                           <div className="flex items-center gap-2">
                             <School className="h-5 w-5" />
-                            <span>{profile.school.name}</span>
+                            <span>{profile.school?.name}</span>
                             {profile.graduation_year && (
                               <>
                                 <span>•</span>
@@ -350,8 +354,8 @@ const AlumniProfilePage = () => {
 
             {/* Booking Section */}
             <div className="space-y-6">
-              {/* Only show booking options if not own profile */}
-              {!isOwnProfile && (
+              {/* Only show booking options if not own profile and has pricing */}
+              {!isOwnProfile && hasBookingOptions && (
                 <Card className="p-6 bg-white border shadow-sm">
                   <h2 className="text-xl font-semibold mb-4">Book a Session</h2>
                   <p className="text-gray-600 mb-6">
@@ -359,12 +363,12 @@ const AlumniProfilePage = () => {
                   </p>
                   
                   <div className="space-y-4">
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      {profile?.price_15_min && (
+                    {profile?.price_15_min && (
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                      >
                         <ProductCard
                           title="Quick Chat"
                           price={profile.price_15_min}
@@ -374,15 +378,15 @@ const AlumniProfilePage = () => {
                           profileId={id}
                           productId="quick-chat"
                         />
-                      )}
-                    </motion.div>
+                      </motion.div>
+                    )}
 
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                    >
-                      {profile?.price_30_min && (
+                    {profile?.price_30_min && (
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                      >
                         <ProductCard
                           title="Deep Dive"
                           price={profile.price_30_min}
@@ -392,15 +396,15 @@ const AlumniProfilePage = () => {
                           profileId={id}
                           productId="deep-dive"
                         />
-                      )}
-                    </motion.div>
+                      </motion.div>
+                    )}
 
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                    >
-                      {profile?.price_60_min && (
+                    {profile?.price_60_min && (
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                      >
                         <ProductCard
                           title="Comprehensive Session"
                           price={profile.price_60_min}
@@ -410,8 +414,8 @@ const AlumniProfilePage = () => {
                           profileId={id}
                           productId="comprehensive"
                         />
-                      )}
-                    </motion.div>
+                      </motion.div>
+                    )}
                   </div>
                 </Card>
               )}

@@ -84,6 +84,8 @@ export async function getAllProfiles(): Promise<ProfileWithDetails[]> {
 }
 
 export async function getProfileById(id: string): Promise<ProfileWithDetails | null> {
+  console.log('Fetching profile with ID:', id);
+  
   const { data: profile, error } = await supabase
     .from('profiles')
     .select(`
@@ -100,15 +102,21 @@ export async function getProfileById(id: string): Promise<ProfileWithDetails | n
     return null;
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    console.log('No profile found with ID:', id);
+    return null;
+  }
+
+  console.log('Profile data retrieved:', profile);
 
   return {
     ...profile,
-    school: {
+    school: profile.school ? {
       ...profile.school,
       image: profile.school?.image ?? null
-    },
-    activities: profile.activities.map((pa: any) => pa.activities),
+    } : null,
+    major: profile.major || null,
+    activities: profile.activities?.map((pa: any) => pa.activities) || [],
     role: profile.role as 'applicant' | 'alumni' | 'mentor',
     social_links: parseSocialLinks(profile.social_links)
   };
