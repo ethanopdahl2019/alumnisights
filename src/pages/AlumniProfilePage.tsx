@@ -1,10 +1,9 @@
-
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { getProfileById } from "@/services/profiles";
 import { getProfileReviews } from "@/services/reviews";
-import { School, Briefcase, Award, MapPin, Calendar, ExternalLink, Star, MessageSquare, Users } from "lucide-react";
+import { School, Briefcase, Award, MapPin, Calendar, ExternalLink, Star, MessageSquare, Users, Edit } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -14,9 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Tag from "@/components/Tag";
 import { MentorChatButton } from "@/components/mentor-chat/MentorChatButton";
+import { useAuth } from "@/components/AuthProvider";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AlumniProfilePage = () => {
   const { id } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
   
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ['profile', id],
@@ -64,6 +69,33 @@ const AlumniProfilePage = () => {
     },
     enabled: !!id
   });
+
+  // Check if this is the user's own profile
+  useEffect(() => {
+    const checkIfOwnProfile = async () => {
+      if (user && profile) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('id', profile.id)
+          .single();
+          
+        if (data && data.user_id === user.id) {
+          setIsOwnProfile(true);
+        }
+      }
+    };
+    
+    checkIfOwnProfile();
+  }, [user, profile]);
+
+  const handleEditProfile = () => {
+    if (profile?.role === 'mentor') {
+      navigate('/mentor-dashboard');
+    } else {
+      navigate('/alumni-dashboard');
+    }
+  };
 
   if (loadingProfile) {
     return (
@@ -173,12 +205,28 @@ const AlumniProfilePage = () => {
                         </div>
                       </div>
                       
-                      {/* Add the mentor chat button here */}
-                      <MentorChatButton 
-                        mentorId={profile.user_id} 
-                        mentorName={profile.name}
-                        className="ml-auto"
-                      />
+                      <div className="flex gap-2">
+                        {/* Show edit button only for own profile */}
+                        {isOwnProfile && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={handleEditProfile}
+                            className="flex items-center gap-2"
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit Profile
+                          </Button>
+                        )}
+                        
+                        {/* Show mentor chat button only for other people's profiles */}
+                        {!isOwnProfile && (
+                          <MentorChatButton 
+                            mentorId={profile.user_id} 
+                            mentorName={profile.name}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -302,68 +350,71 @@ const AlumniProfilePage = () => {
 
             {/* Booking Section */}
             <div className="space-y-6">
-              <Card className="p-6 bg-white border shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Book a Session</h2>
-                <p className="text-gray-600 mb-6">
-                  Get personalized insights about {profile?.school?.name} from someone who's been there.
-                </p>
-                
-                <div className="space-y-4">
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                  >
-                    {profile?.price_15_min && (
-                      <ProductCard
-                        title="Quick Chat"
-                        price={profile.price_15_min}
-                        duration="15 minutes"
-                        description="Perfect for specific questions about the application process"
-                        onBook={() => {/* Fallback for old functionality */}}
-                        profileId={id}
-                        productId="quick-chat"
-                      />
-                    )}
-                  </motion.div>
+              {/* Only show booking options if not own profile */}
+              {!isOwnProfile && (
+                <Card className="p-6 bg-white border shadow-sm">
+                  <h2 className="text-xl font-semibold mb-4">Book a Session</h2>
+                  <p className="text-gray-600 mb-6">
+                    Get personalized insights about {profile?.school?.name} from someone who's been there.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      {profile?.price_15_min && (
+                        <ProductCard
+                          title="Quick Chat"
+                          price={profile.price_15_min}
+                          duration="15 minutes"
+                          description="Perfect for specific questions about the application process"
+                          onBook={() => {/* Fallback for old functionality */}}
+                          profileId={id}
+                          productId="quick-chat"
+                        />
+                      )}
+                    </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                  >
-                    {profile?.price_30_min && (
-                      <ProductCard
-                        title="Deep Dive"
-                        price={profile.price_30_min}
-                        duration="30 minutes"
-                        description="Ideal for in-depth discussion about academics and campus life"
-                        onBook={() => {/* Fallback for old functionality */}}
-                        profileId={id}
-                        productId="deep-dive"
-                      />
-                    )}
-                  </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      {profile?.price_30_min && (
+                        <ProductCard
+                          title="Deep Dive"
+                          price={profile.price_30_min}
+                          duration="30 minutes"
+                          description="Ideal for in-depth discussion about academics and campus life"
+                          onBook={() => {/* Fallback for old functionality */}}
+                          profileId={id}
+                          productId="deep-dive"
+                        />
+                      )}
+                    </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                  >
-                    {profile?.price_60_min && (
-                      <ProductCard
-                        title="Comprehensive Session"
-                        price={profile.price_60_min}
-                        duration="60 minutes"
-                        description="Full consultation covering all aspects of your application"
-                        onBook={() => {/* Fallback for old functionality */}}
-                        profileId={id}
-                        productId="comprehensive"
-                      />
-                    )}
-                  </motion.div>
-                </div>
-              </Card>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                    >
+                      {profile?.price_60_min && (
+                        <ProductCard
+                          title="Comprehensive Session"
+                          price={profile.price_60_min}
+                          duration="60 minutes"
+                          description="Full consultation covering all aspects of your application"
+                          onBook={() => {/* Fallback for old functionality */}}
+                          profileId={id}
+                          productId="comprehensive"
+                        />
+                      )}
+                    </motion.div>
+                  </div>
+                </Card>
+              )}
 
               {/* Social Links */}
               {socialLinks && Object.keys(socialLinks).length > 0 && (

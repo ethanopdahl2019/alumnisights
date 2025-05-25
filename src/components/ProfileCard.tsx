@@ -52,10 +52,8 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
     })) || [])
   ];
   
-  // Determine the link destination based on whether it's the user's own profile
-  const linkDestination = isOwnProfile 
-    ? '/alumni-dashboard' 
-    : `/alumni/${profile.id}`;
+  // Always link to the public profile page, regardless of who is viewing
+  const linkDestination = `/alumni/${profile.id}`;
   
   return (
     <motion.div
