@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -23,7 +22,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { getSchools } from '@/services/profiles';
 import { School } from '@/types/database';
-import { Upload, Camera, Plus, X } from 'lucide-react';
+import { Upload, Camera, Plus, X, ArrowLeft } from 'lucide-react';
 import { uploadFileToStorage } from '@/utils/fileUpload';
 
 // Define advanced degree schema
@@ -303,6 +302,18 @@ const MentorProfileComplete = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
+      {/* Back Button */}
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="flex items-center text-gray-600 hover:text-gray-800"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-center">Complete Your Mentor Profile</CardTitle>

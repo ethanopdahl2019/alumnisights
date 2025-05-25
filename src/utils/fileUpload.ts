@@ -10,7 +10,7 @@ interface UploadOptions {
 
 /**
  * Uploads a file to Supabase storage with organized folder structure
- * @param options Object containing file, prefix (type of image), and resourceId (university ID)
+ * @param options Object containing file, prefix (type of image), and resourceId (user ID or university ID)
  * @returns The public URL of the uploaded file or null if upload fails
  */
 export async function uploadFileToStorage({ 
@@ -29,9 +29,17 @@ export async function uploadFileToStorage({
     const fileExt = file.name.split('.').pop();
     const sanitizedResourceId = resourceId ? resourceId.replace(/[^a-zA-Z0-9-]/g, '_') : 'new';
     const fileName = `${sanitizedResourceId}-${prefix}-${Date.now()}.${fileExt}`;
-    const filePath = `universities/${sanitizedResourceId}/${prefix}/${fileName}`;
+    
+    // Determine bucket and path based on prefix
+    let bucketName = 'university-content';
+    let filePath = `universities/${sanitizedResourceId}/${prefix}/${fileName}`;
+    
+    if (prefix === 'profile') {
+      bucketName = 'profile-photos';
+      filePath = `${sanitizedResourceId}/${fileName}`;
+    }
 
-    console.log("Uploading to path:", filePath);
+    console.log("Uploading to bucket:", bucketName, "path:", filePath);
 
     // Verify the bucket exists before attempting upload
     const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
@@ -42,17 +50,17 @@ export async function uploadFileToStorage({
       return null;
     }
     
-    const bucket = buckets?.find(b => b.name === 'university-content');
+    const bucket = buckets?.find(b => b.name === bucketName);
     
     if (!bucket) {
-      console.error("Storage bucket 'university-content' does not exist");
+      console.error(`Storage bucket '${bucketName}' does not exist`);
       toast.error("Storage infrastructure not set up correctly. Please contact administrator.");
       return null;
     }
 
-    // Upload the file to the university-content bucket
+    // Upload the file to the appropriate bucket
     const { error: uploadError, data } = await supabase.storage
-      .from('university-content')
+      .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: true
@@ -67,7 +75,7 @@ export async function uploadFileToStorage({
     
     // Get the public URL for the uploaded file
     const { data: urlData } = supabase.storage
-      .from('university-content')
+      .from(bucketName)
       .getPublicUrl(filePath);
     
     console.log("Public URL generated:", urlData.publicUrl);
