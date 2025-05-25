@@ -8,6 +8,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { 
   Table, 
@@ -59,6 +60,7 @@ const UserManagement = () => {
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
+  const [updatingVisibility, setUpdatingVisibility] = useState<string | null>(null);
 
   // Fetch all users using Edge Function
   const fetchUsers = async () => {
@@ -122,100 +124,65 @@ const UserManagement = () => {
     }
   };
 
-  // Update user visibility
+  // Update user visibility using the new Supabase function
   const updateUserVisibility = async (userId: string, visible: boolean) => {
+    setUpdatingVisibility(userId);
     try {
-      // First check if profile exists for this user
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('user_id', userId)
-        .single();
+      const { data, error } = await supabase.rpc('update_user_browse_visibility', {
+        user_id_param: userId,
+        visible_param: visible
+      });
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error checking profile:', fetchError);
-        toast.error('Failed to check user profile');
+      if (error) {
+        console.error('Error updating visibility:', error);
+        toast.error('Failed to update user visibility');
         return;
       }
 
-      if (existingProfile) {
-        // Update existing profile
-        const { error } = await supabase
-          .from('profiles')
-          .update({ visible: visible })
-          .eq('user_id', userId);
-
-        if (error) {
-          console.error('Error updating visibility:', error);
-          toast.error('Failed to update user visibility');
-          return;
-        }
+      if (data) {
+        // Update local state
+        setUserProfiles(prev => ({
+          ...prev,
+          [userId]: { ...prev[userId], user_id: userId, visible }
+        }));
+        toast.success(`User visibility ${visible ? 'enabled' : 'disabled'}`);
       } else {
-        // Create new profile with minimal required fields
-        const { error } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: userId,
-            name: 'User Profile', // Default name
-            major_id: (await supabase.from('majors').select('id').limit(1).single()).data?.id || '', // Get first major as default
-            visible: visible
-          });
-
-        if (error) {
-          console.error('Error creating profile:', error);
-          toast.error('Failed to create user profile');
-          return;
-        }
+        toast.error('Failed to update user visibility');
       }
-
-      // Update local state
-      setUserProfiles(prev => ({
-        ...prev,
-        [userId]: { ...prev[userId], user_id: userId, visible }
-      }));
-
-      toast.success(`User visibility ${visible ? 'enabled' : 'disabled'}`);
     } catch (error) {
       console.error('Failed to update user visibility:', error);
       toast.error('Failed to update user visibility');
+    } finally {
+      setUpdatingVisibility(null);
     }
   };
 
-  // Delete user function
+  // Delete user using the new Supabase function
   const deleteUser = async (userId: string) => {
     setDeletingUser(userId);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/admin-users`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userId }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete user");
-      }
-
-      // Remove user from local state
-      setUsers(prev => prev.filter(u => u.id !== userId));
-      setUserProfiles(prev => {
-        const newProfiles = { ...prev };
-        delete newProfiles[userId];
-        return newProfiles;
+      const { data, error } = await supabase.rpc('delete_user_and_data', {
+        user_id_to_delete: userId
       });
 
-      toast.success("User deleted successfully");
+      if (error) {
+        console.error('Error deleting user:', error);
+        toast.error('Failed to delete user: ' + error.message);
+        return;
+      }
+
+      if (data) {
+        // Remove user from local state
+        setUsers(prev => prev.filter(u => u.id !== userId));
+        setUserProfiles(prev => {
+          const newProfiles = { ...prev };
+          delete newProfiles[userId];
+          return newProfiles;
+        });
+        toast.success("User deleted successfully");
+      } else {
+        toast.error('Failed to delete user');
+      }
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("Failed to delete user: " + (error as Error).message);
@@ -362,11 +329,12 @@ const UserManagement = () => {
                               'Never'}
                           </TableCell>
                           <TableCell>
-                            <Checkbox
+                            <Switch
                               checked={isVisible}
                               onCheckedChange={(checked) => 
-                                updateUserVisibility(user.id, checked as boolean)
+                                updateUserVisibility(user.id, checked)
                               }
+                              disabled={updatingVisibility === user.id}
                             />
                           </TableCell>
                           <TableCell>
@@ -400,8 +368,9 @@ const UserManagement = () => {
                                     <AlertDialogAction
                                       onClick={() => deleteUser(user.id)}
                                       className="bg-red-600 hover:bg-red-700"
+                                      disabled={deletingUser === user.id}
                                     >
-                                      Delete
+                                      {deletingUser === user.id ? "Deleting..." : "Delete"}
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
