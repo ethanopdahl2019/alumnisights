@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -246,9 +247,9 @@ const MentorProfileComplete = () => {
         headline: values.headline,
         graduation_year: parseInt(values.graduationYear),
         location: values.location,
-        price_15_min: parseFloat(values.price15Min || '0'),
-        price_30_min: parseFloat(values.price30Min || '0'),
-        price_60_min: parseFloat(values.price60Min || '0'),
+        price_15_min: values.price15Min ? parseFloat(values.price15Min) : null,
+        price_30_min: values.price30Min ? parseFloat(values.price30Min) : null,
+        price_60_min: values.price60Min ? parseFloat(values.price60Min) : null,
         visible: true,
         university_id: universityId,
         achievements: [
@@ -330,25 +331,24 @@ const MentorProfileComplete = () => {
               </Avatar>
               
               <div className="flex flex-col items-center space-y-2">
-                <Label htmlFor="profile-image" className="cursor-pointer">
-                  <input
-                    id="profile-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={uploadingImage}
-                    className="flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {uploadingImage ? 'Uploading...' : 'Upload Photo'}
-                  </Button>
-                </Label>
+                <input
+                  id="profile-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadingImage}
+                  className="flex items-center gap-2"
+                  onClick={() => document.getElementById('profile-image')?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  {uploadingImage ? 'Uploading...' : 'Upload Photo'}
+                </Button>
                 <p className="text-xs text-gray-500">
                   Upload a professional profile photo
                 </p>
@@ -600,7 +600,7 @@ const MentorProfileComplete = () => {
                   id="price15Min" 
                   placeholder="e.g., 25" 
                   type="number"
-                  {...form.register('price15Min', { valueAsNumber: true })} 
+                  {...form.register('price15Min')} 
                 />
                 {form.formState.errors.price15Min && (
                   <p className="text-red-500 text-sm">{form.formState.errors.price15Min.message}</p>
@@ -613,7 +613,7 @@ const MentorProfileComplete = () => {
                   id="price30Min" 
                   placeholder="e.g., 40" 
                   type="number"
-                  {...form.register('price30Min', { valueAsNumber: true })} 
+                  {...form.register('price30Min')} 
                 />
                 {form.formState.errors.price30Min && (
                   <p className="text-red-500 text-sm">{form.formState.errors.price30Min.message}</p>
@@ -626,7 +626,7 @@ const MentorProfileComplete = () => {
                   id="price60Min" 
                   placeholder="e.g., 75"
                   type="number"
-                  {...form.register('price60Min', { valueAsNumber: true })} 
+                  {...form.register('price60Min')} 
                 />
                 {form.formState.errors.price60Min && (
                   <p className="text-red-500 text-sm">{form.formState.errors.price60Min.message}</p>
