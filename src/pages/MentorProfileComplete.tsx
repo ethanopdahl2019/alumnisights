@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -25,13 +26,10 @@ import { School, Major } from '@/types/database';
 import { Upload, Camera } from 'lucide-react';
 import { uploadFileToStorage } from '@/utils/fileUpload';
 
-// Define form schema
+// Define form schema - removed firstName, lastName, universityId
 const mentorProfileFormSchema = z.object({
-  firstName: z.string().min(1, { message: 'First name is required' }),
-  lastName: z.string().min(1, { message: 'Last name is required' }),
   headline: z.string().min(1, { message: 'Headline is required' }),
   bio: z.string().min(10, { message: 'Bio must be at least 10 characters' }),
-  universityId: z.string().min(1, { message: 'University is required' }),
   majorId: z.string().min(1, { message: 'Major is required' }),
   graduationYear: z.string().refine((val) => {
     const num = parseInt(val, 10);
@@ -56,15 +54,12 @@ const MentorProfileComplete = () => {
   const [profileImage, setProfileImage] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Form setup
+  // Form setup - removed firstName, lastName, universityId from defaults
   const form = useForm<MentorProfileFormValues>({
     resolver: zodResolver(mentorProfileFormSchema),
     defaultValues: {
-      firstName: user?.user_metadata?.first_name || '',
-      lastName: user?.user_metadata?.last_name || '',
       headline: '',
       bio: '',
-      universityId: '',
       majorId: '',
       graduationYear: '',
       location: '',
@@ -131,13 +126,12 @@ const MentorProfileComplete = () => {
 
     setIsLoading(true);
     try {
-      // Get university ID from user metadata or form
-      const universityId = user.user_metadata?.university_id || values.universityId;
+      // Get university ID from user metadata
+      const universityId = user.user_metadata?.university_id;
       
       // Find the school that matches the university
       let schoolId = null;
       if (universityId) {
-        // Try to find a school with matching name or ID
         const matchingSchool = schools.find(school => 
           school.name.toLowerCase().includes(universityId.toLowerCase()) ||
           school.id === universityId
@@ -145,9 +139,14 @@ const MentorProfileComplete = () => {
         schoolId = matchingSchool?.id || null;
       }
 
+      // Get name from user metadata
+      const firstName = user.user_metadata?.first_name || '';
+      const lastName = user.user_metadata?.last_name || '';
+      const fullName = `${firstName} ${lastName}`.trim();
+
       const profileData = {
         user_id: user.id,
-        name: `${values.firstName} ${values.lastName}`,
+        name: fullName,
         bio: values.bio,
         image: profileImage || null,
         school_id: schoolId,
@@ -236,33 +235,6 @@ const MentorProfileComplete = () => {
               </div>
             </div>
 
-            {/* Form fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input 
-                  id="firstName" 
-                  placeholder="John" 
-                  {...form.register('firstName')} 
-                />
-                {form.formState.errors.firstName && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.firstName.message}</p>
-                )}
-              </div>
-              
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input 
-                  id="lastName" 
-                  placeholder="Doe" 
-                  {...form.register('lastName')} 
-                />
-                {form.formState.errors.lastName && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.lastName.message}</p>
-                )}
-              </div>
-            </div>
-
             <div>
               <Label htmlFor="headline">Headline</Label>
               <Input 
@@ -288,37 +260,23 @@ const MentorProfileComplete = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="universityId">University</Label>
-                <Input 
-                  id="universityId" 
-                  placeholder="e.g., Harvard University" 
-                  {...form.register('universityId')} 
-                />
-                {form.formState.errors.universityId && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.universityId.message}</p>
-                )}
-              </div>
-              
-              <div>
-                <Label htmlFor="majorId">Major</Label>
-                <Select onValueChange={(value) => form.setValue('majorId', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your major" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {majors.map((major) => (
-                      <SelectItem key={major.id} value={major.id}>
-                        {major.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form.formState.errors.majorId && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.majorId.message}</p>
-                )}
-              </div>
+            <div>
+              <Label htmlFor="majorId">Major</Label>
+              <Select onValueChange={(value) => form.setValue('majorId', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your major" />
+                </SelectTrigger>
+                <SelectContent>
+                  {majors.map((major) => (
+                    <SelectItem key={major.id} value={major.id}>
+                      {major.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.majorId && (
+                <p className="text-red-500 text-sm">{form.formState.errors.majorId.message}</p>
+              )}
             </div>
 
             <div>

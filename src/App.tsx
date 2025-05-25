@@ -98,6 +98,7 @@ const App = () => (
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/schools" element={<Schools />} />
                 <Route path="/schools/:id" element={<SchoolDetail />} />
+                <Route path="/schools/undergraduate-admissions/:id" element={<UniversityPage />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/resources" element={<Resources />} />
                 <Route path="/testimonials" element={<Testimonials />} />
@@ -110,6 +111,7 @@ const App = () => (
                 {/* Insights routes */}
                 <Route path="/insights/university-admissions" element={<UniversityAdmissions />} />
                 <Route path="/insights/undergraduate-admissions" element={<UndergraduateAdmissions />} />
+                <Route path="/insights/undergraduate-admissions/:id" element={<UniversityPage />} />
                 <Route path="/insights/graduate-admissions" element={<GraduateAdmissions />} />
                 <Route path="/insights/clubs-and-greek-life" element={<ClubsAndGreekLife />} />
                 <Route path="/insights/industry-insights" element={<IndustryInsights />} />
