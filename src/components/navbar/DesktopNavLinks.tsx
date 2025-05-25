@@ -9,7 +9,7 @@ export const DesktopNavLinks = () => {
       <Link to="/browse" className="text-navy font-medium hover:text-navy/80 transition-colors">
         Browse
       </Link>
-      <Link to="/schools" className="text-navy font-medium hover:text-navy/80 transition-colors">
+      <Link to="/insights/undergraduate-admissions" className="text-navy font-medium hover:text-navy/80 transition-colors">
         Schools
       </Link>
       
