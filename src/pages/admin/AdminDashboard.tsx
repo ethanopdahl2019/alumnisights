@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -22,8 +23,7 @@ import {
   ChevronRight,
   FileCheck,
   BarChart,
-  Home,
-  List
+  Home
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -95,12 +95,6 @@ const adminLinkGroups = {
       description: "Manage clubs, sports and activities",
       icon: <Activity className="h-5 w-5" />,
       href: "/admin/activities"
-    },
-    {
-      title: "Information Lists",
-      description: "Manage dropdown options and form choices",
-      icon: <List className="h-5 w-5" />,
-      href: "/admin/information-lists"
     },
   ],
   operations: [
