@@ -366,6 +366,18 @@ const MentorProfileComplete = () => {
             </div>
 
             <div>
+              <Label htmlFor="graduationYear">Graduation Year</Label>
+              <Input 
+                id="graduationYear" 
+                placeholder="e.g., 2022" 
+                {...form.register('graduationYear')} 
+              />
+              {form.formState.errors.graduationYear && (
+                <p className="text-red-500 text-sm">{form.formState.errors.graduationYear.message}</p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="currentOccupation">Current Occupation</Label>
               <Input 
                 id="currentOccupation" 
@@ -545,18 +557,6 @@ const MentorProfileComplete = () => {
                     Add Another Advanced Degree
                   </Button>
                 </div>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="graduationYear">Graduation Year</Label>
-              <Input 
-                id="graduationYear" 
-                placeholder="e.g., 2022" 
-                {...form.register('graduationYear')} 
-              />
-              {form.formState.errors.graduationYear && (
-                <p className="text-red-500 text-sm">{form.formState.errors.graduationYear.message}</p>
               )}
             </div>
 

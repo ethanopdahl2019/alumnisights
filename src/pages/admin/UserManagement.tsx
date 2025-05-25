@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -122,50 +121,18 @@ const UserManagement = () => {
     }
   };
 
-  // Update user visibility
+  // Update user visibility using the new database function
   const updateUserVisibility = async (userId: string, visible: boolean) => {
     try {
-      // First check if profile exists for this user
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('user_id', userId)
-        .single();
+      const { data, error } = await supabase.rpc('update_user_browse_visibility', {
+        user_id_param: userId,
+        visible_param: visible
+      });
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error checking profile:', fetchError);
-        toast.error('Failed to check user profile');
+      if (error) {
+        console.error('Error updating visibility:', error);
+        toast.error('Failed to update user visibility');
         return;
-      }
-
-      if (existingProfile) {
-        // Update existing profile
-        const { error } = await supabase
-          .from('profiles')
-          .update({ visible: visible })
-          .eq('user_id', userId);
-
-        if (error) {
-          console.error('Error updating visibility:', error);
-          toast.error('Failed to update user visibility');
-          return;
-        }
-      } else {
-        // Create new profile with minimal required fields
-        const { error } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: userId,
-            name: 'User Profile', // Default name
-            major_id: (await supabase.from('majors').select('id').limit(1).single()).data?.id || '', // Get first major as default
-            visible: visible
-          });
-
-        if (error) {
-          console.error('Error creating profile:', error);
-          toast.error('Failed to create user profile');
-          return;
-        }
       }
 
       // Update local state
@@ -181,30 +148,23 @@ const UserManagement = () => {
     }
   };
 
-  // Delete user function
+  // Delete user function using the new database function
   const deleteUser = async (userId: string) => {
     setDeletingUser(userId);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error("No active session");
+      const { data, error } = await supabase.rpc('delete_user_and_data', {
+        user_id_to_delete: userId
+      });
+
+      if (error) {
+        console.error('Error deleting user:', error);
+        toast.error('Failed to delete user: ' + error.message);
+        return;
       }
 
-      const response = await fetch(
-        `https://xvnhujckrivhjnaslanm.supabase.co/functions/v1/admin-users`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userId }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete user");
+      if (!data) {
+        toast.error('Failed to delete user');
+        return;
       }
 
       // Remove user from local state
@@ -238,7 +198,7 @@ const UserManagement = () => {
         return;
       }
 
-      navigate(`/alumni/${profile.id}`);
+      navigate(`/profile/${profile.id}`);
     } catch (error) {
       console.error('Error finding user profile:', error);
       toast.error('Failed to find user profile');
@@ -295,7 +255,7 @@ const UserManagement = () => {
             </Button>
             <Button
               variant="outline"
-              onClick={() => navigate('/admin/dashboard')}
+              onClick={() => navigate('/admin')}
             >
               Back to Dashboard
             </Button>
