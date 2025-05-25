@@ -23,7 +23,7 @@ const Hero = () => {
 
   return (
     <>
-      <section className="relative min-h-[85vh] flex items-center bg-white">
+      <section className="relative min-h-[85vh] flex items-center">
         {/* Background video */}
         <div className="absolute inset-0 w-full h-full overflow-hidden">
           <video
@@ -51,7 +51,7 @@ const Hero = () => {
             transition={{ duration: 0.7 }}
           >
             <motion.h1 
-              className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold mb-6 tracking-tight text-navy"
+              className="text-5xl md:text-6xl lg:text-7xl font-medium mb-6 tracking-tight"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
@@ -61,7 +61,7 @@ const Hero = () => {
             </motion.h1>
             
             <motion.p 
-              className="text-xl text-gray-700 mb-10 max-w-2xl mx-auto font-sans"
+              className="text-xl text-gray-700 mb-10 max-w-2xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.8 }}
@@ -78,15 +78,15 @@ const Hero = () => {
             >
               <motion.a 
                 href="/browse" 
-                className="inline-flex items-center px-8 py-4 bg-navy text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-w-[200px] justify-center"
+                className="btn-primary min-w-[180px]"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 Find Your Connection
               </motion.a>
               <motion.a 
-                href="/auth" 
-                className="inline-flex items-center px-8 py-4 border-2 border-navy text-navy font-semibold rounded-xl hover:bg-navy hover:text-white transition-all duration-300 transform hover:-translate-y-1 min-w-[200px] justify-center"
+                href="/sign-up" 
+                className="btn-secondary min-w-[180px]"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -98,18 +98,18 @@ const Hero = () => {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-50">
         <div className="container-custom">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-serif font-bold mb-4 text-navy">How It Works</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto font-sans">
+            <h2 className="text-4xl font-medium mb-4">How It Works</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Get connected with the right person to guide your college journey
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <motion.div 
-              className="bg-white p-8 rounded-xl shadow-sm border relative"
+              className="bg-white p-8 rounded-xl shadow-sm relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -118,15 +118,15 @@ const Hero = () => {
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
                 <Users className="h-6 w-6 text-blue-600" />
               </div>
-              <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100 font-serif">1</span>
-              <h3 className="text-2xl font-serif font-bold mb-3 text-navy">Browse Profiles</h3>
-              <p className="text-gray-600 font-sans">
+              <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100">1</span>
+              <h3 className="text-2xl font-medium mb-3">Browse Profiles</h3>
+              <p className="text-gray-600">
                 Search through our diverse community of students and alumni from your target schools.
               </p>
             </motion.div>
 
             <motion.div 
-              className="bg-white p-8 rounded-xl shadow-sm border relative"
+              className="bg-white p-8 rounded-xl shadow-sm relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -135,15 +135,15 @@ const Hero = () => {
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-6">
                 <Calendar className="h-6 w-6 text-green-600" />
               </div>
-              <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100 font-serif">2</span>
-              <h3 className="text-2xl font-serif font-bold mb-3 text-navy">Book a Session</h3>
-              <p className="text-gray-600 font-sans">
+              <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100">2</span>
+              <h3 className="text-2xl font-medium mb-3">Book a Session</h3>
+              <p className="text-gray-600">
                 Schedule a personalized conversation at a time that works best for you.
               </p>
             </motion.div>
 
             <motion.div 
-              className="bg-white p-8 rounded-xl shadow-sm border relative"
+              className="bg-white p-8 rounded-xl shadow-sm relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
@@ -152,9 +152,9 @@ const Hero = () => {
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-6">
                 <GraduationCap className="h-6 w-6 text-purple-600" />
               </div>
-              <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100 font-serif">3</span>
-              <h3 className="text-2xl font-serif font-bold mb-3 text-navy">Get Insider Insights</h3>
-              <p className="text-gray-600 font-sans">
+              <span className="absolute top-8 right-8 text-5xl font-bold text-gray-100">3</span>
+              <h3 className="text-2xl font-medium mb-3">Get Insider Insights</h3>
+              <p className="text-gray-600">
                 Gain authentic perspectives about academics, campus life, and admission strategies.
               </p>
             </motion.div>
@@ -162,8 +162,8 @@ const Hero = () => {
         </div>
       </section>
 
-      {/* Features Section with uploaded image */}
-      <section className="py-24 bg-white">
+      {/* Features Section */}
+      <section className="py-24">
         <div className="container-custom">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -172,8 +172,8 @@ const Hero = () => {
               transition={{ duration: 0.8 }}
               viewport={{ once: true, margin: "-100px" }}
             >
-              <h2 className="text-4xl font-serif font-bold mb-6 text-navy">Learn from those who've walked the path</h2>
-              <p className="text-xl mb-8 text-gray-600 font-sans">
+              <h2 className="text-4xl font-medium mb-6">Learn from those who've walked the path</h2>
+              <p className="text-xl mb-8 text-gray-600">
                 Our platform connects prospective students with current undergrads and alumni who provide authentic insights about college life, admissions, and academics.
               </p>
               <ul className="space-y-4">
@@ -198,12 +198,12 @@ const Hero = () => {
                         </svg>
                       </div>
                     </div>
-                    <span className="text-lg font-sans">{item}</span>
+                    <span className="text-lg">{item}</span>
                   </motion.li>
                 ))}
               </ul>
               <div className="mt-10">
-                <Link to="/browse" className="inline-flex items-center px-8 py-4 bg-navy text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                <Link to="/browse" className="btn-primary inline-flex items-center">
                   Start Exploring
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -218,7 +218,7 @@ const Hero = () => {
               viewport={{ once: true, margin: "-100px" }}
             >
               <div className="relative z-10 rounded-lg overflow-hidden shadow-xl">
-                <img src="/lovable-uploads/ac4ac494-9f39-4376-94ee-435e6eeaad53.png" alt="Students walking on campus" className="w-full h-auto" />
+                <img src="/placeholder.svg" alt="Students on campus" className="w-full h-auto" />
               </div>
               <div className="absolute -bottom-6 -right-6 w-64 h-64 bg-blue-100 rounded-lg -z-10"></div>
               <div className="absolute -top-6 -left-6 w-32 h-32 bg-green-100 rounded-lg -z-10"></div>
@@ -228,11 +228,11 @@ const Hero = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-gradient-to-b from-gray-50 to-white">
         <div className="container-custom">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-serif font-bold mb-4 text-navy">What Students Say</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto font-sans">
+            <h2 className="text-4xl font-medium mb-4">What Students Say</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Real stories from students who found their path through alumni connections
             </p>
           </div>
@@ -260,7 +260,7 @@ const Hero = () => {
             ].map((testimonial, index) => (
               <motion.div 
                 key={index}
-                className="bg-white p-8 rounded-xl shadow-md border"
+                className="bg-white p-8 rounded-xl shadow-md"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.2 }}
@@ -274,12 +274,12 @@ const Hero = () => {
                     />
                   ))}
                 </div>
-                <p className="text-lg mb-6 italic text-gray-700 font-sans">"{testimonial.quote}"</p>
+                <p className="text-lg mb-6 italic text-gray-700">"{testimonial.quote}"</p>
                 <div className="flex items-center">
                   <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
                     <img src={testimonial.avatar} alt={testimonial.author} className="w-full h-full object-cover" />
                   </div>
-                  <span className="font-semibold font-sans text-navy">{testimonial.author}</span>
+                  <span className="font-medium">{testimonial.author}</span>
                 </div>
               </motion.div>
             ))}
@@ -292,7 +292,7 @@ const Hero = () => {
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <Link to="/browse" className="inline-flex items-center px-8 py-4 border-2 border-navy text-navy font-semibold rounded-xl hover:bg-navy hover:text-white transition-all duration-300 transform hover:-translate-y-1">
+            <Link to="/browse" className="btn-secondary inline-flex items-center">
               Find Your Match
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -300,38 +300,23 @@ const Hero = () => {
         </div>
       </section>
 
-      {/* Updated CTA Section */}
-      <section className="py-20 bg-white border-t">
+      {/* CTA Section */}
+      <section className="py-16 bg-navy text-white">
         <div className="container-custom">
-          <div className="max-w-5xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6 leading-tight text-navy">
-                Ready to find your college mentor?
-              </h2>
-              <p className="text-xl md:text-2xl mb-12 text-gray-600 max-w-3xl mx-auto leading-relaxed font-sans">
-                Get personalized insights that can transform your college experience.
-                Start your journey today!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link to="/browse" className="inline-flex items-center px-8 py-4 bg-navy text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                    <Users className="mr-2 h-5 w-5" />
-                    Browse Alumni
-                  </Link>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link to="/auth" className="inline-flex items-center px-8 py-4 border-2 border-navy text-navy font-semibold rounded-xl hover:bg-navy hover:text-white transition-all duration-300 transform hover:-translate-y-1">
-                    <GraduationCap className="mr-2 h-5 w-5" />
-                    Join as a Mentor
-                  </Link>
-                </motion.div>
-              </div>
-            </motion.div>
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl font-medium mb-6">Ready to find your college mentor?</h2>
+            <p className="text-xl mb-10 opacity-90">
+              Get personalized insights that can transform your college experience.
+              Start your journey today!
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/browse" className="btn-primary bg-white text-navy hover:bg-gray-100">
+                Browse Alumni
+              </Link>
+              <Link to="/sign-up" className="btn-outline text-white border-white hover:bg-white/10">
+                Join as a Mentor
+              </Link>
+            </div>
           </div>
         </div>
       </section>

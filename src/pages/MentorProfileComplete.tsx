@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -103,8 +104,6 @@ const MentorProfileComplete = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [hasAdvancedDegree, setHasAdvancedDegree] = useState(false);
   const [advancedDegrees, setAdvancedDegrees] = useState<AdvancedDegree[]>([]);
-  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
-  const [selectedClubs, setSelectedClubs] = useState<string[]>([]);
   const [availableActivities, setAvailableActivities] = useState<string[]>([
     'Student Government',
     'Academic Clubs',
@@ -253,18 +252,27 @@ const MentorProfileComplete = () => {
         price_60_min: values.price60Min || null,
         visible: true,
         university_id: universityId,
-        greek_life: values.greekLife || null,
         achievements: [
           `Current Occupation: ${values.currentOccupation}`,
           `Years of Experience: ${values.yearsOfExperience}`,
-          ...selectedActivities.map(activity => `Activity: ${activity}`),
-          ...selectedClubs.map(club => `Club: ${club}`),
+          ...(values.activities || []).map(activity => `Activity: ${activity}`),
+          ...(values.clubs || []).map(club => `Club: ${club}`),
           ...(values.greekLife ? [`Greek Life: ${values.greekLife}`] : []),
           ...(hasAdvancedDegree && advancedDegrees.length > 0 
             ? advancedDegrees.map(degree => `${degree.degree} from ${degree.university} (${degree.year})`)
             : [])
         ]
       };
+
+      // Update user metadata with advanced degrees
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          ...user.user_metadata,
+          advanced_degrees: hasAdvancedDegree ? advancedDegrees : null
+        }
+      });
+
+      if (metadataError) throw metadataError;
 
       const { error } = await supabase
         .from('profiles')
@@ -423,12 +431,12 @@ const MentorProfileComplete = () => {
                   <div key={activity} className="flex items-center space-x-2">
                     <Checkbox
                       id={`activity-${activity}`}
-                      checked={selectedActivities.includes(activity)}
                       onCheckedChange={(checked) => {
+                        const currentActivities = form.getValues('activities') || [];
                         if (checked) {
-                          setSelectedActivities([...selectedActivities, activity]);
+                          form.setValue('activities', [...currentActivities, activity]);
                         } else {
-                          setSelectedActivities(selectedActivities.filter(a => a !== activity));
+                          form.setValue('activities', currentActivities.filter(a => a !== activity));
                         }
                       }}
                     />
@@ -448,12 +456,12 @@ const MentorProfileComplete = () => {
                   <div key={club} className="flex items-center space-x-2">
                     <Checkbox
                       id={`club-${club}`}
-                      checked={selectedClubs.includes(club)}
                       onCheckedChange={(checked) => {
+                        const currentClubs = form.getValues('clubs') || [];
                         if (checked) {
-                          setSelectedClubs([...selectedClubs, club]);
+                          form.setValue('clubs', [...currentClubs, club]);
                         } else {
-                          setSelectedClubs(selectedClubs.filter(c => c !== club));
+                          form.setValue('clubs', currentClubs.filter(c => c !== club));
                         }
                       }}
                     />

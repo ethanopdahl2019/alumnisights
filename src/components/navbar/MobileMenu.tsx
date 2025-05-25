@@ -31,7 +31,7 @@ export const MobileMenu = () => {
               Browse
             </Link>
             <Link 
-              to="/insights/undergraduate-admissions" 
+              to="/schools" 
               className="text-navy font-medium py-2 hover:bg-gray-50 px-4 rounded"
               onClick={() => setMobileMenuOpen(false)}
             >

@@ -70,26 +70,6 @@
   h3 {
     @apply text-2xl md:text-3xl;
   }
-
-  /* Hide loading states during page transitions */
-  .loading-indicator,
-  [data-loading="true"] {
-    display: none !important;
-  }
-
-  /* Smooth page transitions */
-  .page-transition {
-    opacity: 1;
-    transition: opacity 0.2s ease-in-out;
-  }
-
-  .page-transition-enter {
-    opacity: 0;
-  }
-
-  .page-transition-enter-active {
-    opacity: 1;
-  }
 }
 
 @layer components {
